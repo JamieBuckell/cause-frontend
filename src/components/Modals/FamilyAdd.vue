@@ -1,0 +1,583 @@
+<template>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <button
+          type="submit"
+          class="btn btn-info btn-fill btn-wd float-right"
+          @click.prevent="saveFamilies"
+          :disabled="submittingFamily"
+        >
+          {{ saveType == 'create' ? 'Save' : 'Update' }} Family
+        </button>
+        <p class="float-right pr-3 pt-2" v-if="saveType == 'create'">
+          Please ensure you enter all family members before hitting Save as you
+          cannot amend this once submitted.
+        </p>
+      </div>
+    </div>
+    <div class="row" v-if="messages.length">
+      <div class="col-12">
+        <l-alert type="danger" v-for="m in messages" :key="m">
+          <span> {{ getErrorMessage(m) }}</span>
+        </l-alert>
+      </div>
+    </div>
+    <form>
+      <div v-for="(nomination, nomIndex) in nominations" :key="nomIndex">
+        <div class="row">
+          <div class="col-md-12">
+            <card class="mb-3">
+              <template slot="header">
+                <el-select
+                  v-if="canChangeNominator()"
+                  class="select-default mb-0 pull-right"
+                  v-model="chosenNominatorId"
+                  placeholder="Who"
+                  filterable
+                  default-first-option
+                  @change="changeNominator()"
+                >
+                  <el-option
+                    class="select-default"
+                    v-for="nominator in allNominators"
+                    :key="nominator.requestId"
+                    :label="nominator.fullName"
+                    :value="nominator.requestId"
+                  >
+                  </el-option>
+                </el-select>
+                <h4 class="card-title">
+                  {{ nomination.hamperId
+                  }}<span class="d-none d-md-inline"> - </span
+                  ><br class="d-md-none" />Family Members
+                </h4>
+                <p class="card-category">
+                  Family Total:
+                  {{ nomination.adults + nomination.children }} (Adults:
+                  {{ nomination.adults }} Children: {{ nomination.children }})
+                </p>
+              </template>
+              <div class="row d-none d-md-flex">
+                <div class="col-md-1"></div>
+                <div class="col-md-2"><label>Who</label></div>
+                <div class="col-md-2"><label>Age</label></div>
+                <div class="col-md-2"></div>
+                <div class="col-md-4">
+                  <label>Additional Information</label>
+                </div>
+                <div class="col-md-1"></div>
+              </div>
+              <div
+                class="row"
+                v-for="(member, memberIndex) in nomination.members"
+                :key="memberIndex"
+              >
+                <div class="col-md-1">#{{ memberIndex + 1 }}</div>
+                <div class="col-md-2">
+                  <label class="d-block d-md-none">Who</label>
+                  <el-select
+                    class="select-default mb-0 w-100"
+                    v-model="member.who"
+                    placeholder="Who"
+                    filterable
+                    default-first-option
+                  >
+                    <el-option
+                      class="select-default"
+                      v-for="item in whoList"
+                      :key="item"
+                      :label="item"
+                      :value="item"
+                    >
+                    </el-option>
+                  </el-select>
+                  <div v-if="member.who == 'Other'">
+                    <el-input
+                      type="text"
+                      class="mb-0"
+                      placeholder="Please specify"
+                      v-model="member.whoOther"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <label class="d-block d-md-none pt-3">Age</label>
+                  <el-select
+                    class="select-default mb-0 w-100"
+                    v-model="member.age"
+                    @change="calculateAges(nomIndex)"
+                    placeholder="Age"
+                    filterable
+                    default-first-option
+                  >
+                    <el-option
+                      class="select-default"
+                      key=""
+                      label="Unknown"
+                      value=""
+                    >
+                    </el-option>
+                    <el-option
+                      v-for="item in ageList"
+                      :key="item"
+                      :label="item"
+                      :value="item"
+                    >
+                    </el-option>
+                  </el-select>
+                </div>
+
+                <div class="col-md-2">
+                  <label class="d-block d-md-none pt-0"></label>
+
+                  <el-select
+                    class="select-default mb-0 w-100"
+                    v-model="member.ageType"
+                    @change="calculateAges(nomIndex)"
+                    placeholder="Age"
+                    filterable
+                    default-first-option
+                  >
+                    <el-option
+                      class="select-default"
+                      v-for="item in ageTypes"
+                      :key="item"
+                      :label="item"
+                      :value="item"
+                    >
+                    </el-option>
+                  </el-select>
+                </div>
+                <div class="col-md-4">
+                  <label class="d-block d-md-none pt-3"
+                    >Additional Information</label
+                  >
+                  <fg-input
+                    type="text"
+                    class="mb-0 d-none d-md-block"
+                    placeholder="Dietry Requirements/Special Needs etc"
+                    v-model="member.additionalInfo"
+                  >
+                  </fg-input>
+
+                  <el-input
+                    class="d-block d-md-none"
+                    type="textarea"
+                    :autosize="{ minRows: 4 }"
+                    placeholder="Dietry Requirements/Special Needs etc"
+                    v-model="member.additionalInfo"
+                  >
+                  </el-input>
+                </div>
+                <div class="col-md-1 family-actions">
+                  <div class="cell pt-3 pt-md-0">
+                    <a
+                      v-tooltip.top-center="'Delete'"
+                      class="btn-danger btn-simple btn-link"
+                      @click="removeFamilyMember(nomIndex, memberIndex)"
+                      ><i class="fa fa-times"></i
+                    ></a>
+                  </div>
+                </div>
+              </div>
+              <template slot="footer">
+                <button
+                  type="submit"
+                  class="btn btn-secondary btn-fill btn-wd mt-2 float-right"
+                  @click.prevent="addFamilyMember(nomIndex)"
+                >
+                  Add Family Member
+                </button>
+              </template>
+            </card>
+          </div>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+    </form>
+  </div>
+</template>
+<script>
+import {
+  Table,
+  TableColumn,
+  Select,
+  Option,
+  Collapse,
+  CollapseItem,
+} from 'element-ui'
+import breakpoints from '@/util/breakpoints'
+import {
+  createFamily,
+  getFamilyByRequest,
+  updateFamily,
+} from '@/api/families.api'
+import LAlert from 'src/components/Alert'
+
+export default {
+  components: {
+    [Select.name]: Select,
+    [Option.name]: Option,
+    [Table.name]: Table,
+    [TableColumn.name]: TableColumn,
+    [Collapse.name]: Collapse,
+    [CollapseItem.name]: CollapseItem,
+    LAlert,
+  },
+  props: {
+    orgRef: {
+      type: String,
+      default: '',
+    },
+    nominatorRef: {
+      type: String,
+      default: '',
+    },
+    nominatorId: {
+      type: String,
+      default: '',
+    },
+    hamperCount: {
+      type: Number,
+      default: 0,
+    },
+    allNominators: {
+      type: Array,
+      default: () => [],
+    },
+    allFamilies: {
+      type: Array,
+      default: () => [],
+    },
+    familyData: {
+      type: Object,
+      default: () => {},
+    },
+    saveType: {
+      type: String,
+      default: 'create',
+    },
+  },
+  data() {
+    return {
+      editFamilyData: {},
+      editFamilyMembers: [],
+      submittingFamily: false,
+      activePanel: 0,
+      nominations: [],
+      chosenNominatorId: '',
+      chosenNominator: {},
+      selectionOptions: {
+        adult: ['mum', 'dad'],
+        child: ['Boy', 'Girl'],
+      },
+      messages: [],
+    }
+  },
+  computed: {
+    nominatorsFamilies() {
+      return this.allFamilies.filter(
+        (f) => f.nominatorId == this.chosenNominatorId
+      )
+    },
+    breakpoints: () => breakpoints.screen,
+    ageList() {
+      return Array.from(Array(115).keys())
+    },
+    ageTypes() {
+      return ['Years', 'Months']
+    },
+    whoList() {
+      return [
+        'Mam',
+        'Dad',
+        'Boy',
+        'Girl',
+        'Grandma',
+        'Grandad',
+        'Male',
+        'Female',
+        'Other',
+      ]
+    },
+    familyCount() {
+      return this.nominatorsFamilies.length
+    },
+    nextHamperId() {
+      const totalNewNominations = this?.nominations
+        ? this.nominations.length
+        : 0
+
+      let validHamperId = (this.familyCount + totalNewNominations)
+        .toString()
+        .padStart(3, '0')
+
+      let existingRef = false
+      if (this.nominatorsFamilies) {
+        existingRef = this.nominatorsFamilies.find(
+          (f) =>
+            f.reference ===
+            `${this.orgRef}${this.nominatorsReference}-${validHamperId}`
+        )
+      }
+
+      if (existingRef) {
+        let isUnique = false
+
+        let hamperIncrement = 0
+        while (!isUnique) {
+          hamperIncrement++
+          let checkIncrement = hamperIncrement.toString().padStart(3, '0')
+          const existingRefCheck = this.nominatorsFamilies.find(
+            (f) =>
+              f.reference ===
+              `${this.orgRef}${this.nominatorsReference}-${checkIncrement}`
+          )
+          isUnique = existingRefCheck === undefined
+
+          if (hamperIncrement >= 100) {
+            isUnique = true
+          }
+        }
+        validHamperId = hamperIncrement.toString().padStart(3, '0')
+      }
+
+      return validHamperId
+    },
+    nominatorsReference() {
+      let returnRef = this.nominatorRef
+
+      if (!returnRef && this.chosenNominator.userReference) {
+        returnRef = this.chosenNominator.userReference
+      }
+
+      return returnRef
+    },
+    getHamperReference() {
+      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`
+    },
+  },
+  watch: {
+    async familyData(newVal) {
+      if (newVal?.requestId) {
+        this.nominations = []
+        await this.updateFamilyData(newVal.requestId)
+        this.addFamily(this.editFamilyData)
+      }
+    },
+  },
+  // familyData
+  async mounted() {
+    this.resetWindow()
+
+    this.chosenNominatorId = this.nominatorId
+    console.log(this.chosenNominatorId, this.nominatorId)
+    if (this.saveType != 'create' && this.familyData?.requestId) {
+      await this.updateFamilyData(this.familyData.requestId)
+    }
+    this.addFamily()
+
+    const storedNominator = this.$store.getters.getGenericData(
+      'SplitFamilyChosenNominator'
+    )
+    if (this.allNominators.length) {
+      const storedNomExists =
+        storedNominator && storedNominator.requestId
+          ? this.allNominators.find(
+              (n) => n.requestId === storedNominator.requestId
+            )
+          : false
+      this.chosenNominatorId = storedNomExists
+        ? storedNomExists.requestId
+        : this.allNominators[0].requestId
+    }
+    if (this.saveType === 'create') {
+      this.changeNominator()
+    }
+  },
+  methods: {
+    async updateFamilyData(requestId) {
+      const familyReq = await getFamilyByRequest(requestId)
+      this.editFamilyData = familyReq.data?.family
+      this.editFamilyMembers = familyReq.data?.members
+    },
+    canChangeNominator() {
+      return this.saveType === 'create' && this.allNominators.length > 1
+    },
+    setChosenNominator(nominator) {
+      this.chosenNominator = nominator
+      this.chosenNominatorId = nominator.requestId
+
+      this.$store.dispatch('setGenericData', {
+        key: 'AddFamilyChosenNominator',
+        data: nominator,
+      })
+    },
+    changeNominator() {
+      const nominator = this.allNominators.find(
+        (n) => n.requestId === this.chosenNominatorId
+      )
+      if (nominator) {
+        this.setChosenNominator(nominator)
+        this.nominations[0].hamperId = this.getHamperReference
+      }
+    },
+    async resetWindow() {
+      this.activePanel = 0
+      this.nominations = []
+    },
+    async saveFamilies() {
+      switch (this.saveType) {
+        case 'create':
+          this.createFamilies()
+          break
+        case 'update':
+          this.updateFamilies()
+          break
+      }
+    },
+    async createFamilies() {
+      this.submittingFamily = true
+      const res = await createFamily({
+        nominatorId: this.chosenNominatorId
+          ? this.chosenNominatorId
+          : this.nominatorId,
+        nominations: this.nominations,
+      })
+      if (res.status == 200) {
+        const familyData = res?.data?.families
+        this.$emit('saveFamilies', familyData)
+        this.nominations = []
+      } else {
+        if (res?.data?.messages) {
+          this.messages = Object.keys(res?.data?.messages).map((k) => ({
+            error: res?.data?.messages[k],
+          }))
+        }
+      }
+      this.submittingFamily = true
+    },
+    async updateFamilies() {
+      this.submittingFamily = true
+      /* */
+      const res = await updateFamily({
+        nominations: this.nominations,
+      })
+      if (res.status == 200) {
+        const familyData = res?.data?.families
+        this.$emit('saveFamilies', { families: familyData, update: true })
+        this.nominations = []
+      } else {
+        if (res?.data?.messages) {
+          this.messages = Object.keys(res?.data?.messages).map((k) => ({
+            error: res?.data?.messages[k],
+          }))
+        }
+      }
+      /* */
+      this.submittingFamily = false
+    },
+    addFamily() {
+      const nominationsData = {
+        hamperId: this.editFamilyData?.reference
+          ? this.editFamilyData.reference
+          : this.getHamperReference,
+        adults: 0,
+        children: 0,
+        members: [],
+      }
+      if (this.editFamilyData?.requestId && this.editFamilyMembers) {
+        nominationsData.familyId = this.editFamilyData.requestId
+        nominationsData.nominatorId = this.editFamilyData.nominatorId
+        for (const [k, member] of this.editFamilyMembers.entries()) {
+          nominationsData.members.push({
+            memberId: member.requestId,
+            age: member.age,
+            ageType: member.ageType,
+            who: member.who,
+            whoOther: member.whoOther,
+            additionalInfo: member.additionalInfo,
+          })
+        }
+      } else {
+        nominationsData.members.push({
+          age: '',
+          ageType: 'Years',
+          who: '',
+          additionalInfo: '',
+        })
+      }
+      this.nominations.unshift(nominationsData)
+      this.calculateAges(this.nominations.length - 1)
+    },
+    addFamilyMember(index) {
+      this.nominations[index].members.push({
+        age: '',
+        ageType: 'Years',
+        who: '',
+        additionalInfo: '',
+      })
+    },
+    removeFamilyMember(nomIndex, memberIndex) {
+      this.nominations[nomIndex].members.splice(memberIndex, 1)
+    },
+    calculateAges(index) {
+      this.nominations[index].adults = this.nominations[index].members.reduce(
+        function (a, b) {
+          return a + (b['age'] === '' || b['age'] >= 18 ? 1 : 0)
+        },
+        0
+      )
+      this.nominations[index].children = this.nominations[index].members.reduce(
+        function (a, b) {
+          return a + (b['age'] !== '' && b['age'] < 18 ? 1 : 0)
+        },
+        0
+      )
+    },
+
+    collapseTitle: (member, i) => {
+      return (
+        (member.who ? '' : 'Member ') +
+        ('#' + i) +
+        (member.who || member.age ? ' - ' : '') +
+        (member.who && member.who != 'Other' ? member.who : '') +
+        (member.who == 'Other' ? member.whoOther : '') +
+        (member.age
+          ? ` (${member.age}${
+              member.ageType != 'Years' ? ' ' + member.ageType : ''
+            })`
+          : '') +
+        (member.additionalInfo ? ' - ' : '') +
+        (member.additionalInfo ?? '')
+      )
+    },
+    getErrorMessage(m) {
+      for (const [key, value] of Object.entries(m)) {
+        return `${value}`
+      }
+    },
+  },
+}
+</script>
+<style lang="scss">
+.family-actions {
+  text-align: center;
+  display: flex;
+  .cell {
+    align-self: center;
+    margin: 0 auto;
+    .btn-link {
+      color: #fb404b;
+    }
+  }
+}
+.v-modal {
+  z-index: 1040 !important;
+}
+.el-dialog__wrapper {
+  z-index: 1050 !important;
+}
+</style>
