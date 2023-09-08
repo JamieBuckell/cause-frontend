@@ -40,8 +40,8 @@
   </div>
 </template>
 <script>
-import { getDashData } from "@/api/dashboard.api";
 import { StatsCard } from "src/components/index";
+import { getSubscribers } from "@/api/subscribers.api";
 
 export default {
   components: {
@@ -50,6 +50,9 @@ export default {
   computed: {
     activeCampaign() {
       return this.$store.getters.getActiveCampaign;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   data() {
@@ -120,7 +123,7 @@ export default {
           title: "Nominators",
           value: "0",
           active: true,
-        },
+        } /*
         admins: {
           url: "/admin/users",
           icon: "nc-badge text-warning",
@@ -128,7 +131,7 @@ export default {
           title: "Admin Users",
           value: "0",
           active: true,
-        },
+        },*/,
         hampersDropped: {
           url: "/hampers/list",
           icon: "nc-bag text-primary",
@@ -145,28 +148,85 @@ export default {
     activeCampaign(newQuestion, oldQuestion) {
       this.updateDashData();
     },
+    async platformData() {
+      this.isLoading = true;
+      await this.updateDashData();
+      this.isLoading = false;
+    },
   },
   methods: {
     async updateDashData() {
       if (!this.activeCampaign) {
         return;
       }
-      const dashData = await getDashData(this.activeCampaign);
-      this.dashdata.subscribers.value = (
-        dashData.data.subscribers ?? 0
-      ).toString();
-      this.dashdata.donors.value = (dashData.data.donors ?? 0).toString();
+
+      const donors = [...this.$store.getters.getPlatformData?.donors];
+      const families = [...this.$store.getters.getPlatformData?.families];
+      const nominators = [...this.$store.getters.getPlatformData?.nominators];
+      const organisations = [
+        ...this.$store.getters.getPlatformData?.organisations,
+      ];
+      if (donors.length) {
+        const verifiedDonors = donors.filter(
+          (d) => d?.emailVerification?.verified === true
+        );
+
+        this.dashdata.donors.value = (donors.length ?? 0).toString();
+        this.dashdata.donors.subvalue =
+          (verifiedDonors.length ?? 0).toString() + " Verified";
+        this.dashdata.families.value = (families.length ?? 0).toString();
+        this.dashdata.organisations.value = (
+          organisations.length ?? 0
+        ).toString();
+        this.dashdata.nominators.value = (nominators.length ?? 0).toString();
+
+        this.dashdata.pledged.value = donors.reduce((accumulator, d) => {
+          return (
+            accumulator +
+            d.familyDetails.request.reduce((subAccumulator, r) => {
+              return subAccumulator + parseInt(r?.numberOfFamilies ?? 0);
+            }, 0)
+          );
+        }, 0);
+        this.dashdata.pledged.subvalue =
+          verifiedDonors.reduce((accumulator, d) => {
+            return (
+              accumulator +
+              d.familyDetails.request.reduce((subAccumulator, r) => {
+                return subAccumulator + parseInt(r?.numberOfFamilies ?? 0);
+              }, 0)
+            );
+          }, 0) + " Verified";
+
+        this.dashdata.allocated.value = donors.reduce((accumulator, d) => {
+          return (
+            accumulator +
+            parseInt(d?.familyDetails?.allocation?.numberOfFamilies ?? 0)
+          );
+        }, 0);
+      }
+
+      const subscribers = await getSubscribers();
+      if (subscribers.data) {
+        this.dashdata.subscribers.value =
+          Object.values(subscribers.data).filter(
+            (s) => s.subscribed === true && s.verified === true
+          ).length ?? 0;
+        this.dashdata.subscribers.subvalue =
+          (Object.values(subscribers.data).filter(
+            (s) => s.subscribed === false && s.verified === true
+          ).length ?? 0) + " Unsubscribed";
+      }
+      return;
+      // To Do: Update this!
+      /* *
       this.dashdata.admins.value = (dashData.data.admins ?? 0).toString();
       this.dashdata.allocated.value = (dashData.data.allocated ?? 0).toString();
       this.dashdata.allocated.subvalue =
         (dashData.data.allocatedConfirmed ?? 0).toString() + " confirmed";
-      this.dashdata.organisations.value = (
-        dashData.data.organisations ?? 0
-      ).toString();
-      this.dashdata.nominators.value = (
-        dashData.data.nominators ?? 0
-      ).toString();
-      this.dashdata.pledged.value = (dashData.data.pledged ?? 0).toString();
+
+
+        this.dashdata.pledged.value = (dashData.data.pledged ?? 0).toString();
       this.dashdata.pledged.subvalue =
         (dashData.data.pledgedVerified ?? 0).toString() + " verified";
       this.dashdata.families.value = (dashData.data.families ?? 0).toString();
@@ -178,6 +238,7 @@ export default {
           (dashData.data.allocatedConfirmed ?? 0) -
           (dashData.data.hampersDropped ?? 0)
         ).toString() + " awaiting";
+      /* */
     },
   },
   async mounted() {

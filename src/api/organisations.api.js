@@ -1,21 +1,23 @@
-import { httpClient, httpClientV2 } from "@/api/core/httpClient";
+import { httpClient } from "@/api/core/httpClient";
 
-export const createOrganisation = async (
-  body
-) =>
+export const createOrganisation = async (body) =>
   httpClient.post(`/organisations/create`, body);
 
-export const deleteOrganisation = async (organisationId) =>
-  await httpClient.post(`/organisations/delete/${organisationId}`);
+export const deleteOrganisation = async (organisationId, campaignId) =>
+  await httpClient.post(`/organisations/delete/${organisationId}`, {
+    campaignId,
+  });
 
 export const getOrganisations = async () =>
-  await httpClientV2.get(`/organisations/list`);
+  await httpClient.get(`/organisations/list`);
 
 export const getOrganisationAdmins = async (requestId) =>
   await httpClient.get(`/organisations/get-admins/${requestId}`);
 
 export const getOrganisationByHash = async (requestId, hashPassword) =>
-  await httpClient.get(`/organisations/get-by-hash/${requestId}/${hashPassword}`);
+  await httpClient.get(
+    `/organisations/get-by-hash/${requestId}/${hashPassword}`
+  );
 
 export const getOrganisationByRequest = async (requestId) =>
   await httpClient.get(`/organisations/get-by-request/${requestId}`);
@@ -26,7 +28,7 @@ export const updateOrganisation = async (body) =>
 export const createOrganisationAdmin = async (requestId, body) =>
   await httpClient.post(`/organisations/create-admin/${requestId}`, body);
 
-export const checkReference = async (reference) =>
-  await httpClient.get(`/organisations/check-reference/${reference}`);
-  
-  
+export const checkReference = async (reference, campaignId) =>
+  await httpClient.post(`/organisations/check-reference/${reference}`, {
+    campaignId,
+  });

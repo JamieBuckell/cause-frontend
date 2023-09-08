@@ -218,22 +218,22 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { Table, TableColumn, Select, Option } from 'element-ui'
+import Vue from "vue";
+import { Table, TableColumn, Select, Option } from "element-ui";
 import {
   getOrganisationByRequest,
   updateOrganisation,
   createOrganisationAdmin,
-} from '@/api/organisations.api'
-import { getNominators, resetNominatorPassword } from '@/api/nominators.api'
-import { getFamilyByOrganisation } from '@/api/families.api'
-import Fuse from 'fuse.js'
-import TeamLeadsList from '@/components/Cards/TeamLeadsList.vue'
-import NominatorsList from '@/pages/Nominators/List.vue'
-import FamiliesList from '@/pages/Families/List.vue'
-import { MessageBox } from 'element-ui'
+} from "@/api/organisations.api";
+import { getNominators, resetNominatorPassword } from "@/api/nominators.api";
+import { getFamilyByOrganisation } from "@/api/families.api";
+import Fuse from "fuse.js";
+import TeamLeadsList from "@/components/Cards/TeamLeadsList.vue";
+import NominatorsList from "@/pages/Nominators/List.vue";
+import FamiliesList from "@/pages/Families/List.vue";
+import { MessageBox } from "element-ui";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
@@ -248,7 +248,7 @@ export default {
   data() {
     return {
       urlCopied: false,
-      organisationId: '',
+      organisationId: "",
       familyOptions: {
         create: true,
         update: true,
@@ -281,33 +281,33 @@ export default {
       },
       orgEditMode: false,
       orgAdmin: {
-        email: '',
-        telephone: '',
-        firstName: '',
-        lastName: '',
+        email: "",
+        telephone: "",
+        firstName: "",
+        lastName: "",
       },
       baseUrl: this.$hostname,
       organisation: {
-        requestId: '',
-        urlHash: '',
-        name: '',
-        reference: '',
+        requestId: "",
+        urlHash: "",
+        name: "",
+        reference: "",
         referenceSet: false,
         contacts: {
           lead: {
-            name: '',
-            number: '',
-            email: '',
+            name: "",
+            number: "",
+            email: "",
           },
           secondary: {
-            name: '',
-            number: '',
-            email: '',
+            name: "",
+            number: "",
+            email: "",
           },
         },
         familiesLimit: 0,
         familiesTotal: 0,
-        status: '',
+        status: "",
       },
       nominatorPagination: {
         perPage: false,
@@ -321,38 +321,38 @@ export default {
         perPageOptions: [5, 10, 25, 50],
         total: 0,
       },
-      searchQuery: '',
+      searchQuery: "",
       propsToSearch: [
-        'companyName',
-        'firstName',
-        'lastName',
-        'email',
-        'families',
+        "companyName",
+        "firstName",
+        "lastName",
+        "email",
+        "families",
       ],
       tableColumns: [
         {
-          prop: 'firstName',
-          label: 'First Name',
+          prop: "firstName",
+          label: "First Name",
           minWidth: 75,
         },
         {
-          prop: 'lastName',
-          label: 'Last Name',
+          prop: "lastName",
+          label: "Last Name",
           minWidth: 75,
         },
         {
-          prop: 'emailAddress',
-          label: 'Email',
+          prop: "emailAddress",
+          label: "Email",
           minWidth: 250,
         },
         {
-          prop: 'telephoneNumber',
-          label: 'Telephone',
+          prop: "telephoneNumber",
+          label: "Telephone",
           minWidth: 200,
         },
         {
-          prop: 'authorised',
-          label: 'Authorised',
+          prop: "authorised",
+          label: "Authorised",
           minWidth: 100,
         },
         /*{
@@ -363,18 +363,18 @@ export default {
       ],
       tableColumnsAdmin: [
         {
-          prop: 'firstName',
-          label: 'Firstname',
+          prop: "firstName",
+          label: "Firstname",
           minWidth: 75,
         },
         {
-          prop: 'lastName',
-          label: 'Lastname',
+          prop: "lastName",
+          label: "Lastname",
           minWidth: 75,
         },
         {
-          prop: 'emailAddress',
-          label: 'Email',
+          prop: "emailAddress",
+          label: "Email",
           minWidth: 250,
         },
       ],
@@ -382,19 +382,19 @@ export default {
       tableDataAdmin: [],
       fuseSearch: null,
       nominatorMessages: [], //[{ error: "There has been an error!" }]
-    }
+    };
   },
   computed: {
     allNominators() {
-      return Object.values(this.model.nominators)
+      return Object.values(this.model.nominators);
     },
     allFamilies() {
-      return Object.values(this.model.families)
+      return Object.values(this.model.families);
     },
     pagedData() {
       return this.tableData.length
         ? this.tableData.slice(this.from, this.to)
-        : this.tableData
+        : this.tableData;
     },
     /***
      * Searches through table data and returns a paginated array.
@@ -403,21 +403,21 @@ export default {
      * @returns {computed.pagedData}
      */
     queriedData() {
-      let result = this.tableData
-      if (this.searchQuery !== '') {
-        result = this.fuseSearch.search(this.searchQuery)
-        this.paginationTotal(result.length)
+      let result = this.tableData;
+      if (this.searchQuery !== "") {
+        result = this.fuseSearch.search(this.searchQuery);
+        this.paginationTotal(result.length);
       }
       // Todo: Delete when data is available
       result.map((o) => {
-        o.families = Math.floor(Math.random() * (16 - 0 + 1) + 0)
-        o.authorised = o.status = 'authorised' ? 'Yes' : 'No'
-        return true
-      })
-      return result.length ? result.slice(this.from, this.to) : result
+        o.families = Math.floor(Math.random() * (16 - 0 + 1) + 0);
+        o.authorised = o.status = "authorised" ? "Yes" : "No";
+        return true;
+      });
+      return result.length ? result.slice(this.from, this.to) : result;
     },
     queriedDataAdmin() {
-      let result = this.tableDataAdmin
+      let result = this.tableDataAdmin;
 
       // console.log(this.tableData);
       // Todo: Delete when data is available
@@ -425,127 +425,126 @@ export default {
         o.hasRegistered = this.tableData.find(
           (n) => n.emailAddress === o.emailAddress
         )
-          ? 'Yes'
-          : 'No'
-        return true
-      })
-      return result
+          ? "Yes"
+          : "No";
+        return true;
+      });
+      return result;
     },
     to() {
-      let highBound = this.from + this.pagination.perPage
+      let highBound = this.from + this.pagination.perPage;
       if (this.total < highBound) {
-        highBound = this.total
+        highBound = this.total;
       }
-      return highBound
+      return highBound;
     },
     from() {
-      return this.pagination.perPage * (this.pagination.currentPage - 1)
+      return this.pagination.perPage * (this.pagination.currentPage - 1);
     },
     total() {
-      this.paginationTotal(this.tableData.length)
-      return this.tableData.length
+      this.paginationTotal(this.tableData.length);
+      return this.tableData.length;
     },
     unauthorisedNominators() {
       return Object.values(this.model.nominators)
-        .filter((n) => n.status != 'Approved')
-        .map((n) => n.requestId)
+        .filter((n) => n.status != "Approved")
+        .map((n) => n.requestId);
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   methods: {
     copyURL() {
-      navigator.clipboard.writeText(this.getURL())
-      this.urlCopied = true
+      navigator.clipboard.writeText(this.getURL());
+      this.urlCopied = true;
       setTimeout(() => {
-        this.urlCopied = false
-      }, 3000)
+        this.urlCopied = false;
+      }, 3000);
     },
     setModelData(type, data) {
-      this.model[type] = data
+      this.model[type] = data;
     },
     updateRef() {
       if (!this.organisation.referenceSet) {
-        var matches = this.organisation.name.match(/\b(\w)/g)
-        var acronym = matches.join('').toUpperCase()
+        var matches = this.organisation.name.match(/\b(\w)/g);
+        var acronym = matches.join("").toUpperCase();
 
-        this.organisation.reference = acronym
-      } else if (this.organisation.name == '') {
-        this.organisation.referenceSet = false
-        this.organisation.reference = ''
+        this.organisation.reference = acronym;
+      } else if (this.organisation.name == "") {
+        this.organisation.referenceSet = false;
+        this.organisation.reference = "";
       }
     },
     manualRef() {
-      this.organisation.referenceSet = true
+      this.organisation.referenceSet = true;
     },
     async doUpdate() {
-      const res = await updateOrganisation(this.organisation)
+      const res = await updateOrganisation(this.organisation);
       if (res.data.success) {
-        this.switchOrgEdit()
+        this.switchOrgEdit();
       } else {
         //Handle Error
       }
     },
     paginationTotal(value) {
-      this.pagination.total = value
+      this.pagination.total = value;
     },
     getURL() {
-      return `${this.baseUrl}/register/${this.organisation.requestId}/${this.organisation.urlHash}`
+      return `${this.baseUrl}/register/${this.organisation.requestId}/${this.organisation.urlHash}`;
     },
     switchOrgEdit() {
-      this.orgEditMode = !this.orgEditMode
+      this.orgEditMode = !this.orgEditMode;
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin")) {
+      this.$router.push("/");
     }
     if (!this.$route.params?.requestId) {
-      this.$router.push('/')
+      this.$router.push("/");
     }
-    this.organisationId = this.$route.params.requestId
+    this.organisationId = this.$route.params.requestId;
 
-    this.fuseSearch = new Fuse(this.tableData, { keys: ['name', 'email'] })
+    this.fuseSearch = new Fuse(this.tableData, { keys: ["name", "email"] });
 
-    const organisationData = await getOrganisationByRequest(this.organisationId)
+    const organisationData = await this.platformData.organisations.find(
+      (o) => o.GSI2PK === this.organisationId
+    );
 
     this.organisation = {
-      requestId: organisationData.data.requestId,
-      urlHash: organisationData.data.urlHash,
-      name: organisationData.data.name,
-      reference: organisationData.data.reference,
-      referenceSet: organisationData.data.reference !== '',
+      requestId: organisationData?.GSI2PK ?? "",
+      urlHash: organisationData?.urlHash ?? "",
+      name: organisationData?.organisation?.name ?? "",
+      reference: organisationData?.SK ?? "",
+      referenceSet: organisationData?.SK !== "",
       contacts: {
         lead: {
-          name: organisationData.data.leadContactName,
-          number: organisationData.data.leadContactNumber,
-          email: organisationData.data.leadContactEmail,
+          name: organisationData?.organisation?.leadContactName,
+          number: organisationData?.organisation?.leadContactNumber,
+          email: organisationData?.organisation?.leadContactEmail,
         },
         secondary: {
-          name: organisationData.data.secondaryContactName,
-          number: organisationData.data.secondaryContactNumber,
-          email: organisationData.data.secondaryContactEmail,
+          name: organisationData?.organisation?.secondaryContactName,
+          number: organisationData?.organisation?.secondaryContactNumber,
+          email: organisationData?.organisation?.secondaryContactEmail,
         },
       },
-      familiesLimit: organisationData.data.familiesLimit,
-      familiesTotal: organisationData.data.familiesTotal,
-      status: organisationData.data.status ?? '',
-    }
-    this.isLoading.organisation = false
+      familiesLimit: organisationData?.organisation?.familiesLimit ?? null,
+      familiesTotal: organisationData?.organisation?.totalFamilies ?? 0,
+      status: organisationData?.status ?? "",
+    };
+    this.isLoading.organisation = false;
 
-    if (this.userInGroup('admin') || this.userInGroup('teamlead')) {
-      const tableData = await getNominators(this.organisationId)
-      this.tableData = Object.values(tableData.data)
-      this.isLoading.nominators = false
-    }
+    const familiesData = {}; //await getFamilyByOrganisation(this.organisationId);
 
-    const familiesData = await getFamilyByOrganisation(this.organisationId)
-
-    this.families = familiesData.data.families
-    this.isLoading.organisation = false
+    this.families = familiesData.data?.families;
+    this.isLoading.organisation = false;
   },
-}
+};
 </script>

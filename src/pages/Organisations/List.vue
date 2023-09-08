@@ -97,20 +97,21 @@
   </div>
 </template>
 <script>
-import { getOrganisations, deleteOrganisation } from '@/api/organisations.api'
-import ListingsPage from '@/components/Cards/ListingsPage.vue'
-import { Select, Option } from 'element-ui'
+import { deleteOrganisation } from "@/api/organisations.api";
+import { getByCampaign } from "@/api/campaign.api";
+import ListingsPage from "@/components/Cards/ListingsPage.vue";
+import { Select, Option } from "element-ui";
 
 export default {
   components: {
-    ListingsPage,
     [Select.name]: Select,
     [Option.name]: Option,
+    ListingsPage,
   },
   props: {
     organisationId: {
       type: String,
-      default: '',
+      default: "",
     },
     paginateOptions: {
       type: Object,
@@ -121,7 +122,7 @@ export default {
     },
     searchKeys: {
       type: Array,
-      default: () => ['reference', 'name'],
+      default: () => ["reference", "name"],
     },
     options: {
       type: Object,
@@ -136,24 +137,24 @@ export default {
   data() {
     const tableColumns = [
       {
-        prop: 'reference',
-        label: 'Ref',
+        prop: "reference",
+        label: "Ref",
         minWidth: 120,
       },
       {
-        prop: 'name',
-        label: 'Name',
+        prop: "name",
+        label: "Name",
         minWidth: 300,
       },
       {
-        prop: 'Families',
-        label: 'Families',
+        prop: "totalFamilies",
+        label: "Families",
         minWidth: 80,
       },
-    ]
+    ];
     const savedFilters = this.$store.getters.getGenericData(
-      'organisationsFilters'
-    )
+      "organisationsFilters"
+    );
     return {
       tableData: [],
       pagination: {
@@ -162,12 +163,34 @@ export default {
         perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
         total: 0,
       },
+      filters: {
+        hasNominated: savedFilters?.hasNominated
+          ? savedFilters.hasNominated
+          : "All",
+        hasNominatedOptions: ["All", "Yes", "No"],
+        organisationType: savedFilters?.organisationType
+          ? savedFilters.organisationType
+          : "All",
+        organisationTypeOptions: [
+          "All",
+          "Charity",
+          "Local Authority",
+          "School",
+        ],
+        sort: savedFilters?.sort ? savedFilters.sort : "Reference A-Z",
+        sortOptions: [
+          "Reference A-Z",
+          "Reference Z-A",
+          "Families (High - Low)",
+          "Families (Low - High)",
+        ],
+      },
       listingsOptions: {
         columns: tableColumns,
         searchKeys: this.searchKeys,
         modalMessages: {
           delete: {
-            message: 'If you delete this donor, the process cannot be undone.',
+            message: "If you delete this donor, the process cannot be undone.",
           },
         },
         create: this.options?.create ? this.options.create : false,
@@ -176,89 +199,67 @@ export default {
         download: this.options?.download ? this.options.download : false,
         search: this.options?.search ? this.options.search : true,
       },
-      filters: {
-        hasNominated: savedFilters?.hasNominated
-          ? savedFilters.hasNominated
-          : 'All',
-        hasNominatedOptions: ['All', 'Yes', 'No'],
-        organisationType: savedFilters?.organisationType
-          ? savedFilters.organisationType
-          : 'All',
-        organisationTypeOptions: [
-          'All',
-          'Charity',
-          'Local Authority',
-          'School',
-        ],
-        sort: savedFilters?.sort ? savedFilters.sort : 'Reference A-Z',
-        sortOptions: [
-          'Reference A-Z',
-          'Reference Z-A',
-          'Families (High - Low)',
-          'Families (Low - High)',
-        ],
-      },
-    }
+    };
   },
   computed: {
     totalFamiliesCount() {
       const sum = this.listingsData.reduce((accumulator, org) => {
-        return accumulator + org.totalFamilies
-      }, 0)
-      return sum
+        return accumulator + parseInt(org.totalFamilies);
+      }, 0);
+      return sum;
     },
     listingsData() {
-      let result = this?.tableData ?? []
+      let result = this?.tableData ?? [];
       if (result.length) {
-        if (this.filters.hasNominated && this.filters.hasNominated != 'All') {
+        if (this.filters.hasNominated && this.filters.hasNominated != "All") {
           result = result.filter((d) =>
-            this.filters.hasNominated === 'Yes'
+            this.filters.hasNominated === "Yes"
               ? d.totalFamilies > 0
               : d.totalFamilies === 0
-          )
+          );
         }
         if (
           this.filters.organisationType &&
-          this.filters.organisationType != 'All'
+          this.filters.organisationType != "All"
         ) {
           const orgType = this.filters.organisationType
             .toLowerCase()
-            .replace(/\s/g, '-')
-          result = result.filter((d) => d.type === orgType)
+            .replace(/\s/g, "-");
+          result = result.filter((d) => d.organisation.type === orgType);
         }
       }
 
-      if (this.filters.sort != 'None') {
+      if (this.filters.sort != "None") {
         switch (this.filters.sort) {
-          case 'Reference Z-A':
+          case "Reference Z-A":
             result.sort((a, b) =>
               b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-            )
-            break
-          case 'Families (High - Low)':
+            );
+            break;
+          case "Families (High - Low)":
             result.sort((a, b) =>
               b.totalFamilies > a.totalFamilies
                 ? 1
                 : a.totalFamilies > b.totalFamilies
                 ? -1
                 : 0
-            )
-            break
-          case 'Families (Low - High)':
+            );
+            break;
+          case "Families (Low - High)":
             result.sort((a, b) =>
               b.totalFamilies < a.totalFamilies
                 ? 1
                 : a.totalFamilies < b.totalFamilies
                 ? -1
                 : 0
-            )
-            break
-          case 'Reference A-Z':
+            );
+            break;
+          case "Reference A-Z":
           default:
             result.sort((a, b) =>
               b.reference < a.reference ? 1 : a.reference < b.reference ? -1 : 0
-            )
-            break
+            );
+            break;
         }
         /*
         if (this.filters.sort && this.filters.sort === "Reference Z-A") {
@@ -273,76 +274,106 @@ export default {
         */
       }
 
-      return result
+      return result;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   methods: {
-    filtersChanged() {
-      this.$store.dispatch('setGenericData', {
-        key: 'organisationsFilters',
-        data: this.filters,
-      })
-    },
-    async handleCreate(i, r) {
-      this.$router.push(`/organisations/add`)
-    },
-    async handleEdit(i, r) {
-      this.$router.push(`/organisations/view/${r.requestId}`)
-    },
-    async handleDelete(i, r) {
-      const updateRes = await deleteOrganisation(r.requestId)
-      if (updateRes?.status != 200 && updateRes?.data?.messages) {
-        this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
-          error: updateRes?.data?.messages[k],
-        }))
-      } else {
-        let indexToDelete = this.tableData.findIndex(
-          (tableRow) => tableRow.requestId === r.requestId
-        )
-        if (indexToDelete >= 0) {
-          this.tableData.splice(indexToDelete, 1)
-        }
-      }
-    },
-
     downloadCSV() {
-      let rows = [['Ref', 'NAme', 'Families']]
+      let rows = [["Ref", "Name", "Families"]];
 
       const data = this.tableData.map((organisation) => {
         return [
           `"${organisation.reference}"`,
-          `"${organisation.name ? organisation.name : ''}"`,
+          `"${organisation.name ? organisation.name : ""}"`,
           `"${organisation.totalFamilies ? organisation.totalFamilies : 0}"`,
-        ]
-      })
-      rows.push(...data)
+        ];
+      });
+      rows.push(...data);
 
       let csvContent =
-        'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n')
+        "data:text/csv;charset=utf-8," +
+        rows.map((e) => e.join(",")).join("\n");
 
-      var encodedUri = encodeURI(csvContent)
+      var encodedUri = encodeURI(csvContent);
       // window.open(encodedUri);
       /* */
-      var link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', `all-organisations-list.csv`)
-      document.body.appendChild(link) // Required for FF
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `all-organisations-list.csv`);
+      document.body.appendChild(link); // Required for FF
 
-      link.click()
-      link.remove()
+      link.click();
+      link.remove();
       /* */
+    },
+    filtersChanged() {
+      this.$store.dispatch("setGenericData", {
+        key: "organisationsFilters",
+        data: this.filters,
+      });
+    },
+    async handleCreate(i, r) {
+      this.$router.push(`/organisations/add`);
+    },
+    async handleEdit(i, r) {
+      this.$router.push(`/organisations/view/${r.GSI2PK}`);
+    },
+    async handleDelete(i, r) {
+      const updateRes = await deleteOrganisation(
+        r.GSI2PK,
+        this.$store.getters.getActiveCampaign
+      );
+      if (updateRes?.status != 200 && updateRes?.data?.messages) {
+        this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
+          error: updateRes?.data?.messages[k],
+        }));
+      } else {
+        let indexToDelete = this.tableData.findIndex(
+          (tableRow) => tableRow.GSI2PK === r.GSI2PK
+        );
+        if (indexToDelete >= 0) {
+          this.tableData.splice(indexToDelete, 1);
+        }
+      }
+    },
+    async getOrganisationsData() {
+      var pData = this.$store.getters.getPlatformData;
+      if (!pData?.organisations) {
+        const platformData = await getByCampaign(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (platformData?.data) {
+          await this.$store.dispatch("setPlatformData", {
+            ...platformData.data,
+          });
+          pData = platformData?.data;
+        }
+      }
+
+      this.tableData = Object.values(pData?.organisations ?? []);
+
+      this.tableData.map((o) => {
+        o.reference = `${o.SK}`;
+        o.name = `${o.organisation.name}`;
+        o.totalFamilies = `${o.organisation.totalFamilies}`;
+        return true;
+      });
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin') && !this.organisationId) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin") && !this.organisationId) {
+      this.$router.push("/");
     }
-    const res = await getOrganisations(this.organisationId ?? false)
-    this.tableData = Object.values(res.data)
-
-    this.tableData.sort((a, b) =>
-      b.reference < a.reference ? 1 : a.reference < b.reference ? -1 : 0
-    )
+    await this.getOrganisationsData();
   },
-}
+  watch: {
+    async platformData() {
+      await this.getOrganisationsData();
+    },
+  },
+};
 </script>

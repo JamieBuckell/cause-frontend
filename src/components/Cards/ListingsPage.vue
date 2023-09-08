@@ -171,14 +171,14 @@
   </card>
 </template>
 <script>
-import Vue from 'vue'
-import { Dialog, Table, TableColumn, Select, Option } from 'element-ui'
-import { Pagination as LPagination } from 'src/components/index'
-import Fuse from 'fuse.js'
-import Swal from 'sweetalert2'
-import { MessageBox } from 'element-ui'
+import Vue from "vue";
+import { Dialog, Table, TableColumn, Select, Option } from "element-ui";
+import { Pagination as LPagination } from "src/components/index";
+import Fuse from "fuse.js";
+import Swal from "sweetalert2";
+import { MessageBox } from "element-ui";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
@@ -218,7 +218,7 @@ export default {
     },
     listingsType: {
       type: String,
-      default: 'default',
+      default: "default",
     },
     customActions: {
       type: Array,
@@ -231,14 +231,14 @@ export default {
       currentPage: 1,
       perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
       total: 0,
-    }
-    let pagination = this.$store.getters.getPaginationData(this.listingsType)
+    };
+    let pagination = this.$store.getters.getPaginationData(this.listingsType);
     if (!pagination) {
-      this.$store.dispatch('setPaginationData', {
+      this.$store.dispatch("setPaginationData", {
         type: this.listingsType,
         attributes: defaultPagination,
-      })
-      pagination = defaultPagination
+      });
+      pagination = defaultPagination;
     }
     return {
       type: this.listingsType,
@@ -247,155 +247,155 @@ export default {
         create: false,
       },
       model: {
-        email: '',
-        telephone: '',
-        firstName: '',
-        lastName: '',
+        email: "",
+        telephone: "",
+        firstName: "",
+        lastName: "",
       },
       isLoading: true,
       tableColumns: this.options.columns,
       tableData: [],
       pagination,
-      searchQuery: '',
+      searchQuery: "",
       propsToSearch: this.options.searchKeys,
       fuseSearch: null,
-    }
+    };
   },
   computed: {
     queriedData() {
-      let result = this.tableData
+      let result = this.tableData;
 
-      if (this.searchQuery !== '' && this.fuseSearch) {
-        let fsr = this.fuseSearch.search(this.searchQuery)
+      if (this.searchQuery !== "" && this.fuseSearch) {
+        let fsr = this.fuseSearch.search(this.searchQuery);
         // Filter out the lower matches
-        fsr = fsr.filter((d) => d.score <= 0.01)
+        fsr = fsr.filter((d) => d.score <= 0.01);
         //Format into how we need it
         result = Object.keys(fsr).map(function (key) {
-          return { ...fsr[key].item }
-        })
+          return { ...fsr[key].item };
+        });
       }
 
       return result.length && this.paginateOptions.perPage
         ? result.slice(this.from, this.to)
-        : result
+        : result;
     },
     to() {
-      let highBound = this.from + this.pagination.perPage
+      let highBound = this.from + this.pagination.perPage;
       if (this.total < highBound) {
-        highBound = this.total
+        highBound = this.total;
       }
-      return highBound
+      return highBound;
     },
     from() {
-      return this.pagination.perPage * (this.pagination.currentPage - 1)
+      return this.pagination.perPage * (this.pagination.currentPage - 1);
     },
     total() {
-      this.paginationTotal(this.tableData.length)
-      return this.tableData.length
+      this.paginationTotal(this.tableData.length);
+      return this.tableData.length;
     },
     searchEnabled() {
-      return this.options?.search && this.options?.searchKeys.length
+      return this.options?.search && this.options?.searchKeys.length;
     },
     showActions() {
       return (
         this.canDelete(null) || this.canEdit(null) || this.hasCustomActions()
-      )
+      );
     },
   },
   mounted() {
-    this.tableData = this.listingsData
-    this.isLoading = false
+    this.tableData = this.listingsData;
+    this.isLoading = false;
 
-    this.initFuse()
+    this.initFuse();
   },
   beforeUnmount() {
-    this.fuseSearch = null
-    this.tableData = []
+    this.fuseSearch = null;
+    this.tableData = [];
   },
   watch: {
     listingsData(newVal) {
-      this.tableData = newVal
-      this.initFuse()
+      this.tableData = newVal;
+      this.initFuse();
     },
   },
   methods: {
     updateSearch() {
-      let searchResults = []
-      if (this.searchQuery !== '' && this.fuseSearch) {
-        let fsr = this.fuseSearch.search(this.searchQuery)
+      let searchResults = [];
+      if (this.searchQuery !== "" && this.fuseSearch) {
+        let fsr = this.fuseSearch.search(this.searchQuery);
         // Filter out the lower matches
-        fsr = fsr.filter((d) => d.score <= 0.01)
+        fsr = fsr.filter((d) => d.score <= 0.01);
         //Format into how we need it
         searchResults = Object.keys(fsr).map(function (key) {
-          return { ...fsr[key].item }
-        })
+          return { ...fsr[key].item };
+        });
       }
-      this.$emit('updateSearch', searchResults)
+      this.$emit("updateSearch", searchResults);
     },
     checkActionCondition(r, a) {
       if (a.condition) {
         switch (a.condition) {
-          case 'notAllocated':
+          case "notAllocated":
             return (
               !r?.allocatedTo ||
-              r.allocatedTo == '' ||
-              r.allocatedTo == 'unallocated'
-            )
+              r.allocatedTo == "" ||
+              r.allocatedTo == "unallocated"
+            );
         }
       }
 
-      return true
+      return true;
     },
     checkClasses(col) {
-      let classes = []
-      if (typeof col.authorised !== 'undefined' && !col.authorised) {
-        classes.push('unauthorised')
+      let classes = [];
+      if (typeof col.authorised !== "undefined" && !col.authorised) {
+        classes.push("unauthorised");
       }
-      return classes.join()
+      return classes.join();
     },
     canDelete(row) {
-      let canDelete = this.options?.delete
-      if (row && canDelete && this.listingsType === 'nominators') {
+      let canDelete = this.options?.delete;
+      if (row && canDelete && this.listingsType === "nominators") {
         canDelete =
-          this.$store?.getters?.usersEmail === row.emailAddress ? false : true
+          this.$store?.getters?.usersEmail === row.emailAddress ? false : true;
       }
-      return canDelete
+      return canDelete;
     },
     canEdit(row) {
-      let canEdit = this.options?.edit
-      if (row && canEdit && this.listingsType === 'nominators') {
+      let canEdit = this.options?.edit;
+      if (row && canEdit && this.listingsType === "nominators") {
         canEdit =
-          this.$store?.getters?.usersEmail === row.emailAddress ? false : true
+          this.$store?.getters?.usersEmail === row.emailAddress ? false : true;
       }
-      return canEdit
+      return canEdit;
     },
     canDownload() {
-      return this.options?.download
+      return this.options?.download;
     },
     downloadCSV() {
-      this.$emit('downloadCSV')
+      this.$emit("downloadCSV");
     },
     hasCustomActions() {
-      let hasCustomActions = this.customActions.length
-      return hasCustomActions
+      let hasCustomActions = this.customActions.length;
+      return hasCustomActions;
     },
     handleCustomAction(i, k, r, a) {
-      this.$emit('handleCustomAction', i, k, r)
+      this.$emit("handleCustomAction", i, k, r);
 
       if (a.removeRow) {
         let indexToDelete = this.tableData.findIndex(
           (tableRow) => tableRow.requestId === r.requestId
-        )
+        );
         if (indexToDelete >= 0) {
-          this.tableData.splice(indexToDelete, 1)
+          this.tableData.splice(indexToDelete, 1);
         }
       }
     },
     updatePagination() {
-      this.$store.dispatch('setPaginationData', {
+      this.$store.dispatch("setPaginationData", {
         type: this.listingsType,
         attributes: this.pagination,
-      })
+      });
     },
     initFuse() {
       this.fuseSearch = new Fuse(this.tableData, {
@@ -406,37 +406,37 @@ export default {
         shouldSort: true,
         useExtendedSearch: true,
         keys: this.options.searchKeys,
-      })
+      });
     },
     paginationTotal(value) {
-      this.pagination.total = value
+      this.pagination.total = value;
     },
     handleEdit(i, r) {
       if (this.canEdit) {
-        this.$emit('editItem', i, r)
+        this.$emit("editItem", i, r);
       }
     },
     handleDelete(i, r) {
       Swal.fire({
-        title: this.options?.modalMessages?.delete?.title ?? 'Are you sure?',
+        title: this.options?.modalMessages?.delete?.title ?? "Are you sure?",
         text:
           this.options?.modalMessages?.delete?.message ??
           `If you delete this item, this process cannot be undone.`,
-        type: this.options?.modalMessages?.delete?.type ?? 'warning',
+        type: this.options?.modalMessages?.delete?.type ?? "warning",
         showCancelButton: true,
-        confirmButtonClass: 'btn btn-success btn-fill',
-        cancelButtonClass: 'btn btn-danger btn-fill',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
         buttonsStyling: false,
       }).then((d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          this.$emit('deleteItem', i, r)
+          this.$emit("deleteItem", i, r);
         }
-      })
+      });
     },
   },
-}
+};
 </script>
 <style lang="scss">
 .can-edit {

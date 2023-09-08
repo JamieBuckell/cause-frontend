@@ -154,27 +154,24 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { Select, Option } from 'element-ui'
-import {
-  getDonorsByCampaign,
-  deletePledge,
-  resendVerification,
-} from '@/api/donors.api'
-import ListingsPage from '@/components/Cards/ListingsPage.vue'
-import moment from 'moment'
-import Swal from 'sweetalert2'
-import { MessageBox } from 'element-ui'
+import Vue from "vue";
+import { Select, Option } from "element-ui";
+import { deleteDonor, resendVerification } from "@/api/donors.api";
+import { getByCampaign } from "@/api/campaign.api";
+import ListingsPage from "@/components/Cards/ListingsPage.vue";
+import moment from "moment";
+import Swal from "sweetalert2";
+import { MessageBox } from "element-ui";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 window.EventBus = new Vue({
   methods: {
     emit(payload) {
-      this.$emit('$EventBusEvent', payload)
+      this.$emit("$EventBusEvent", payload);
     },
   },
-})
+});
 
 export default {
   components: {
@@ -185,7 +182,7 @@ export default {
   props: {
     organisationId: {
       type: String,
-      default: '',
+      default: "",
     },
     paginateOptions: {
       type: Object,
@@ -197,12 +194,12 @@ export default {
     searchKeys: {
       type: Array,
       default: () => [
-        'email',
-        'firstName',
-        'lastName',
-        'company',
-        'telephone',
-        'additionalInfo',
+        "email",
+        "firstName",
+        "lastName",
+        "company",
+        "telephone",
+        "additionalInfo",
       ],
     },
     options: {
@@ -218,26 +215,26 @@ export default {
   data() {
     const tableColumns = [
       {
-        prop: 'donorDetail',
-        label: 'Donor Details',
+        prop: "donorDetail",
+        label: "Donor Details",
         html: true,
         minWidth: 450,
       },
       {
-        prop: 'pledgeDetail',
-        label: 'Pledged',
+        prop: "pledgeDetail",
+        label: "Pledged",
         html: true,
         minWidth: 450,
-        align: 'center',
+        align: "center",
       },
       {
-        prop: 'dateAdded',
-        label: 'Date Pledged',
+        prop: "dateAdded",
+        label: "Date Pledged",
         minWidth: 160,
-        align: 'center',
+        align: "center",
       },
-    ]
-    const savedFilters = this.$store.getters.getGenericData('donorsFilters')
+    ];
+    const savedFilters = this.$store.getters.getGenericData("donorsFilters");
     return {
       tableData: [],
       pagination: {
@@ -247,32 +244,32 @@ export default {
         total: 0,
       },
       filters: {
-        verified: savedFilters?.verified ? savedFilters.verified : 'Yes',
-        verifiedOptions: ['All', 'Yes', 'No'],
-        bounced: savedFilters?.bounced ? savedFilters.bounced : 'All',
-        bouncedOptions: ['All', 'Yes', 'No'],
-        pledged: savedFilters?.pledged ? savedFilters.pledged : 'Any',
-        pledgedOptions: ['Any', '1', '2', '3', '4', '5+'],
-        allocated: savedFilters?.allocated ? savedFilters.allocated : 'All',
+        verified: savedFilters?.verified ? savedFilters.verified : "Yes",
+        verifiedOptions: ["All", "Yes", "No"],
+        bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
+        bouncedOptions: ["All", "Yes", "No"],
+        pledged: savedFilters?.pledged ? savedFilters.pledged : "Any",
+        pledgedOptions: ["Any", "1", "2", "3", "4", "5+"],
+        allocated: savedFilters?.allocated ? savedFilters.allocated : "All",
         allocatedOptions: [
-          'All',
-          'Not Allocated',
-          'Part Allocated',
-          'Fully Allocated',
+          "All",
+          "Not Allocated",
+          "Part Allocated",
+          "Fully Allocated",
         ],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
-          : 'Any',
-        hasAdditionalInformationOptions: ['All', 'Yes', 'No'],
-        sort: savedFilters?.sort ? savedFilters.sort : 'Newest First',
-        sortOptions: ['Newest First', 'Oldest First'],
+          : "Any",
+        hasAdditionalInformationOptions: ["All", "Yes", "No"],
+        sort: savedFilters?.sort ? savedFilters.sort : "Newest First",
+        sortOptions: ["Newest First", "Oldest First"],
       },
       listingsOptions: {
         columns: tableColumns,
         searchKeys: this.searchKeys,
         modalMessages: {
           delete: {
-            message: 'If you delete this donor, the process cannot be undone.',
+            message: "If you delete this donor, the process cannot be undone.",
           },
         },
         create: this.options?.create ? this.options.create : false,
@@ -281,74 +278,101 @@ export default {
         download: this.options?.download ? this.options.download : false,
         search: this.options?.search ? this.options.search : true,
       },
-    }
+    };
   },
   computed: {
     listingsData() {
-      let result = this?.tableData ?? []
+      let result = this?.tableData ?? [];
       if (result.length) {
-        if (this.filters.verified && this.filters.verified != 'All') {
-          result = result.filter(
-            (d) => d.verified === (this.filters.verified === 'Yes')
-          )
-        }
-        if (this.filters.bounced && this.filters.bounced != 'All') {
+        if (this.filters.verified && this.filters.verified != "All") {
+          const v = this.filters.verified === "Yes";
           result = result.filter(
             (d) =>
-              d.bounced === (this.filters.bounced === 'Yes') ||
-              (!d.bounced && this.filters.bounced === 'No')
-          )
+              d?.emailVerification?.verified === v ||
+              (!d?.emailVerification?.verified && !v)
+          );
         }
-        if (this.filters.pledged && this.filters.pledged != 'Any') {
-          result = result.filter((d) =>
-            this.filters.pledged != '5+'
-              ? d.numberOfFamilies == this.filters.pledged
-              : d.numberOfFamilies >= 5
-          )
+        if (this.filters.bounced && this.filters.bounced != "All") {
+          const b = this.filters.bounced === "Yes";
+          result = result.filter(
+            (d) =>
+              d.emailVerification?.bounced === b ||
+              (!d?.emailVerification?.bounced && !b)
+          );
         }
-        if (this.filters.allocated && this.filters.allocated != 'All') {
+        if (this.filters.pledged && this.filters.pledged != "Any") {
           result = result.filter((d) => {
+            const p = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + b.numberOfFamilies,
+                  0
+                )
+              : 0;
+            return this.filters.pledged != "5+"
+              ? p == this.filters.pledged
+              : p >= 5;
+          });
+        }
+        if (this.filters.allocated && this.filters.allocated != "All") {
+          result = result.filter((d) => {
+            const numberofFamilies = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + b.numberOfFamilies,
+                  0
+                )
+              : 0;
             switch (this.filters.allocated.toLowerCase()) {
-              case 'not allocated':
-                return !d?.allocatedFamilies || d.allocatedFamilies === 0
-              case 'part allocated':
+              case "not allocated":
                 return (
-                  d?.allocatedFamilies &&
-                  d.allocatedFamilies > 0 &&
-                  d.allocatedFamilies < d.numberOfFamilies
-                )
-              case 'fully allocated':
+                  !d?.familyDetails?.allocation?.numberOfFamilies ||
+                  d.familyDetails?.allocation?.numberOfFamilies === 0
+                );
+              case "part allocated":
                 return (
-                  d?.allocatedFamilies &&
-                  d.allocatedFamilies > 0 &&
-                  d.allocatedFamilies === d.numberOfFamilies
-                )
+                  d?.familyDetails?.allocation?.numberOfFamilies &&
+                  d.familyDetails?.allocation?.numberOfFamilies > 0 &&
+                  d.familyDetails?.allocation?.numberOfFamilies <
+                    numberofFamilies
+                );
+              case "fully allocated":
+                return (
+                  d?.familyDetails?.allocation?.numberOfFamilies &&
+                  d.familyDetails?.allocation?.numberOfFamilies > 0 &&
+                  d.familyDetails?.allocation?.numberOfFamilies ===
+                    numberofFamilies
+                );
               default:
-                return true
+                return true;
             }
-          })
+          });
         }
 
         if (
           this.filters.hasAdditionalInformation &&
-          this.filters.hasAdditionalInformation != 'Any'
+          this.filters.hasAdditionalInformation != "Any"
         ) {
-          result = result.filter((d) =>
-            this.filters.hasAdditionalInformation === 'Yes'
-              ? d.additionalInfo !== ''
-              : d.additionalInfo === ''
-          )
+          result = result.filter((d) => {
+            const aI = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + b.additionalInfo,
+                  ""
+                )
+              : "";
+            return this.filters.hasAdditionalInformation === "Yes"
+              ? aI !== ""
+              : aI === "";
+          });
         }
       }
 
-      if (this.filters.sort && this.filters.sort === 'Oldest First') {
+      if (this.filters.sort && this.filters.sort === "Oldest First") {
         result.sort((a, b) =>
           a.dateAddedSort > b.dateAddedSort
             ? 1
             : b.dateAddedSort > a.dateAddedSort
             ? -1
             : 0
-        )
+        );
       } else {
         result.sort((a, b) =>
           a.dateAddedSort < b.dateAddedSort
@@ -356,104 +380,119 @@ export default {
             : b.dateAddedSort < a.dateAddedSort
             ? -1
             : 0
-        )
+        );
       }
 
-      return result
+      return result;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   methods: {
     downloadCSV() {
       let rows = [
         [
-          'Donor Name',
-          'Email Address',
-          'Telephone',
-          'Company',
-          'Families Pledged',
-          'Family Detail',
-          'Additional Information',
-          'Source',
-          'Verified',
-          'Date Pledged',
+          "Donor Name",
+          "Email Address",
+          "Telephone",
+          "Company",
+          "Families Pledged",
+          "Family Detail",
+          "Additional Information",
+          "Source",
+          "Verified",
+          "Date Pledged",
         ],
-      ]
+      ];
 
       const data = this.tableData.map((donor) => {
+        const aI = donor?.familyDetails?.request
+          ? donor.familyDetails.request.reduce(
+              (a, b) => a + b.additionalInfo,
+              ""
+            )
+          : "";
+
+        const numberofFamilies = donor?.familyDetails?.request
+          ? donor.familyDetails.request.reduce(
+              (a, b) => a + b.numberOfFamilies,
+              0
+            )
+          : 0;
         return [
           `"${donor.firstName} ${donor.lastName}"`,
-          `"${donor.email ? donor.email : ''}"`,
-          `"${donor.telephone ? donor.telephone : ''}"`,
-          `"${donor.company ? donor.company : ''}"`,
-          `"${donor.numberOfFamilies ? donor.numberOfFamilies : ''}"`,
+          `"${donor.email ? donor.email : ""}"`,
+          `"${donor.telephone ? donor.telephone : ""}"`,
+          `"${donor.company ? donor.company : ""}"`,
+          `"${numberofFamilies ?? ""}"`,
           `"${
-            donor.familyDetail ? JSON.parse(donor.familyDetail).join(', ') : ''
+            donor.familyDetail ? JSON.parse(donor.familyDetail).join(", ") : ""
           }"`,
-          `"${donor.additionalInfo ? donor.additionalInfo : ''}"`,
-          `"${donor.howHeard ? donor.howHeard : ''}"`,
-          `"${donor.verified ? donor.verified : ''}"`,
-          `"${donor.dateAdded ? donor.dateAdded : ''}"`,
-        ]
-      })
-      rows.push(...data)
+          `"${aI ?? ""}"`,
+          `"${donor.donorDetails.howHeard ?? ""}"`,
+          `"${donor.emailVerification?.verified ?? ""}"`,
+          `"${donor.dateAdded ? donor.dateAdded : ""}"`,
+        ];
+      });
+      rows.push(...data);
 
       let csvContent =
-        'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n')
+        "data:text/csv;charset=utf-8," +
+        rows.map((e) => e.join(",")).join("\n");
 
-      var encodedUri = encodeURI(csvContent)
+      var encodedUri = encodeURI(csvContent);
       // window.open(encodedUri);
       /* */
-      var link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', `all-donors-list.csv`)
-      document.body.appendChild(link) // Required for FF
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `all-donors-list.csv`);
+      document.body.appendChild(link); // Required for FF
 
-      link.click()
-      link.remove()
+      link.click();
+      link.remove();
       /* */
     },
     filtersChanged() {
-      this.$store.dispatch('setGenericData', {
-        key: 'donorsFilters',
+      this.$store.dispatch("setGenericData", {
+        key: "donorsFilters",
         data: this.filters,
-      })
+      });
     },
     async handleEdit(i, r) {
-      this.$router.push(`/donors/view/${r.requestId}`)
+      this.$router.push(`/donors/view/${r.GSI2PK}`);
     },
     async handleDelete(i, r) {
-      /* */
-      // const updateRes = await deleteDonor({ donorId: r.requestId })
-      const updateRes = await deletePledge({
-        pledgeId: r.pledgeId,
-        donorId: r.requestId,
-      })
+      const updateRes = await deleteDonor({
+        campaign: this.$store.getters.getActiveCampaign,
+        donorId: r?.GSI2PK ?? "UNKNOWN",
+      });
       if (updateRes?.status != 200 && updateRes?.data?.messages) {
         this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
           error: updateRes?.data?.messages[k],
-        }))
+        }));
       } else {
         let indexToDelete = this.tableData.findIndex(
-          (tableRow) => tableRow.requestId === r.requestId
-        )
+          (tableRow) => tableRow.GSI2PK === r.GSI2PK
+        );
         if (indexToDelete >= 0) {
-          this.tableData.splice(indexToDelete, 1)
+          this.tableData.splice(indexToDelete, 1);
         }
       }
       /* */
     },
-    async handleEventBusEvent(requestId) {
-      const donor = this.tableData.find((n) => n.requestId === requestId)
+    async handleEventBusEvent(GSI2PK) {
+      const donor = this.tableData.find((n) => n.GSI2PK === GSI2PK);
 
-      if (donor.requestId) {
-        const sent = await resendVerification({ donorId: donor.requestId })
+      if (donor.GSI2PK) {
+        const sent = await resendVerification({ donorId: donor.GSI2PK });
         if (sent.status === 200) {
           Swal.fire({
-            title: 'Success',
-            text: 'Welcome email sent successfully.',
+            title: "Success",
+            text: "Welcome email sent successfully.",
             timer: 3000,
             showConfirmButton: false,
-          })
+          });
         }
       }
     },
@@ -464,118 +503,155 @@ export default {
                     <div class="col-12">
                       <span class="donorName">
                         <strong>
-                          ${donor.firstName}
-                          ${donor.lastName}
-                        </strong>`
-      if (donor.email) {
+                          ${donor.donorDetails.firstName}
+                          ${donor.donorDetails.lastName}
+                        </strong>`;
+      if (donor.GSI3PK) {
         donorDetail += `
                         -
-                        <a href="mailto:${donor.email}">${donor.email}</a>`
+                        <a href="mailto:${donor.GSI3PK}">${donor.GSI3PK}</a>`;
       }
       donorDetail += `
-                      </span>`
-      if (donor.telephone) {
+                      </span>`;
+      if (donor.donorDetails.telephone) {
         donorDetail += `
                       <span class="donorEmail">
-                        <strong>Telephone:</strong> <a href="tel:${donor.telephone}">${donor.telephone}</a>
-                      </span>`
+                        <strong>Telephone:</strong> <a href="tel:${donor.donorDetails.telephone}">${donor.donorDetails.telephone}</a>
+                      </span>`;
       }
-      if (donor.howHeard) {
+      if (donor?.donorDetails?.howHeard) {
         donorDetail += `
                       <span class="donorEmail">
-                        <strong>Source:</strong> ${donor.howHeard}
-                      </span>`
+                        <strong>Source:</strong> ${donor.donorDetails.howHeard}
+                      </span>`;
       }
-      if (!donor.verified) {
+      if (!donor?.emailVerification?.verified) {
         donorDetail += `
                       <button
                         type="submit"
                         class="btn btn-info btn-fill pull-right w-100 mt-3 mt-xl-0"
-                        onclick="EventBus.emit('${donor.requestId}')"
+                        onclick="EventBus.emit('${donor.GSI3PK}')"
                       >
                         Resend Verification Email
-                      </button>`
+                      </button>`;
       }
       donorDetail += `
                     </div>
-                  </div>`
+                  </div>`;
       donorDetail += `
               </div>
-              `
-      return donorDetail
+              `;
+      return donorDetail;
     },
     getPreferenceDetail(p) {
       switch (p.toLowerCase()) {
-        case 'single':
-          return 'Single Person'
-        case 'small':
-          return 'Small Family - Maximum 3 family members'
-        case 'medium':
-          return 'Medium Family - Maximum 5 family members'
-        case 'large':
-          return 'Large Family - 6+ family members'
+        case "single":
+          return "Single Person";
+        case "small":
+          return "Small Family - 2 - 3 family members";
+        case "medium":
+          return "Medium Family - 4 - 5 family members";
+        case "large":
+          return "Large Family - 6 - 7 family members";
+        case "extralarge":
+          return "Extra Large Family - 8+ family members";
         default:
-          return 'No Preference'
+          return "No Preference";
       }
     },
     setPledgeDetail(donor) {
+      const numberofFamilies = donor?.familyDetails?.request
+        ? donor.familyDetails.request.reduce(
+            (a, b) => a + b.numberOfFamilies,
+            0
+          )
+        : 0;
       let donorDetail = `
               <div>
                   <div class="row">
                     <div class="col-12">
                       <span class="donorName">
                         <strong>
-                          ${donor.numberOfFamilies}
-                        </strong> Famil${
-                          donor.numberOfFamilies > 1 ? 'ies' : 'y'
-                        }`
+                          ${numberofFamilies}
+                        </strong> Famil${numberofFamilies > 1 ? "ies" : "y"}`;
       donorDetail += `
-                      </span>`
-      if (donor.familyDetail && donor.familyDetail.length) {
-        const familyDetail = JSON.parse(donor.familyDetail)
-        for (var index = 0; index < familyDetail.length; index++) {
-          const preference = familyDetail[index]
-          donorDetail += `
-                      - ${this.getPreferenceDetail(preference)}<br />`
-          if (index + 1 >= donor.numberOfFamilies) {
-            break
+                      </span>`;
+      if (donor.familyDetails.request && donor.familyDetails.request.length) {
+        for (const familyRequest of donor.familyDetails.request) {
+          try {
+            const familyDetail = familyRequest?.familyDetail
+              ? JSON.parse(familyRequest.familyDetail)
+              : [];
+            for (const preference of familyDetail) {
+              donorDetail += `
+                        - ${this.getPreferenceDetail(preference)}<br />`;
+            }
+          } catch (e) {
+            console.log(e, familyRequest);
           }
         }
       }
-      if (donor.additionalInfo) {
+
+      const aI = donor?.familyDetails?.request
+        ? donor.familyDetails.request.reduce(
+            (a, b) => a + b.additionalInfo + (b.additionalInfo ? "<br />" : ""),
+            ""
+          )
+        : "";
+      if (aI.length) {
         donorDetail += `
                       <span class="donorAdditional">
-                        <strong>Additional Info:</strong> ${donor.additionalInfo}
-                      </span>`
+                        <strong>Additional Info:</strong> ${aI}
+                      </span>`;
       }
       donorDetail += `
                     </div>
-                  </div>`
+                  </div>`;
       donorDetail += `
               </div>
-              `
-      return donorDetail
+              `;
+      return donorDetail;
+    },
+    async getDonorData() {
+      var pData = this.$store.getters.getPlatformData;
+      if (!pData?.donors) {
+        const platformData = await getByCampaign(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (platformData?.data) {
+          await this.$store.dispatch("setPlatformData", {
+            ...platformData.data,
+          });
+          pData = platformData?.data;
+        }
+      }
+
+      this.tableData = Object.values(pData?.donors ?? []);
+
+      this.tableData.map((o) => {
+        o.fullName = `${o.donorDetails.firstName} ${o.donorDetails.lastName}`;
+        o.donorDetail = this.setDonorDetail(o);
+        o.pledgeDetail = this.setPledgeDetail(o);
+        o.dateAddedSort = moment(o.dateAdded).format("YYYYMMDDHHmmss");
+        return true;
+      });
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin') && !this.userInGroup('teamlead')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin") && !this.userInGroup("teamlead")) {
+      this.$router.push("/");
     }
+    await this.getDonorData();
 
-    const res = await getDonorsByCampaign(this.$store.getters.getActiveCampaign)
-    this.tableData = Object.values(res.data)
-
-    this.tableData.map((o) => {
-      o.fullName = `${o.firstName} ${o.lastName}`
-      o.donorDetail = this.setDonorDetail(o)
-      o.pledgeDetail = this.setPledgeDetail(o)
-      o.dateAddedSort = moment(o.dateAdded).format('YYYYMMDDHHmmss')
-      return true
-    })
-
-    EventBus.$on('$EventBusEvent', this.handleEventBusEvent)
+    EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
-}
+  watch: {
+    async platformData() {
+      await this.getDonorData();
+    },
+  },
+};
 </script>
 <style lang="scss">
 .donors-list {

@@ -115,7 +115,6 @@ export default {
       this.loader = "loading";
       const l = this.loader;
       this[l] = !this[l];
-      console.log("sign in with: " + this.email + " " + this.password);
       var authData = {
         Username: this.email,
         Password: this.password,
@@ -156,5 +155,4 @@ export default {
   },
 };
 </script>
-<style scoped>
-</style>
+<style scoped></style>

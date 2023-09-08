@@ -64,47 +64,55 @@
                 v-if="column.prop == 'nominatorDetail'"
                 :class="col.row.status == 'Approved' ? '' : 'unauthorised'"
               >
-                  <div class="row">
-                    <div
-                      class="col-12"
-                      :class="col.row.status != 'Approved' ? 'col-xl-7' : ''"
-                    >
-                      <span class="nominatorName">
-                        <strong>
-                          {{ col.row["firstName"] }}
-                          {{ col.row["lastName"] }}
-                        </strong>
-                        -
-                        <a :href="`tel:${col.row['telephoneNumber']}`">{{
-                          col.row["telephoneNumber"]
-                        }}</a>
-                      </span>
-                      <span class="nominatorEmail" v-if="col.row['emailAddress']">
-                        <a :href="`mailto:${col.row['emailAddress']}`">{{
-                          col.row["emailAddress"]
-                        }}</a>
-                      </span>
-                    </div>
-                    Yes
+                <div class="row">
+                  <div
+                    class="col-12"
+                    :class="col.row.status != 'Approved' ? 'col-xl-7' : ''"
+                  >
+                    <span class="nominatorName">
+                      <strong>
+                        {{ col.row["firstName"] }}
+                        {{ col.row["lastName"] }}
+                      </strong>
+                      -
+                      <a :href="`tel:${col.row['telephoneNumber']}`">{{
+                        col.row["telephoneNumber"]
+                      }}</a>
+                    </span>
+                    <span class="nominatorEmail" v-if="col.row['emailAddress']">
+                      <a :href="`mailto:${col.row['emailAddress']}`">{{
+                        col.row["emailAddress"]
+                      }}</a>
+                    </span>
                   </div>
+                  Yes
+                </div>
 
-                  <div class="row always-show" v-if="col.row.status != 'Approved' && allowAuthorise">
-                    <div class="col-12">
-                      <button
-                        type="submit"
-                        class="btn btn-info btn-fill pull-right w-100 mt-3"
-                        @click.prevent="approveNom(col.row)"
-                        v-if="col.row.status != 'Approved'"
-                      >
-                        Authorise
-                      </button>
-                    </div>
-                  </div>                
+                <div
+                  class="row always-show"
+                  v-if="col.row.status != 'Approved' && allowAuthorise"
+                >
+                  <div class="col-12">
+                    <button
+                      type="submit"
+                      class="btn btn-info btn-fill pull-right w-100 mt-3"
+                      @click.prevent="approveNom(col.row)"
+                      v-if="col.row.status != 'Approved'"
+                    >
+                      Authorise
+                    </button>
+                  </div>
+                </div>
               </div>
               <div v-else>{{ col.row[column.prop] }}</div>
             </template>
           </el-table-column>
-          <el-table-column :min-width="75" fixed="right" label="Actions" v-if="allowDelete">
+          <el-table-column
+            :min-width="75"
+            fixed="right"
+            label="Actions"
+            v-if="allowDelete"
+          >
             <template slot-scope="props">
               <div class="text-center">
                 <a
@@ -157,7 +165,7 @@ export default {
     [Option.name]: Option,
     [Table.name]: Table,
     [TableColumn.name]: TableColumn,
-    LPagination
+    LPagination,
   },
   props: {
     organisationId: {
@@ -274,10 +282,10 @@ export default {
       return this.userInGroup(role);
     },
     async getListData() {
-      if (!this.organisationId && !this.checkRole('admin')) {
+      if (!this.organisationId && !this.checkRole("admin")) {
         return false;
       } else {
-        const res = await getNominators(this.organisationId ?? false);
+        const res = {}; // await getNominators(this.organisationId ?? false);
         this.tableData = Object.values(res.data);
 
         this.$emit("resultData", "nominators", this.tableData);
@@ -305,7 +313,10 @@ export default {
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteUser(this.organisationId, r.emailAddress);
+          const updateRes = await deleteUser(
+            this.organisationId,
+            r.emailAddress
+          );
           if (updateRes?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],

@@ -75,7 +75,7 @@
                     {{ address }}
                   </el-tag>
                 </div>
-                <div class="col-8" v-if="emailType === 'subscribers'">
+                <div class="col-4" v-if="emailType === 'subscribers'">
                   <label for="includePledged"
                     >Include Pledged Subscribers:</label
                   >
@@ -90,6 +90,31 @@
                       :key="item.value"
                       :label="item.label"
                       :value="item.value"
+                    >
+                    </el-option>
+                  </el-select>
+                </div>
+                <div
+                  class="col-4"
+                  v-if="
+                    emailType === 'nominators' ||
+                    emailType === 'donors' ||
+                    emailType === 'teamleads' ||
+                    (emailType === 'subscribers' && !includePledged)
+                  "
+                >
+                  <label for="singleAddress">of Campaign:</label>
+                  <el-select
+                    name="type"
+                    class="select-default w-100"
+                    v-model="campaignId"
+                  >
+                    <el-option
+                      class="select-default"
+                      v-for="item in allCampaigns"
+                      :key="item.campaignId"
+                      :label="item.name"
+                      :value="item.campaignId"
                     >
                     </el-option>
                   </el-select>
@@ -164,12 +189,12 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { sendEmail } from '@/api/communications.api'
-import Swal from 'sweetalert2'
-import { MessageBox, Select, Option, Tag } from 'element-ui'
+import Vue from "vue";
+import { sendEmail } from "@/api/communications.api";
+import Swal from "sweetalert2";
+import { MessageBox, Select, Option, Tag } from "element-ui";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
@@ -181,138 +206,153 @@ export default {
     return {
       isLoading: true,
       genericOptions: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' },
+        { value: true, label: "Yes" },
+        { value: false, label: "No" },
       ],
       emailTypes: [
-        { value: 'specific', label: 'Specific Email Address(es)' },
-        { value: 'donors', label: 'All Donors' },
-        { value: 'subscribers', label: 'All Subscribers' },
-        { value: 'nominators', label: 'All Nominators' },
-        { value: 'teamleads', label: 'All Team Leads' },
+        { value: "specific", label: "Specific Email Address(es)" },
+        { value: "donors", label: "All Donors" },
+        { value: "subscribers", label: "All Subscribers" },
+        { value: "nominators", label: "All Nominators" },
+        { value: "teamleads", label: "All Team Leads" },
       ],
-      emailType: 'specific',
+      emailType: "specific",
       specificAddresses: [],
-      specificAddress: '',
+      specificAddress: "",
       emailError: false,
-      includePledged: false,
+      includePledged: true,
       includeTeamLeads: true,
       sendFrom: `hampers`,
       emailSubject: ``,
       emailTitle: ``,
       htmlContent: ``,
-    }
+      campaignId: this.$store.getters.getActiveCampaign,
+    };
   },
-  computed: {},
+  computed: {
+    allCampaigns() {
+      return this.$store.getters.getAllCampaigns;
+    },
+  },
   methods: {
     handleClose(address) {
-      this.specificAddresses.splice(this.specificAddresses.indexOf(address), 1)
+      this.specificAddresses.splice(this.specificAddresses.indexOf(address), 1);
     },
     handleInputConfirm() {
       const re = new RegExp(
         /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
-      )
+      );
 
       this.specificAddress = this.specificAddress
         .toLowerCase()
-        .replace(/[ \u00A0]/, ' ')
-        .replace(/\s\s+/g, ' ')
+        .replace(/[ \u00A0]/, " ")
+        .replace(/\s\s+/g, " ");
 
-      let inputValue = this.specificAddress
+      let inputValue = this.specificAddress;
 
-      const allItems = inputValue.split(' ')
+      const allItems = inputValue.split(" ");
 
-      let hasError = false
+      let hasError = false;
 
       for (const emailKey in allItems) {
-        const emailValue = allItems[emailKey]
+        const emailValue = allItems[emailKey];
 
         if (emailValue) {
           if (re.test(emailValue)) {
             if (!this.specificAddresses.find((e) => e === emailValue)) {
-              this.specificAddresses.push(emailValue)
+              this.specificAddresses.push(emailValue);
             }
             this.specificAddress = this.specificAddress.replace(
               `${emailValue}`,
-              ''
-            )
+              ""
+            );
           } else if (!hasError) {
-            hasError = true
+            hasError = true;
           }
         }
       }
 
       if (!hasError) {
-        this.specificAddress = ''
+        this.specificAddress = "";
       }
-      this.specificAddress = this.specificAddress.replace(/\s\s+/g, ' ').trim()
-      this.emailError = hasError
+      this.specificAddress = this.specificAddress.replace(/\s\s+/g, " ").trim();
+      this.emailError = hasError;
     },
     async sendEmail() {
       await Swal.fire({
-        title: 'Are you sure?',
+        title: "Are you sure?",
         text: `If you hit yes, this email will be sent to your specified emails. The process cannot be undone.`,
-        type: 'warning',
+        type: "warning",
         showCancelButton: true,
-        confirmButtonClass: 'btn btn-success btn-fill',
-        cancelButtonClass: 'btn btn-danger btn-fill',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
         buttonsStyling: false,
       }).then(async (d) => {
-        this.isLoading = true
+        this.isLoading = true;
         if (d?.isConfirmed && !d?.isDismissed) {
-          const emailSendRes = await sendEmail({
-            options: {
-              type: this.emailType,
-              toAddresses: this.specificAddresses,
-              excludeTeamLeads: !this.includeTeamLeads,
-              excludePledged: !this.includePledged,
-            },
-            email: {
-              fromAddress: this.sendFrom,
-              subject: this.emailSubject,
-              title: this.emailTitle,
-              content: this.htmlContent,
-            },
-          })
-          if (emailSendRes.status == 200) {
-            Swal.fire({
-              title: 'Success',
-              text: 'Email sent successfully.',
-              timer: 3000,
-              showConfirmButton: false,
-            })
-            /* *
+          try {
+            const emailSendRes = await sendEmail({
+              options: {
+                type: this.emailType,
+                campaignId: this.campaignId,
+                toAddresses: this.specificAddresses,
+                excludeTeamLeads: !this.includeTeamLeads,
+                excludePledged: !this.includePledged,
+              },
+              email: {
+                fromAddress: this.sendFrom,
+                subject: this.emailSubject,
+                title: this.emailTitle,
+                content: this.htmlContent,
+              },
+            });
+            if (emailSendRes.status == 200) {
+              Swal.fire({
+                title: "Success",
+                text: "Email sent successfully.",
+                timer: 3000,
+                showConfirmButton: false,
+              });
+              /* *
             this.emailSubject = `CAUSE Foundation: `;
             this.emailTitle = "";
             this.htmlContent = "";
             this.toAddresses = [];
             /* */
-          } else {
+            } else {
+              Swal.fire({
+                title: "Error",
+                text: "An unexpected error occurred",
+                timer: 3000,
+                showConfirmButton: false,
+              });
+            }
+          } catch (e) {
             Swal.fire({
-              title: 'Error',
-              text: 'An unexpected error occurred',
+              title: "Error",
+              text: e?.message ?? "An unexpected error occurred",
               timer: 3000,
               showConfirmButton: false,
-            })
+            });
           }
         }
-        this.isLoading = false
-      })
+        this.isLoading = false;
+      });
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin")) {
+      this.$router.push("/");
     }
 
-    this.isLoading = false
+    this.isLoading = false;
   },
-}
+};
 </script>
 <style lang="css">
-@import '~vue-wysiwyg/dist/vueWysiwyg.css';
+@import "~vue-wysiwyg/dist/vueWysiwyg.css";
 .editr {
   background: #fff;
 }

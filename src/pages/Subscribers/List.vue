@@ -13,8 +13,8 @@
               type="submit"
               class="btn btn-info btn-fill btn-wd pull-right"
               @click.prevent="
-                createKey = !createKey
-                openModal('create')
+                createKey = !createKey;
+                openModal('create');
               "
               v-if="!isLoading"
             >
@@ -167,7 +167,7 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
+import Vue from "vue";
 import {
   Dialog,
   Table,
@@ -175,16 +175,15 @@ import {
   Select,
   Option,
   MessageBox,
-} from 'element-ui'
-import { Pagination as LPagination } from 'src/components/index'
-import LAlert from 'src/components/Alert'
-import Swal from 'sweetalert2'
-import { getDonors } from '@/api/donors.api'
-import { deleteSubscriber } from '@/api/subscribers.api'
-import SubscriberAdd from '@/components/Modals/SubscriberAdd.vue'
-import Fuse from 'fuse.js'
+} from "element-ui";
+import { Pagination as LPagination } from "src/components/index";
+import LAlert from "src/components/Alert";
+import Swal from "sweetalert2";
+import { getSubscribers, deleteSubscriber } from "@/api/subscribers.api";
+import SubscriberAdd from "@/components/Modals/SubscriberAdd.vue";
+import Fuse from "fuse.js";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 export default {
   components: {
     LPagination,
@@ -208,44 +207,44 @@ export default {
         perPage: 25,
         currentPage: 1,
         perPageOptions: [25, 50, 100],
-        verified: 'Yes',
-        verifiedOptions: ['All', 'Yes', 'No'],
-        bounced: 'No',
+        verified: "Yes",
+        verifiedOptions: ["All", "Yes", "No"],
+        bounced: "No",
         total: 0,
       },
-      searchQuery: '',
-      propsToSearch: ['email', 'firstName', 'lastName', 'company'],
+      searchQuery: "",
+      propsToSearch: ["PK", "firstName", "lastName", "company"],
       tableColumns: [
         {
-          prop: 'email',
-          label: 'Email Address',
+          prop: "PK",
+          label: "Email Address",
           minWidth: 300,
         },
         {
-          prop: 'firstName',
-          label: 'First Name',
+          prop: "firstName",
+          label: "First Name",
           minWidth: 150,
         },
         {
-          prop: 'lastName',
-          label: 'Last Name',
+          prop: "lastName",
+          label: "Last Name",
           minWidth: 150,
         },
         {
-          prop: 'company',
-          label: 'Company',
+          prop: "company",
+          label: "Company",
           minWidth: 200,
         },
       ],
       tableData: [],
       fuseSearch: null,
-    }
+    };
   },
   computed: {
     pagedData() {
       return this.tableData.length
         ? this.tableData.slice(this.from, this.to)
-        : this.tableData
+        : this.tableData;
     },
     /***
      * Searches through table data and returns a paginated array.
@@ -254,120 +253,118 @@ export default {
      * @returns {computed.pagedData}
      */
     queriedData() {
-      let result = this.tableData
-      if (this.searchQuery !== '' && this.fuseSearch) {
-        let fsr = this.fuseSearch.search(this.searchQuery)
+      let result = this.tableData;
+      if (this.searchQuery !== "" && this.fuseSearch) {
+        let fsr = this.fuseSearch.search(this.searchQuery);
         // Filter out the lower matches
-        fsr = fsr.filter((d) => d.score <= 0.01)
+        fsr = fsr.filter((d) => d.score <= 0.01);
         //Format into how we need it
         result = Object.keys(fsr).map(function (key) {
-          return { ...fsr[key].item }
-        })
+          return { ...fsr[key].item };
+        });
       }
       if (result.length) {
-        result = result.filter((d) => d.subscribed === true)
-        if (this.pagination.verified && this.pagination.verified != 'All') {
+        result = result.filter((d) => d.subscribed === true);
+        if (this.pagination.verified && this.pagination.verified != "All") {
+          const v = this.pagination.verified === "Yes";
           result = result.filter(
-            (d) => d.verified === (this.pagination.verified === 'Yes')
-          )
+            (d) => d?.verified === v || (!d?.verified && !v)
+          );
         }
-        if (this.pagination.bounced && this.pagination.bounced != 'All') {
-          result = result.filter(
-            (d) =>
-              d.bounced === (this.pagination.bounced === 'Yes') ||
-              (!d.bounced && this.pagination.bounced === 'No')
-          )
+        if (this.pagination.bounced && this.pagination.bounced != "All") {
+          const b = this.pagination.bounced === "Yes";
+          result = result.filter((d) => d.bounced === b || (!d?.bounced && !b));
         }
       }
       result = result.sort((a, b) =>
         a.lastName > b.lastName ? 1 : b.lastName > a.lastName ? -1 : 0
-      )
-      this.paginationTotal(result.length)
-      return result.length ? result.slice(this.from, this.to) : result
+      );
+      this.paginationTotal(result.length);
+      return result.length ? result.slice(this.from, this.to) : result;
     },
     to() {
-      let highBound = this.from + this.pagination.perPage
+      let highBound = this.from + this.pagination.perPage;
       if (this.total < highBound) {
-        highBound = this.total
+        highBound = this.total;
       }
-      return highBound
+      return highBound;
     },
     from() {
-      return this.pagination.perPage * (this.pagination.currentPage - 1)
+      return this.pagination.perPage * (this.pagination.currentPage - 1);
     },
     total() {
       // this.paginationTotal(this.tableData.length);
-      return this.pagination.total
+      return this.pagination.total;
     },
   },
   methods: {
     openModal(name) {
-      this.modals[name] = true
+      this.modals[name] = true;
     },
     closeModal(name) {
-      this.modals[name] = false
+      this.modals[name] = false;
     },
     cellValueRenderer(row, column, cellValue, index) {
-      let value = cellValue
-      if (typeof row[column.property] === 'boolean') {
-        value = cellValue ? 'Yes' : 'No'
+      let value = cellValue;
+      if (typeof row[column.property] === "boolean") {
+        value = cellValue ? "Yes" : "No";
       }
-      return value
+      return value;
     },
     handleEdit(index, row) {
-      this.$router.push(`/subscribers/view/${row.requestId}`)
+      this.$router.push(`/subscribers/view/${row.requestId}`);
     },
     async handleDelete(index, row) {
       await Swal.fire({
-        title: 'Are you sure?',
+        title: "Are you sure?",
         text: `If you delete this subscriber, the process cannot be undone.`,
-        type: 'warning',
+        type: "warning",
         showCancelButton: true,
-        confirmButtonClass: 'btn btn-success btn-fill',
-        cancelButtonClass: 'btn btn-danger btn-fill',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteSubscriber(row.requestId)
+          const updateRes = await deleteSubscriber(row.requestId);
           /* */
           if (updateRes?.data?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
-            }))
+            }));
           } else {
             let indexToDelete = this.tableData.findIndex(
               (tableRow) => tableRow.id === row.id
-            )
+            );
             if (indexToDelete >= 0) {
-              this.tableData.splice(indexToDelete, 1)
+              this.tableData.splice(indexToDelete, 1);
             }
           }
           /* */
         }
-      })
+      });
     },
     paginationTotal(value) {
-      this.pagination.total = value
+      this.pagination.total = value;
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
   async mounted() {
-    const tableData = await getDonors()
-    this.tableData = Object.values(tableData.data)
+    const tableData = await getSubscribers();
+    this.tableData = Object.values(tableData.data);
 
-    this.isLoading = false
+    this.isLoading = false;
 
     this.fuseSearch = new Fuse(this.tableData, {
-      keys: ['email', 'firstName', 'lastName', 'company'],
+      keys: ["PK", "firstName", "lastName", "company"],
       includeScore: true,
-    })
+    });
   },
-}
+};
 </script>
 <style></style>

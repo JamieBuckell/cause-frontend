@@ -24,13 +24,13 @@
   </standalone-layout>
 </template>
 <script>
-import Vue from 'vue'
-import { FadeRenderTransition } from 'src/components/index'
-import StandaloneLayout from '../Dashboard/Pages/StandaloneLayout.vue'
-import { verifySubscription } from '@/api/donors.api'
-import { Loading } from 'element-ui'
+import Vue from "vue";
+import { FadeRenderTransition } from "src/components/index";
+import StandaloneLayout from "../Dashboard/Pages/StandaloneLayout.vue";
+import { verifySubscription } from "@/api/donors.api";
+import { Loading } from "element-ui";
 
-Vue.use(Loading)
+Vue.use(Loading);
 
 export default {
   components: {
@@ -40,28 +40,29 @@ export default {
   data() {
     return {
       isLoading: true,
-      logo: '/static/img/cause-foundation-logo.png',
-      logoAlt: 'CAUSE Foundation Logo',
-      verificationMessage: 'Thank you, your email has been verified.',
-    }
+      logo: "/static/img/cause-foundation-logo.png",
+      logoAlt: "CAUSE Foundation Logo",
+      verificationMessage: "Thank you, your email has been verified.",
+    };
   },
   async mounted() {
     if (this?.$route?.params?.email && this?.$route?.query?.v) {
       const verification = await verifySubscription(
         this.$route.params.email,
-        this.$route.query.v
-      )
+        this.$route.query.v,
+        this.$route.query.c
+      );
       if (verification?.data?.messages?.success) {
-        this.verificationMessage = verification?.data?.messages?.success
+        this.verificationMessage = verification?.data?.messages?.success;
       } else if (verification?.data?.messages?.unexpected) {
-        this.verificationMessage = verification?.data?.messages?.unexpected
+        this.verificationMessage = verification?.data?.messages?.unexpected;
       } else if (verification?.data?.messages?.error) {
-        this.verificationMessage = verification?.data?.messages?.error
+        this.verificationMessage = verification?.data?.messages?.error;
       }
-      this.isLoading = false
+      this.isLoading = false;
     }
   },
-}
+};
 </script>
 <style lang="scss">
 .form-check-label {

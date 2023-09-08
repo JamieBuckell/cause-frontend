@@ -13,24 +13,24 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { getNominators, approveNominator } from '@/api/nominators.api'
-import ListingsPage from '@/components/Cards/ListingsPage.vue'
+import Vue from "vue";
+import { getNominators, approveNominator } from "@/api/nominators.api";
+import ListingsPage from "@/components/Cards/ListingsPage.vue";
 
 window.EventBus = new Vue({
   methods: {
     emit(payload) {
-      this.$emit('$EventBusEvent', payload)
+      this.$emit("$EventBusEvent", payload);
     },
   },
-})
+});
 
 export default {
   components: { ListingsPage },
   props: {
     organisationId: {
       type: String,
-      default: '',
+      default: "",
     },
     paginateOptions: {
       type: Object,
@@ -42,11 +42,11 @@ export default {
     searchKeys: {
       type: Array,
       default: () => [
-        'userReference',
-        'fullName',
-        'lastName',
-        'emailAddress',
-        'telephoneNumber',
+        "userReference",
+        "fullName",
+        "lastName",
+        "emailAddress",
+        "telephoneNumber",
       ],
     },
     allowDelete: {
@@ -74,13 +74,13 @@ export default {
       options: {
         columns: [
           {
-            prop: 'userReference',
-            label: 'Ref',
+            prop: "userReference",
+            label: "Ref",
             minWidth: 70,
           },
           {
-            prop: 'nominatorDetail',
-            label: 'User Details',
+            prop: "nominatorDetail",
+            label: "User Details",
             html: true,
             minWidth: 250,
           },
@@ -88,47 +88,47 @@ export default {
         searchKeys: this.searchKeys,
         delete: this.allowDelete,
       },
-    }
+    };
   },
   computed: {
     listingsData() {
-      return this?.nomData ?? []
+      return this?.nomData ?? [];
     },
   },
   methods: {
     async approveNom(nominator) {
       const resApprove = await approveNominator(
         nominator.requestId,
-        this.organisationId != ''
+        this.organisationId != ""
           ? this.organisationId
           : nominator.organisationId
-      )
+      );
       if (resApprove.status == 200 && this.nomData) {
-        nominator.status = 'Approved'
-        nominator.nominatorDetail = this.setNominatorDetail(nominator)
+        nominator.status = "Approved";
+        nominator.nominatorDetail = this.setNominatorDetail(nominator);
         var foundIndex = this.nomData.findIndex(
           (n) => n.requestId == nominator.requestId
-        )
-        const updatedData = structuredClone(this.nomData)
-        updatedData[foundIndex] = nominator
+        );
+        const updatedData = structuredClone(this.nomData);
+        updatedData[foundIndex] = nominator;
 
-        this.nomData = updatedData
+        this.nomData = updatedData;
       }
     },
     handleEventBusEvent(requestId) {
-      const nominator = this.nomData.find((n) => n.requestId === requestId)
+      const nominator = this.nomData.find((n) => n.requestId === requestId);
 
       if (nominator?.requestId) {
-        this.approveNom(nominator)
+        this.approveNom(nominator);
       }
     },
     setNominatorDetail(nominator) {
       let nominatorDetail = `
               <div
                 class="${
-                  !this.highlightUnauthorised || nominator.status == 'Approved'
-                    ? ''
-                    : 'unauthorised'
+                  !this.highlightUnauthorised || nominator.status == "Approved"
+                    ? ""
+                    : "unauthorised"
                 }"
               >
                   <div class="row">
@@ -142,21 +142,21 @@ export default {
                         <a href="tel:${nominator.telephoneNumber}">${
         nominator.telephoneNumber
       }</a>
-                      </span>`
+                      </span>`;
       if (nominator.emailAddress) {
         nominatorDetail += `
                       <span class="nominatorEmail">
                         <a href="mailto:${nominator.emailAddress}">${nominator.emailAddress}</a>
-                      </span>`
+                      </span>`;
       }
       nominatorDetail += `
                     </div>
-                  </div>`
-      if (this.allowAuthorise && nominator.status != 'Approved') {
+                  </div>`;
+      if (this.allowAuthorise && nominator.status != "Approved") {
         nominatorDetail += `
                   <div class="row always-show" v-if="">
-                    <div class="col-12">`
-        if (this.allowAuthorise && nominator.status != 'Approved') {
+                    <div class="col-12">`;
+        if (this.allowAuthorise && nominator.status != "Approved") {
           nominatorDetail += `
                       <button
                         type="submit"
@@ -164,41 +164,39 @@ export default {
                         onclick="EventBus.emit('${nominator.requestId}')"
                       >
                         Authorise
-                      </button>`
+                      </button>`;
         }
         nominatorDetail += `
                     </div>
-                  </div>`
+                  </div>`;
       }
       nominatorDetail += `
               </div>
-              `
-      return nominatorDetail
+              `;
+      return nominatorDetail;
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin') && !this.userInGroup('teamlead')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin") && !this.userInGroup("teamlead")) {
+      this.$router.push("/");
     }
 
-    const res = await getNominators(
-      this.organisationId != '' ? this.organisationId : false
-    )
-    this.nomData = Object.values(res.data)
+    const res = {}; // await getNominators(this.organisationId != '' ? this.organisationId : false);
+    this.nomData = Object.values(res.data);
 
     this.nomData.map((o) => {
-      o.fullName = `${o.firstName} ${o.lastName}`
-      o.nominatorDetail = this.setNominatorDetail(o)
-      return true
-    })
+      o.fullName = `${o.firstName} ${o.lastName}`;
+      o.nominatorDetail = this.setNominatorDetail(o);
+      return true;
+    });
 
     this.nomData.sort((a, b) =>
       b.firstName < a.firstName ? 1 : a.firstName < b.firstName ? -1 : 0
-    )
+    );
 
-    EventBus.$on('$EventBusEvent', this.handleEventBusEvent)
+    EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
-}
+};
 </script>
 <style lang="scss">
 .nominators-list {

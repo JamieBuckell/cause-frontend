@@ -3,21 +3,37 @@
     <div
       class="alert alert-danger clearfix align-self-center"
       role="alert"
-      v-if="donor.bounced"
+      v-if="donor && donor.emailVerification && donor.emailVerification.bounced"
     >
-      This donors email has bounced: {{ getBouncedReason(donor.bouncedDetail) }}
+      This donors email has bounced:
+      {{
+        getBouncedReason(
+          donor && donor.bouncedDetail ? donor.bouncedDetail : {}
+        )
+      }}
     </div>
     <div class="row">
       <div class="col-12 col-lg-3">
         <card>
           <div slot="header">
-            <h4 class="title">{{ donor.firstName }} {{ donor.lastName }}</h4>
+            <h4 class="title">
+              {{
+                donor && donor.donorDetails && donor.donorDetails.firstName
+                  ? donor.donorDetails.firstName
+                  : ""
+              }}
+              {{
+                donor && donor.donorDetails && donor.donorDetails.lastName
+                  ? donor.donorDetails.lastName
+                  : ""
+              }}
+            </h4>
           </div>
           <div class="row">
-            <div class="col col-12" v-if="donor.email">
+            <div class="col col-12" v-if="donor.GSI3PK">
               <label>Email</label><br />
               <p v-if="!editEmailAddress">
-                {{ donor.email }}
+                {{ donor.GSI3PK }}
                 <button
                   @click.prevent="editEmailAddress = true"
                   class="btn btn-fill btn-info pull-right"
@@ -71,25 +87,31 @@
                 </form>
               </ValidationObserver>
             </div>
-            <div class="col col-12" v-if="donor.telephone">
+            <div
+              class="col col-12"
+              v-if="donor && donor.donorDetails && donor.donorDetails.telephone"
+            >
               <label>Telephone</label><br />
-              <p>{{ donor.telephone }}</p>
+              <p>{{ donor.donorDetails.telephone }}</p>
             </div>
-            <div class="col col-12" v-if="donor.company">
+            <div
+              class="col col-12"
+              v-if="donor && donor.donorDetails && donor.donorDetails.company"
+            >
               <label>Company</label><br />
-              <p>{{ donor.company }}</p>
+              <p>{{ donor.donorDetails.company }}</p>
             </div>
-            <div class="col col-12" v-if="donor.dateAdded">
+            <div class="col col-12" v-if="donor && donor.dateAdded">
               <label>Date Registered</label><br />
               <p>{{ donor.dateAdded }}</p>
             </div>
             <div class="col col-12">
               <label>Subscribed to mailing list</label><br />
-              <p>{{ donor.subscribed ? 'Yes' : 'No' }}</p>
+              <p>{{ donor.subscribed ? "Yes" : "No" }}</p>
             </div>
             <div class="col col-12">
               <label>Email address verified</label><br />
-              <p>{{ donor.verified ? 'Yes' : 'No' }}</p>
+              <p>{{ donor.verified ? "Yes" : "No" }}</p>
             </div>
           </div>
         </card>
@@ -128,7 +150,7 @@
                     </div>
                     <div class="row">
                       <div class="col-3">
-                        <p>{{ campaign.campaignName }}</p>
+                        <p>{{ activeCampaign.name }}</p>
                       </div>
                       <div class="col-1">
                         <p>{{ campaign.numberOfFamilies }}</p>
@@ -183,8 +205,8 @@
                       <div class="col-12" v-if="canAllocate(campaign)">
                         <button
                           @click.prevent="
-                            allocateFamily = true
-                            activeCampaignId = campaign.requestId
+                            allocateFamily = true;
+                            activeCampaignId = campaign.requestId;
                           "
                           class="btn btn-fill btn-info w-100"
                         >
@@ -194,8 +216,8 @@
                       <div class="col-12" v-if="allocationMet(campaign)">
                         <button
                           @click.prevent="
-                            activeCampaignId = campaign.requestId
-                            sendAllocationEmail()
+                            activeCampaignId = campaign.requestId;
+                            sendAllocationEmail();
                           "
                           class="btn btn-fill btn-info w-100"
                         >
@@ -397,33 +419,33 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
+import Vue from "vue";
 import {
   downloadFile,
   getDonorById,
   donorEmailUpdate,
   donorPledgeUpdate,
   confirmPledgeManual,
-} from '@/api/donors.api'
+} from "@/api/donors.api";
 import {
   allocateFamily,
   unallocateFamily,
   emailFamilyAssignment,
-} from '@/api/families.api'
-import FamiliesList from '@/pages/Families/List.vue'
-import Swal from 'sweetalert2'
-import { MessageBox } from 'element-ui'
-import LAlert from 'src/components/Alert'
-import DropDown from 'src/components/Dropdown.vue'
-import { Dialog, Select, Option } from 'element-ui'
-import { extend } from 'vee-validate'
-import { required, min_value, max_value } from 'vee-validate/dist/rules'
+} from "@/api/families.api";
+import FamiliesList from "@/pages/Families/List.vue";
+import Swal from "sweetalert2";
+import { MessageBox } from "element-ui";
+import LAlert from "src/components/Alert";
+import DropDown from "src/components/Dropdown.vue";
+import { Dialog, Select, Option } from "element-ui";
+import { extend } from "vee-validate";
+import { required, min_value, max_value } from "vee-validate/dist/rules";
 
-extend('required', required)
-extend('min_value', min_value)
-extend('max_value', max_value)
+extend("required", required);
+extend("min_value", min_value);
+extend("max_value", max_value);
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 export default {
   components: {
     LAlert,
@@ -435,6 +457,7 @@ export default {
   },
   data() {
     return {
+      activeCampaign: {},
       downloadPending: false,
       familyListOptions: {
         create: false,
@@ -453,135 +476,142 @@ export default {
       baseUrl: this.$hostname,
       campaigns: [],
       campaign: {},
-      activeCampaignId: '',
+      activeCampaignId: "",
       allocateFamily: false,
       editEmailAddress: false,
       editPledge: false,
       editPledgeData: {},
       messages: [],
-      updatedEmail: '',
+      updatedEmail: "",
       maxFamilyDetail: 4,
       customActions: [
         {
-          emit: 'allocateFamily',
-          type: 'button',
-          text: 'Allocate',
-          condition: 'notAllocated',
+          emit: "allocateFamily",
+          type: "button",
+          text: "Allocate",
+          condition: "notAllocated",
           removeRow: true,
         },
       ],
       customActionsAllocated: [
         {
-          emit: 'unallocateFamily',
-          type: 'button',
-          text: 'Unallocate',
+          emit: "unallocateFamily",
+          type: "button",
+          text: "Unallocate",
           removeRow: true,
         },
       ],
       familyOptions: [
-        { label: 'No Preference', value: 'any' },
-        { label: 'Single Person', value: 'single' },
-        { label: 'Small Family - Maximum 3 family members', value: 'small' },
-        { label: 'Medium Family - Maximum 5 family members', value: 'medium' },
-        { label: 'Large Family - 6+ family members', value: 'large' },
+        { label: "No Preference", value: "any" },
+        { label: "Single Person", value: "single" },
+        { label: "Small Family - 2 - 3 family members", value: "small" },
+        { label: "Medium Family - 4 - 5 family members", value: "medium" },
+        { label: "Large Family - 6 - 7 family members", value: "large" },
+        {
+          label: "Extra Large Family - 8+ family members",
+          value: "extralarge",
+        },
       ],
       donor: {
-        requestId: '',
-        firstName: '',
-        lastName: '',
-        email: '',
-        telephone: '',
-        company: '',
-        dateAdded: '',
-        dateSubcribed: '',
-        dateUnsubcribed: '',
-        dateVerified: '',
-        dateBounced: '',
+        requestId: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        telephone: "",
+        company: "",
+        dateAdded: "",
+        dateSubcribed: "",
+        dateUnsubcribed: "",
+        dateVerified: "",
+        dateBounced: "",
         subscribed: false,
         verified: false,
         bounced: false,
       },
-    }
+    };
   },
   computed: {
     grabAdditionalInfo() {
       const allNotes = this.campaigns.reduce((string, campaign) => {
         return `${string} ${campaign.additionalInfo}${
-          string.length ? '<br />' : ''
-        }`
-      }, '')
-      return `<strong>Donor Notes</strong>: ${allNotes}`
+          string.length ? "<br />" : ""
+        }`;
+      }, "");
+      return `<strong>Donor Notes</strong>: ${allNotes}`;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   methods: {
     isAllocated(campaign) {
-      const status = this.formatStatus(campaign)
+      const status = this.formatStatus(campaign);
       return (
-        status.indexOf(' Allocated') >= 0 && status.indexOf('- Confirmed') < 0
-      )
+        status.indexOf(" Allocated") >= 0 && status.indexOf("- Confirmed") < 0
+      );
     },
     formatStatus(campaign) {
       const filterCheck = (type) => {
         return (family) => {
           if (family?.campaignRequestId) {
             if (family.campaignRequestId !== campaign.requestId) {
-              return false
+              return false;
             }
           }
 
           switch (family.status) {
-            case 'allocated-sent':
-            case 'allocated-unconfirmed':
-              return type === 'allocated' ? true : false
-            case 'allocated-confirmed':
-              return type === 'allocated-confirmed' || type === 'allocated'
+            case "allocated-sent":
+            case "allocated-unconfirmed":
+              return type === "allocated" ? true : false;
+            case "allocated-confirmed":
+              return type === "allocated-confirmed" || type === "allocated"
                 ? true
-                : false
-            case 'unallocated':
+                : false;
+            case "unallocated":
             default:
-              return type === 'unallocated' ? true : false
+              return type === "unallocated" ? true : false;
           }
-        }
-      }
+        };
+      };
 
-      const allocations = campaign?.numberOfFamilies // this.assignedFamilies.length
+      const allocations = campaign?.numberOfFamilies; // this.assignedFamilies.length
       const c = this.assignedFamilies.filter(
-        filterCheck('allocated-confirmed')
-      ).length
-      const a = this.assignedFamilies.filter(filterCheck('allocated')).length
+        filterCheck("allocated-confirmed")
+      ).length;
+      const a = this.assignedFamilies.filter(filterCheck("allocated")).length;
 
       const allocation =
         a === allocations
-          ? 'Fully Allocated'
+          ? "Fully Allocated"
           : a > 0
-          ? 'Part Allocated'
-          : 'Unallocated'
+          ? "Part Allocated"
+          : "Unallocated";
       const confirmation =
         c === allocations
-          ? 'Confirmed'
+          ? "Confirmed"
           : c > 0
-          ? 'Part Confirmed'
-          : 'Unconfirmed'
+          ? "Part Confirmed"
+          : "Unconfirmed";
 
       return `${allocation}${
-        allocation === 'Unallocated' ? '' : ' - ' + confirmation
-      }`
+        allocation === "Unallocated" ? "" : " - " + confirmation
+      }`;
     },
     async doConfirmAllocation(donor) {
-      const verification = await confirmPledgeManual(donor.email, 'v')
+      const verification = await confirmPledgeManual(donor.email, "v");
 
       const verifyResponse = {
-        title: 'Error',
-        message: '',
-      }
+        title: "Error",
+        message: "",
+      };
       if (verification?.data?.messages?.success) {
-        verifyResponse.title = 'Success'
+        verifyResponse.title = "Success";
         verifyResponse.message =
-          'This donors pledged has been confirmed successfully.'
+          "This donors pledged has been confirmed successfully.";
       } else if (verification?.data?.messages?.unexpected) {
-        verifyResponse.message = verification?.data?.messages?.unexpected
+        verifyResponse.message = verification?.data?.messages?.unexpected;
       } else if (verification?.data?.messages?.error) {
-        verifyResponse.message = verification?.data?.messages?.error
+        verifyResponse.message = verification?.data?.messages?.error;
       }
 
       Swal.fire({
@@ -589,146 +619,146 @@ export default {
         html: verifyResponse.message,
         timer: 2000,
         showConfirmButton: false,
-      })
+      });
     },
     async downloadPDF(type) {
       Swal.fire({
-        title: 'Generating PDF',
-        text: 'Please wait while your PDF is generated.',
+        title: "Generating PDF",
+        text: "Please wait while your PDF is generated.",
         showConfirmButton: false,
         allowEscapeKey: false,
         backdrop: false,
-      })
+      });
 
       const allocateRes = await downloadFile({
-        donorId: this.donor.requestId,
-        type: 'pdf',
+        donorId: this.donor.GSI2PK,
+        type: "pdf",
         version: type,
-      })
+      });
       if (allocateRes.status == 200) {
-        const linkSource = `data:application/pdf;base64,${allocateRes.data}`
-        const downloadLink = document.createElement('a')
-        const fileName = `${this.donor.firstName.toLowerCase()}-${this.donor.lastName.toLowerCase()}-labels-${type.toLowerCase()}-pdf`
+        const linkSource = `data:application/pdf;base64,${allocateRes.data}`;
+        const downloadLink = document.createElement("a");
+        const fileName = `${this.donor.firstName.toLowerCase()}-${this.donor.lastName.toLowerCase()}-labels-${type.toLowerCase()}-pdf`;
 
-        downloadLink.href = linkSource
-        downloadLink.download = fileName
-        downloadLink.click()
-        this.downloadPending = false
+        downloadLink.href = linkSource;
+        downloadLink.download = fileName;
+        downloadLink.click();
+        this.downloadPending = false;
       } else {
         if (allocateRes?.data?.messages) {
           Swal.fire({
-            title: 'Error',
+            title: "Error",
             text: Object.keys(allocateRes?.data?.messages)
               .map((k) => allocateRes?.data?.messages[k])
               .join(),
             timer: 2000,
             showConfirmButton: false,
-          })
+          });
         }
       }
 
-      Swal.close()
+      Swal.close();
     },
     async doAllocateFamily(i, f) {
       const allocateRes = await allocateFamily({
         campaignRequestId: this.activeCampaignId,
         familyId: f.requestId,
-        donorId: this.donor.requestId,
-      })
+        donorId: this.donor.GSI2PK,
+      });
       if (allocateRes.status == 200) {
         const assignedFamilies = this.assignedFamilies.filter(
           (f) =>
             !f?.campaignRequestId ||
             f.campaignRequestId === this.campaign.requestId
-        )
+        );
 
         const allocationComplete =
-          assignedFamilies.length === this.campaign?.numberOfFamilies
-        this.assignedFamilies.push(f)
+          assignedFamilies.length === this.campaign?.numberOfFamilies;
+        this.assignedFamilies.push(f);
         Swal.fire({
-          title: 'Success',
+          title: "Success",
           text: `Family allocated.${
             allocationComplete
-              ? ' This donor is now ready for their allocation email'
-              : ''
+              ? " This donor is now ready for their allocation email"
+              : ""
           }`,
           timer: 2000,
           showConfirmButton: false,
-        })
+        });
         if (allocationComplete) {
-          this.allocateFamily = false
+          this.allocateFamily = false;
         }
       } else {
         if (allocateRes?.data?.messages) {
           Swal.fire({
-            title: 'Error',
+            title: "Error",
             text: Object.keys(allocateRes?.data?.messages)
               .map((k) => allocateRes?.data?.messages[k])
               .join(),
             timer: 2000,
             showConfirmButton: false,
-          })
+          });
         }
       }
     },
     async doUnallocateFamily(i, f) {
       await unallocateFamily({
         familyId: f.requestId,
-        donorId: this.donor.requestId,
-      })
+        donorId: this.donor.GSI2PK,
+      });
       Swal.fire({
-        title: 'Success',
-        text: 'Family unallocated.',
+        title: "Success",
+        text: "Family unallocated.",
         timer: 2000,
         showConfirmButton: false,
-      })
+      });
     },
     async sendAllocationEmail(i, f) {
       await Swal.fire({
-        title: 'Are you sure?',
+        title: "Are you sure?",
         text: `If you send this allocation, the process cannot be undone.`,
-        type: 'warning',
+        type: "warning",
         showCancelButton: true,
-        confirmButtonClass: 'btn btn-success btn-fill',
-        cancelButtonClass: 'btn btn-danger btn-fill',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
           const updateRes = await emailFamilyAssignment({
-            donorId: this.donor.requestId,
+            donorId: this.donor.GSI2PK,
             campaignRequestId: this.activeCampaignId
               ? this.activeCampaignId
-              : '',
-          })
+              : "",
+          });
           if (updateRes?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
-            }))
+            }));
           } else {
             Swal.fire({
-              title: 'Success',
-              text: 'Email sent successfully.',
+              title: "Success",
+              text: "Email sent successfully.",
               timer: 2000,
               showConfirmButton: false,
-            })
+            });
           }
         }
-      })
+      });
     },
 
     canAllocate(c) {
       const assignedFamilies = this.assignedFamilies.filter(
         (f) => !f?.campaignRequestId || f.campaignRequestId === c.requestId
-      )
-      return this.isJamie() || assignedFamilies.length < c.numberOfFamilies
+      );
+      return this.isJamie() || assignedFamilies.length < c.numberOfFamilies;
     },
     allocationMet(c) {
       const assignedFamilies = this.assignedFamilies.filter(
         (f) => !f?.campaignRequestId || f.campaignRequestId === c.requestId
-      )
-      return assignedFamilies.length >= c.numberOfFamilies
+      );
+      return assignedFamilies.length >= c.numberOfFamilies;
     },
     populateDefaults() {
       if (
@@ -741,144 +771,173 @@ export default {
           this.editPledgeData.familyDetail.length <
           parseInt(this.editPledgeData.numberOfFamilies)
         ) {
-          this.editPledgeData.familyDetail.push('any')
+          this.editPledgeData.familyDetail.push("any");
         }
       }
       if (this.editPledgeData.numberOfFamilies > this.maxFamilyDetail) {
-        this.editPledgeData.familyDetail = []
+        this.editPledgeData.familyDetail = [];
       }
     },
     async saveEmail() {
       if (this.updatedEmail != this.donor.email) {
         await Swal.fire({
-          title: 'Do you want to resend the verification email?',
+          title: "Do you want to resend the verification email?",
           text: `As you have updated this users email, you should also ask them to verify it unless you're confident the email is correct.`,
-          type: 'warning',
+          type: "warning",
           showCancelButton: true,
-          confirmButtonClass: 'btn btn-success btn-fill',
-          cancelButtonClass: 'btn btn-danger btn-fill',
-          confirmButtonText: 'Yes, resend it!',
-          cancelButtonText: 'No, just save',
+          confirmButtonClass: "btn btn-success btn-fill",
+          cancelButtonClass: "btn btn-danger btn-fill",
+          confirmButtonText: "Yes, resend it!",
+          cancelButtonText: "No, just save",
           buttonsStyling: false,
         }).then(async (d) => {
-          const sendEmail = d.isConfirmed || d.dismiss === 'esc'
-          if (!d.isDismissed || d.dismiss === 'cancel') {
+          const sendEmail = d.isConfirmed || d.dismiss === "esc";
+          if (!d.isDismissed || d.dismiss === "cancel") {
             const updateRes = await donorEmailUpdate({
-              donorId: this.donor.requestId,
+              donorId: this.donor.GSI2PK,
               previousEmail: this.donor.email,
               updatedEmail: this.updatedEmail,
               sendEmail,
-            })
+            });
             if (updateRes.data.status != 200 && updateRes.data?.messages) {
               this.messages = Object.keys(updateRes?.data?.messages).map(
                 (k) => ({
                   error: updateRes?.data?.messages[k],
                 })
-              )
+              );
             } else {
-              this.donor.email = this.updatedEmail
-              this.subscriber.bounced = false
-              this.subscriber.bouncedDetail = ''
+              this.donor.email = this.updatedEmail;
+              this.subscriber.bounced = false;
+              this.subscriber.bouncedDetail = "";
             }
           }
-        })
+        });
       }
       if (!this.messages.length) {
-        this.editEmailAddress = false
+        this.editEmailAddress = false;
       }
     },
     async savePledge() {
       await Swal.fire({
-        title: 'Do you want to send a pledge updated email?',
+        title: "Do you want to send a pledge updated email?",
         text: `As you have updated this users pledge details, you should send a confirmation of the updated details to toe donor.`,
-        type: 'warning',
+        type: "warning",
         showCancelButton: true,
-        confirmButtonClass: 'btn btn-success btn-fill',
-        cancelButtonClass: 'btn btn-danger btn-fill',
-        confirmButtonText: 'Yes, send it!',
-        cancelButtonText: 'No, just save',
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
+        confirmButtonText: "Yes, send it!",
+        cancelButtonText: "No, just save",
         buttonsStyling: false,
       }).then(async (d) => {
-        const sendEmail = d.isConfirmed || d.dismiss === 'esc'
-        if (!d.isDismissed || d.dismiss === 'cancel') {
+        const sendEmail = d.isConfirmed || d.dismiss === "esc";
+        if (!d.isDismissed || d.dismiss === "cancel") {
           const updateRes = await donorPledgeUpdate({
             ...this.editPledgeData,
-            donorId: this.donor.requestId,
+            donorId: this.donor.GSI2PK,
             donorEmail: this.donor.email,
             sendEmail,
-          })
+          });
           if (updateRes.data.status != 200 && updateRes.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
-            }))
+            }));
           }
         }
-      })
+      });
       if (!this.messages.length) {
-        this.editPledge = false
+        this.editPledge = false;
       }
     },
     doEditPledge(c) {
-      this.editPledge = true
-      this.editPledgeData = { ...c }
-      this.editPledgeData.familyDetail = JSON.parse(c.familyDetail)
+      this.editPledge = true;
+      this.editPledgeData = { ...c };
+      this.editPledgeData.familyDetail = JSON.parse(c.familyDetail);
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
     getBouncedReason(bouncedData) {
-      const obj = JSON.parse(bouncedData)
-      return obj?.detail
+      const obj = JSON.parse(bouncedData);
+      return obj?.detail;
     },
     getFamilyRequests(req) {
-      const preferences = typeof req === 'string' ? JSON.parse(req) : req
-      const returnArray = []
+      const preferences = typeof req === "string" ? JSON.parse(req) : req;
+      const returnArray = [];
       if (preferences.length) {
         for (const p of preferences) {
           switch (p.toLowerCase()) {
-            case 'single':
-              returnArray.push('Single Person')
-              break
-            case 'small':
-              returnArray.push('Small Family - Maximum 3 family members')
-              break
-            case 'medium':
-              returnArray.push('Medium Family - Maximum 5 family members')
-              break
-            case 'large':
-              returnArray.push('Large Family - 6+ family members')
-              break
+            case "single":
+              returnArray.push("Single Person");
+              break;
+            case "small":
+              returnArray.push("Small Family - 2 - 3 family members");
+              break;
+            case "medium":
+              returnArray.push("Medium Family - 4 - 5 family members");
+              break;
+            case "large":
+              returnArray.push("Large Family - 6 - 7 family members");
+              break;
+            case "extralarge":
+              returnArray.push("Extra Large Family - 8+ family members");
+              break;
+
             default:
-              returnArray.push('No Preference')
-              break
+              returnArray.push("No Preference");
+              break;
           }
         }
       }
 
-      return returnArray
+      return returnArray;
+    },
+    async getDonorData() {
+      var pData = this.$store.getters.getPlatformData;
+      if (!pData?.donors) {
+        const platformData = await getByCampaign(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (platformData?.data) {
+          await this.$store.dispatch("setPlatformData", {
+            ...platformData.data,
+          });
+          pData = platformData?.data;
+        }
+      }
+      this.donor = pData.donors.find(
+        (d) =>
+          d.GSI2PK === this.$route.params.donorId &&
+          d.PK === this.$store.getters.getActiveCampaign
+      );
+      if (!this.donor) {
+        this.$router.push("/donors");
+      }
+      this.updatedEmail = this.donor?.GSI3PK;
+
+      this.activeCampaign = this.$store.getters.getAllCampaigns.find(
+        (c) => c.campaignId === this.$store.getters.getActiveCampaign
+      );
+      this.campaigns = this.donor?.familyDetails?.request ?? [];
+
+      this.assignedFamilies =
+        this.donor?.familyDetails?.allocation?.families ?? [];
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin")) {
+      this.$router.push("/");
     }
-
-    const donorRes = await getDonorById(this.$route.params.donorId)
-
-    this.donor = donorRes?.data?.donor
-    this.updatedEmail = this.donor?.email
-
-    const activeCampaignId = this.$store.getters.getActiveCampaign
-    this.campaigns = donorRes?.data?.campaigns.filter(function (c) {
-      return c.campaignId === activeCampaignId
-    })
-    this.campaign = this.campaigns.length ? this.campaigns[0] : {}
-
-    this.assignedFamilies = donorRes?.data?.families
+    await this.getDonorData();
   },
-}
+  watch: {
+    async platformData() {
+      await this.getDonorData();
+    },
+  },
+};
 </script>
 <style lang="scss">
 .download-dropdown {

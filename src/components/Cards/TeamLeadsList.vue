@@ -67,9 +67,11 @@
                         {{ col.row["lastName"] }}
                       </strong>
                       <span v-if="col.row['telephoneNumber']">- </span>
-                      <a v-if="col.row['telephoneNumber']" :href="`tel:${col.row['telephoneNumber']}`">{{
-                        col.row["telephoneNumber"]
-                      }}</a>
+                      <a
+                        v-if="col.row['telephoneNumber']"
+                        :href="`tel:${col.row['telephoneNumber']}`"
+                        >{{ col.row["telephoneNumber"] }}</a
+                      >
                     </span>
                     <span class="nominatorEmail" v-if="col.row['emailAddress']">
                       <a :href="`mailto:${col.row['emailAddress']}`">{{
@@ -77,10 +79,7 @@
                       }}</a>
                     </span>
                   </div>
-                  <div
-                    v-if="!col.row.emailSent"
-                    class="col-12 always-show"
-                  >
+                  <div v-if="!col.row.emailSent" class="col-12 always-show">
                     <button
                       type="submit"
                       class="btn btn-info btn-fill pull-right w-100 mt-3 mt-xl-0"
@@ -95,7 +94,12 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column :min-width="75" fixed="right" label="Actions" v-if="checkRole('admin')">
+          <el-table-column
+            :min-width="75"
+            fixed="right"
+            label="Actions"
+            v-if="checkRole('admin')"
+          >
             <template slot-scope="props">
               <div class="text-center">
                 <a
@@ -191,7 +195,7 @@ import {
   getOrganisationAdmins,
   createOrganisationAdmin,
 } from "@/api/organisations.api";
-import { sendNominatorAdminEmail } from "@/api/nominators.api";
+import { sendNominatorAdminEmail, createNominator } from "@/api/nominators.api";
 import { deleteUser } from "@/api/users.api";
 
 import Fuse from "fuse.js";
@@ -294,6 +298,9 @@ export default {
         .trim();
       return width <= parseInt(md);
     },
+    platformData() {
+      return this.$store.getters.getPlatformData;
+    },
   },
   async mounted() {
     if (this.userInGroup("admin") || this.userInGroup("teamlead")) {
@@ -323,8 +330,19 @@ export default {
     },
     async getListData() {
       if (this.organisationId) {
-        const res = await getOrganisationAdmins(this.organisationId);
-        this.tableData = Object.values(res.data);
+        this.tableData = await this.platformData?.nominators
+          .filter(
+            (n) => n?.GSI3PK === this.organisationId && n?.type === "team-lead"
+          )
+          .map((n) => ({
+            requestId: n?.GSI2PK ?? "",
+            organisationId: n?.GSI3PK,
+            emailAddress: n?.nominatorDetails?.email ?? "",
+            telephoneNumber: n?.nominatorDetails?.telephone ?? "",
+            firstName: n?.nominatorDetails?.firstName ?? "",
+            lastName: n?.nominatorDetails?.lastName ?? "",
+            emailSent: n?.emailVerification?.sent ?? false,
+          }));
 
         this.$emit("resultData", "teamLeads", this.tableData);
       }
@@ -337,7 +355,8 @@ export default {
     },
     async createAdmin() {
       this.isLoading = true;
-      const res = await createOrganisationAdmin(this.organisationId, {
+      const res = await createNominator({
+        organisationId: this.organisationId,
         email: this.model.email,
         telephone: this.model.telephone,
         firstname: this.model.firstName,
@@ -383,7 +402,10 @@ export default {
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteUser(this.organisationId, r.emailAddress);
+          const updateRes = await deleteUser(
+            this.organisationId,
+            r.emailAddress
+          );
           if (updateRes?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
@@ -398,7 +420,7 @@ export default {
           }
         }
       });
-    }
+    },
   },
 };
 </script>

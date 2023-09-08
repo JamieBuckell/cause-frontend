@@ -280,7 +280,7 @@ export default {
     },
     async getListData() {
       if (this.organisationId) {
-        const res = await getOrganisationAdmins(this.organisationId);
+        const res = {}; // await getOrganisationAdmins(this.organisationId);
         this.tableData = Object.values(res.data);
       }
     },

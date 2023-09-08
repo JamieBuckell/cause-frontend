@@ -1,29 +1,29 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { authenticate, campaigns, pagination } from '@/store/modules'
+import Vue from "vue";
+import Vuex from "vuex";
+import { authenticate, campaigns, pagination } from "@/store/modules";
 import createPersistedState from "vuex-persistedstate";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 /* */
 import SecureLS from "secure-ls";
 let ls = new SecureLS({
   encodingType: "aes",
   isCompression: false,
-  encryptionSecret: '[8IL$Kc"5JK#9PPcs9R6"|8@@}&-=4'
+  encryptionSecret: '[8IL$Kc"5JK#9PPcs9R6"|8@@}&-=4',
 });
 /* */
-Vue.use(Vuex)
+Vue.use(Vuex);
 
-let secure = (process.env.NODE_ENV === 'production') ;
+let secure = process.env.NODE_ENV === "production";
 
 export const store = new Vuex.Store({
   modules: {
     authenticate,
     campaigns,
-    pagination
+    pagination,
   },
-  plugins: [    
+  plugins: [
     createPersistedState({
-      key: 'CFLS',
+      key: "CFLS",
       storage: {
         getItem: (key) => ls.get(key),
         setItem: (key, value) => ls.set(key, value),
@@ -35,17 +35,20 @@ export const store = new Vuex.Store({
         // 'authenticate.tokens',
         // 'authenticate.currentUser',
         // 'authenticate.authChecked',
-        'campaigns.activeCampaign',
-        'authenticate.timestamps',
-        'pagination.data',
-        'campaigns.genericData',
-        'authenticate.tokens.idToken',
-        'authenticate.tokens.accessToken',
-        'authenticate.tokens.refreshToken',
+        "campaigns.allCampaigns",
+        "campaigns.activeCampaign",
+        "campaigns.platformData",
+        "campaigns.genericData",
+        "campaigns.lastUpdated",
+        "authenticate.timestamps",
+        "pagination.data",
+        "authenticate.tokens.idToken",
+        "authenticate.tokens.accessToken",
+        "authenticate.tokens.refreshToken",
       ],
-    }),   
+    }),
     createPersistedState({
-      key: 'CFS',
+      key: "CFS",
       storage: {
         getItem: (key) => {
           return Cookies.get(key);
@@ -53,11 +56,9 @@ export const store = new Vuex.Store({
         setItem: (key, value) => {
           Cookies.set(key, value, { expires: 31, secure: secure });
         },
-        removeItem: (key) => Cookies.remove(key)
+        removeItem: (key) => Cookies.remove(key),
       },
-      paths: [
-        'authenticate.currentUser',
-      ],
+      paths: ["authenticate.currentUser"],
     }),
-  ]
-})
+  ],
+});

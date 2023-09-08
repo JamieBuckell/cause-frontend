@@ -437,6 +437,7 @@ export default {
       howHeard: "",
       howHeardOther: "",
       marketing: false,
+      campaign: "CH2",
     };
     return {
       isOpen: true,

@@ -9,7 +9,9 @@
               <card>
                 <div slot="header" class="text-center">
                   <img :src="logo" :alt="logoAlt" class="site-logo" />
-                  <h3 class="card-title text-center">{{ maintenanceMode ? 'Site Unavailable' : 'Login' }}</h3>
+                  <h3 class="card-title text-center">
+                    {{ maintenanceMode ? "Site Unavailable" : "Login" }}
+                  </h3>
                   <div
                     class="text-danger invalid-feedback"
                     style="display: block"
@@ -60,12 +62,16 @@
                   <br />
                   <div class="forgot">
                     <router-link to="/reset-password" class="card-category">
-                      Having trouble logging in?<br />Click here to reset your password
+                      Having trouble logging in?<br />Click here to reset your
+                      password
                     </router-link>
                   </div>
                 </div>
                 <div v-else>
-                  <p class="text-center">The CAUSE Foundation portal is currently unavailable for maintenance. Please try again later.</p>
+                  <p class="text-center">
+                    The CAUSE Foundation portal is currently unavailable for
+                    maintenance. Please try again later.
+                  </p>
                 </div>
               </card>
             </fade-render-transition>
@@ -129,7 +135,6 @@ export default {
     if (this.$route.query.error) {
       this.errmsg = this.$route.query.error;
     }
-
   },
   methods: {
     async submit() {
@@ -171,6 +176,8 @@ export default {
           this.$store.commit("setUsername", this.email);
           this.resend = true;
           this.errmsg = "User registration not confirmed";
+        } else if (this.errcode === '"PasswordResetRequiredException"') {
+          this.errmsg = "You must reset your password to continue";
         } else if (this.errcode === '"LimitExceededException"') {
           this.errmsg = "Attempt limit exceeded, please try after some time";
         } else {

@@ -8,7 +8,7 @@
           @click.prevent="saveFamilies"
           :disabled="submittingFamily"
         >
-          {{ saveType == 'create' ? 'Save' : 'Update' }} Family
+          {{ saveType == "create" ? "Save" : "Update" }} Family
         </button>
         <p class="float-right pr-3 pt-2" v-if="saveType == 'create'">
           Please ensure you enter all family members before hitting Save as you
@@ -207,14 +207,14 @@ import {
   Option,
   Collapse,
   CollapseItem,
-} from 'element-ui'
-import breakpoints from '@/util/breakpoints'
+} from "element-ui";
+import breakpoints from "@/util/breakpoints";
 import {
   createFamily,
   getFamilyByRequest,
   updateFamily,
-} from '@/api/families.api'
-import LAlert from 'src/components/Alert'
+} from "@/api/families.api";
+import LAlert from "src/components/Alert";
 
 export default {
   components: {
@@ -229,15 +229,15 @@ export default {
   props: {
     orgRef: {
       type: String,
-      default: '',
+      default: "",
     },
     nominatorRef: {
       type: String,
-      default: '',
+      default: "",
     },
     nominatorId: {
       type: String,
-      default: '',
+      default: "",
     },
     hamperCount: {
       type: Number,
@@ -257,7 +257,7 @@ export default {
     },
     saveType: {
       type: String,
-      default: 'create',
+      default: "create",
     },
   },
   data() {
@@ -267,217 +267,216 @@ export default {
       submittingFamily: false,
       activePanel: 0,
       nominations: [],
-      chosenNominatorId: '',
+      chosenNominatorId: "",
       chosenNominator: {},
       selectionOptions: {
-        adult: ['mum', 'dad'],
-        child: ['Boy', 'Girl'],
+        adult: ["mum", "dad"],
+        child: ["Boy", "Girl"],
       },
       messages: [],
-    }
+    };
   },
   computed: {
     nominatorsFamilies() {
       return this.allFamilies.filter(
         (f) => f.nominatorId == this.chosenNominatorId
-      )
+      );
     },
     breakpoints: () => breakpoints.screen,
     ageList() {
-      return Array.from(Array(115).keys())
+      return Array.from(Array(115).keys());
     },
     ageTypes() {
-      return ['Years', 'Months']
+      return ["Years", "Months"];
     },
     whoList() {
       return [
-        'Mam',
-        'Dad',
-        'Boy',
-        'Girl',
-        'Grandma',
-        'Grandad',
-        'Male',
-        'Female',
-        'Other',
-      ]
+        "Mam",
+        "Dad",
+        "Boy",
+        "Girl",
+        "Grandma",
+        "Grandad",
+        "Male",
+        "Female",
+        "Other",
+      ];
     },
     familyCount() {
-      return this.nominatorsFamilies.length
+      return this.nominatorsFamilies.length;
     },
     nextHamperId() {
       const totalNewNominations = this?.nominations
         ? this.nominations.length
-        : 0
+        : 0;
 
       let validHamperId = (this.familyCount + totalNewNominations)
         .toString()
-        .padStart(3, '0')
+        .padStart(3, "0");
 
-      let existingRef = false
+      let existingRef = false;
       if (this.nominatorsFamilies) {
         existingRef = this.nominatorsFamilies.find(
           (f) =>
             f.reference ===
             `${this.orgRef}${this.nominatorsReference}-${validHamperId}`
-        )
+        );
       }
 
       if (existingRef) {
-        let isUnique = false
+        let isUnique = false;
 
-        let hamperIncrement = 0
+        let hamperIncrement = 0;
         while (!isUnique) {
-          hamperIncrement++
-          let checkIncrement = hamperIncrement.toString().padStart(3, '0')
+          hamperIncrement++;
+          let checkIncrement = hamperIncrement.toString().padStart(3, "0");
           const existingRefCheck = this.nominatorsFamilies.find(
             (f) =>
               f.reference ===
               `${this.orgRef}${this.nominatorsReference}-${checkIncrement}`
-          )
-          isUnique = existingRefCheck === undefined
+          );
+          isUnique = existingRefCheck === undefined;
 
           if (hamperIncrement >= 100) {
-            isUnique = true
+            isUnique = true;
           }
         }
-        validHamperId = hamperIncrement.toString().padStart(3, '0')
+        validHamperId = hamperIncrement.toString().padStart(3, "0");
       }
 
-      return validHamperId
+      return validHamperId;
     },
     nominatorsReference() {
-      let returnRef = this.nominatorRef
+      let returnRef = this.nominatorRef;
 
       if (!returnRef && this.chosenNominator.userReference) {
-        returnRef = this.chosenNominator.userReference
+        returnRef = this.chosenNominator.userReference;
       }
 
-      return returnRef
+      return returnRef;
     },
     getHamperReference() {
-      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`
+      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`;
     },
   },
   watch: {
     async familyData(newVal) {
       if (newVal?.requestId) {
-        this.nominations = []
-        await this.updateFamilyData(newVal.requestId)
-        this.addFamily(this.editFamilyData)
+        this.nominations = [];
+        await this.updateFamilyData(newVal.requestId);
+        this.addFamily(this.editFamilyData);
       }
     },
   },
   // familyData
   async mounted() {
-    this.resetWindow()
+    this.resetWindow();
 
-    this.chosenNominatorId = this.nominatorId
-    console.log(this.chosenNominatorId, this.nominatorId)
-    if (this.saveType != 'create' && this.familyData?.requestId) {
-      await this.updateFamilyData(this.familyData.requestId)
+    this.chosenNominatorId = this.nominatorId;
+    if (this.saveType != "create" && this.familyData?.requestId) {
+      await this.updateFamilyData(this.familyData.requestId);
     }
-    this.addFamily()
+    this.addFamily();
 
     const storedNominator = this.$store.getters.getGenericData(
-      'SplitFamilyChosenNominator'
-    )
+      "SplitFamilyChosenNominator"
+    );
     if (this.allNominators.length) {
       const storedNomExists =
         storedNominator && storedNominator.requestId
           ? this.allNominators.find(
               (n) => n.requestId === storedNominator.requestId
             )
-          : false
+          : false;
       this.chosenNominatorId = storedNomExists
         ? storedNomExists.requestId
-        : this.allNominators[0].requestId
+        : this.allNominators[0].requestId;
     }
-    if (this.saveType === 'create') {
-      this.changeNominator()
+    if (this.saveType === "create") {
+      this.changeNominator();
     }
   },
   methods: {
     async updateFamilyData(requestId) {
-      const familyReq = await getFamilyByRequest(requestId)
-      this.editFamilyData = familyReq.data?.family
-      this.editFamilyMembers = familyReq.data?.members
+      const familyReq = await getFamilyByRequest(requestId);
+      this.editFamilyData = familyReq.data?.family;
+      this.editFamilyMembers = familyReq.data?.members;
     },
     canChangeNominator() {
-      return this.saveType === 'create' && this.allNominators.length > 1
+      return this.saveType === "create" && this.allNominators.length > 1;
     },
     setChosenNominator(nominator) {
-      this.chosenNominator = nominator
-      this.chosenNominatorId = nominator.requestId
+      this.chosenNominator = nominator;
+      this.chosenNominatorId = nominator.requestId;
 
-      this.$store.dispatch('setGenericData', {
-        key: 'AddFamilyChosenNominator',
+      this.$store.dispatch("setGenericData", {
+        key: "AddFamilyChosenNominator",
         data: nominator,
-      })
+      });
     },
     changeNominator() {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
-      )
+      );
       if (nominator) {
-        this.setChosenNominator(nominator)
-        this.nominations[0].hamperId = this.getHamperReference
+        this.setChosenNominator(nominator);
+        this.nominations[0].hamperId = this.getHamperReference;
       }
     },
     async resetWindow() {
-      this.activePanel = 0
-      this.nominations = []
+      this.activePanel = 0;
+      this.nominations = [];
     },
     async saveFamilies() {
       switch (this.saveType) {
-        case 'create':
-          this.createFamilies()
-          break
-        case 'update':
-          this.updateFamilies()
-          break
+        case "create":
+          this.createFamilies();
+          break;
+        case "update":
+          this.updateFamilies();
+          break;
       }
     },
     async createFamilies() {
-      this.submittingFamily = true
+      this.submittingFamily = true;
       const res = await createFamily({
         nominatorId: this.chosenNominatorId
           ? this.chosenNominatorId
           : this.nominatorId,
         nominations: this.nominations,
-      })
+      });
       if (res.status == 200) {
-        const familyData = res?.data?.families
-        this.$emit('saveFamilies', familyData)
-        this.nominations = []
+        const familyData = res?.data?.families;
+        this.$emit("saveFamilies", familyData);
+        this.nominations = [];
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
             error: res?.data?.messages[k],
-          }))
+          }));
         }
       }
-      this.submittingFamily = true
+      this.submittingFamily = true;
     },
     async updateFamilies() {
-      this.submittingFamily = true
+      this.submittingFamily = true;
       /* */
       const res = await updateFamily({
         nominations: this.nominations,
-      })
+      });
       if (res.status == 200) {
-        const familyData = res?.data?.families
-        this.$emit('saveFamilies', { families: familyData, update: true })
-        this.nominations = []
+        const familyData = res?.data?.families;
+        this.$emit("saveFamilies", { families: familyData, update: true });
+        this.nominations = [];
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
             error: res?.data?.messages[k],
-          }))
+          }));
         }
       }
       /* */
-      this.submittingFamily = false
+      this.submittingFamily = false;
     },
     addFamily() {
       const nominationsData = {
@@ -487,10 +486,10 @@ export default {
         adults: 0,
         children: 0,
         members: [],
-      }
+      };
       if (this.editFamilyData?.requestId && this.editFamilyMembers) {
-        nominationsData.familyId = this.editFamilyData.requestId
-        nominationsData.nominatorId = this.editFamilyData.nominatorId
+        nominationsData.familyId = this.editFamilyData.requestId;
+        nominationsData.nominatorId = this.editFamilyData.nominatorId;
         for (const [k, member] of this.editFamilyMembers.entries()) {
           nominationsData.members.push({
             memberId: member.requestId,
@@ -499,68 +498,68 @@ export default {
             who: member.who,
             whoOther: member.whoOther,
             additionalInfo: member.additionalInfo,
-          })
+          });
         }
       } else {
         nominationsData.members.push({
-          age: '',
-          ageType: 'Years',
-          who: '',
-          additionalInfo: '',
-        })
+          age: "",
+          ageType: "Years",
+          who: "",
+          additionalInfo: "",
+        });
       }
-      this.nominations.unshift(nominationsData)
-      this.calculateAges(this.nominations.length - 1)
+      this.nominations.unshift(nominationsData);
+      this.calculateAges(this.nominations.length - 1);
     },
     addFamilyMember(index) {
       this.nominations[index].members.push({
-        age: '',
-        ageType: 'Years',
-        who: '',
-        additionalInfo: '',
-      })
+        age: "",
+        ageType: "Years",
+        who: "",
+        additionalInfo: "",
+      });
     },
     removeFamilyMember(nomIndex, memberIndex) {
-      this.nominations[nomIndex].members.splice(memberIndex, 1)
+      this.nominations[nomIndex].members.splice(memberIndex, 1);
     },
     calculateAges(index) {
       this.nominations[index].adults = this.nominations[index].members.reduce(
         function (a, b) {
-          return a + (b['age'] === '' || b['age'] >= 18 ? 1 : 0)
+          return a + (b["age"] === "" || b["age"] >= 18 ? 1 : 0);
         },
         0
-      )
+      );
       this.nominations[index].children = this.nominations[index].members.reduce(
         function (a, b) {
-          return a + (b['age'] !== '' && b['age'] < 18 ? 1 : 0)
+          return a + (b["age"] !== "" && b["age"] < 18 ? 1 : 0);
         },
         0
-      )
+      );
     },
 
     collapseTitle: (member, i) => {
       return (
-        (member.who ? '' : 'Member ') +
-        ('#' + i) +
-        (member.who || member.age ? ' - ' : '') +
-        (member.who && member.who != 'Other' ? member.who : '') +
-        (member.who == 'Other' ? member.whoOther : '') +
+        (member.who ? "" : "Member ") +
+        ("#" + i) +
+        (member.who || member.age ? " - " : "") +
+        (member.who && member.who != "Other" ? member.who : "") +
+        (member.who == "Other" ? member.whoOther : "") +
         (member.age
           ? ` (${member.age}${
-              member.ageType != 'Years' ? ' ' + member.ageType : ''
+              member.ageType != "Years" ? " " + member.ageType : ""
             })`
-          : '') +
-        (member.additionalInfo ? ' - ' : '') +
-        (member.additionalInfo ?? '')
-      )
+          : "") +
+        (member.additionalInfo ? " - " : "") +
+        (member.additionalInfo ?? "")
+      );
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
-}
+};
 </script>
 <style lang="scss">
 .family-actions {

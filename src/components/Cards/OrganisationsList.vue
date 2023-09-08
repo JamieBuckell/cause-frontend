@@ -1,6 +1,11 @@
 <template>
   <card class="nominators-list">
-    <el-dialog center title="Nominate Families" :visible.sync="modals.create" width="80%">
+    <el-dialog
+      center
+      title="Nominate Families"
+      :visible.sync="modals.create"
+      width="80%"
+    >
       <FamilyAdd
         :key="createKey"
         :orgRef="`${hamperRef}`"
@@ -154,7 +159,7 @@ export default {
       type: Object,
       default: () => ({
         perPage: 5,
-        perPageOptions: [5, 10, 25, 50]
+        perPageOptions: [5, 10, 25, 50],
       }),
     },
     allowSearch: {
@@ -187,13 +192,10 @@ export default {
     };
     let pagination = this.$store.getters.getPaginationData("organisations");
     if (!pagination) {
-      this.$store.dispatch(
-        "setPaginationData", 
-        {
-          type: "organisations",
-          defaultPagination
-        }
-      ); 
+      this.$store.dispatch("setPaginationData", {
+        type: "organisations",
+        defaultPagination,
+      });
       pagination = defaultPagination;
     }
     return {
@@ -219,15 +221,12 @@ export default {
           prop: "name",
           label: "Name",
           minWidth: 150,
-        }
+        },
       ],
       tableData: [],
       pagination,
       searchQuery: "",
-      propsToSearch: [
-        "reference",
-        "name",
-      ],
+      propsToSearch: ["reference", "name"],
       fuseSearch: null,
     };
   },
@@ -290,9 +289,9 @@ export default {
       shouldSort: true,
       useExtendedSearch: true,
       keys: [
-        { name: "reference", weight: 2, },
-        { name: "name", weight: 2, }
-      ] 
+        { name: "reference", weight: 2 },
+        { name: "name", weight: 2 },
+      ],
     });
   },
   methods: {
@@ -309,14 +308,17 @@ export default {
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteOrganisation(r.requestId);
+          const updateRes = await deleteOrganisation(
+            r.GSI2PK,
+            this.$store.getters.getActiveCampaign
+          );
           if (updateRes?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
             }));
           } else {
             let indexToDelete = this.tableData.findIndex(
-              (tableRow) => tableRow.requestId === r.requestId
+              (tableRow) => tableRow.GSI2PK === r.GSI2PK
             );
             if (indexToDelete >= 0) {
               this.tableData.splice(indexToDelete, 1);

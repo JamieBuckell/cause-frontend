@@ -14,7 +14,7 @@
           }"
         >
         </sidebar-item>
-
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'QR Scanner', icon: 'nc-icon nc-mobile' }"
@@ -28,6 +28,7 @@
             }"
           ></sidebar-item>
         </sidebar-item>
+        -->
 
         <sidebar-item
           v-if="checkRole('admin')"
@@ -42,6 +43,8 @@
             :link="{ name: 'View All', path: '/organisations' }"
           ></sidebar-item>
         </sidebar-item>
+
+        <!----
         <sidebar-item
           v-if="
             !checkRole('admin') &&
@@ -54,6 +57,9 @@
           }"
         >
         </sidebar-item>
+        -->
+
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Nominators', icon: 'nc-icon nc-light-3' }"
@@ -62,15 +68,13 @@
             :link="{ name: 'View All', path: '/nominators' }"
           ></sidebar-item>
         </sidebar-item>
+        -->
+
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Families', icon: 'nc-icon nc-app' }"
         >
-          <!--
-          <sidebar-item
-            :link="{ name: 'Add New', path: '/families/add' }"
-          ></sidebar-item>
-          -->
           <sidebar-item
             :link="{ name: 'View All', path: '/families/list' }"
           ></sidebar-item>
@@ -78,6 +82,8 @@
             :link="{ name: 'Hampers', path: '/hampers/list' }"
           ></sidebar-item>
         </sidebar-item>
+        -->
+
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Donors', icon: 'nc-icon nc-delivery-fast' }"
@@ -86,6 +92,8 @@
             :link="{ name: 'View All', path: '/donors' }"
           ></sidebar-item>
         </sidebar-item>
+
+        <!---->
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Subscribers', icon: 'nc-icon nc-email-85' }"
@@ -94,6 +102,9 @@
             :link="{ name: 'View All', path: '/subscribers' }"
           ></sidebar-item>
         </sidebar-item>
+        <!---->
+
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Feedback', icon: 'nc-icon nc-quote' }"
@@ -105,6 +116,8 @@
             :link="{ name: 'Volunteers', path: '/feedback/volunteers' }"
           ></sidebar-item>
         </sidebar-item>
+        -->
+
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Communications', icon: 'nc-icon nc-notification-70' }"
@@ -117,6 +130,7 @@
           ></sidebar-item>
         </sidebar-item>
 
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Lists', icon: 'nc-icon nc-notes' }"
@@ -134,7 +148,9 @@
             }"
           ></sidebar-item>
         </sidebar-item>
+        -->
 
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Admin Users', icon: 'nc-icon nc-badge' }"
@@ -147,7 +163,9 @@
             :link="{ name: 'Add New', path: '/admin/users/add' }"
           ></sidebar-item>
         </sidebar-item>
+        -->
 
+        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{
@@ -166,6 +184,7 @@
             }"
           ></sidebar-item>
         </sidebar-item>
+        -->
 
         <sidebar-item
           v-if="checkRole('jamie')"
@@ -270,6 +289,14 @@
     <div class="main-panel">
       <top-navbar></top-navbar>
 
+      <div class="global-loading" v-if="isLoading">
+        <div class="center">
+          <div class="spinner-border text-muted" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+      </div>
+
       <dashboard-content @click.native="toggleSidebar"> </dashboard-content>
 
       <content-footer></content-footer>
@@ -277,25 +304,26 @@
   </div>
 </template>
 <script>
-import TopNavbar from './TopNavbar.vue'
-import ContentFooter from './ContentFooter.vue'
-import DashboardContent from './Content.vue'
-import UserMenu from './Extra/UserMenu.vue'
-import PerfectScrollbar from 'perfect-scrollbar'
-import 'perfect-scrollbar/css/perfect-scrollbar.css'
+import TopNavbar from "./TopNavbar.vue";
+import ContentFooter from "./ContentFooter.vue";
+import DashboardContent from "./Content.vue";
+import UserMenu from "./Extra/UserMenu.vue";
+import PerfectScrollbar from "perfect-scrollbar";
+import "perfect-scrollbar/css/perfect-scrollbar.css";
+import { getPlatformData } from "@/services/campaignData";
 
 function hasElement(className) {
-  return document.getElementsByClassName(className).length > 0
+  return document.getElementsByClassName(className).length > 0;
 }
 
 function initScrollbar(className) {
   if (hasElement(className)) {
-    new PerfectScrollbar(`.${className}`)
+    new PerfectScrollbar(`.${className}`);
   } else {
     // try to init it later in case this component is loaded async
     setTimeout(() => {
-      initScrollbar(className)
-    }, 100)
+      initScrollbar(className);
+    }, 100);
   }
 }
 
@@ -310,61 +338,96 @@ export default {
   data() {
     return {
       idleTimeLimit: 10, //In minutes
-    }
+      isLoading: false,
+    };
   },
   computed: {
     getUsersName() {
-      return `${this.$store.getters.usersName}`
+      return `${this.$store.getters.usersName}`;
+    },
+    activeCampaignId() {
+      return this.$store.getters.getActiveCampaign;
     },
   },
   methods: {
     checkRole(role) {
-      return this.userInGroup(role)
+      return this.userInGroup(role);
     },
     toggleSidebar() {
       if (this.$sidebar.showSidebar) {
-        this.$sidebar.displaySidebar(false)
+        this.$sidebar.displaySidebar(false);
       }
     },
     initScrollbar() {
-      let docClasses = document.body.classList
-      let isWindows = navigator.platform.startsWith('Win')
+      let docClasses = document.body.classList;
+      let isWindows = navigator.platform.startsWith("Win");
       if (isWindows) {
         // if we are on windows OS we activate the perfectScrollbar function
-        initScrollbar('main-panel')
+        initScrollbar("main-panel");
 
-        docClasses.add('perfect-scrollbar-on')
+        docClasses.add("perfect-scrollbar-on");
       } else {
-        docClasses.add('perfect-scrollbar-off')
+        docClasses.add("perfect-scrollbar-off");
       }
     },
     idleTimer: () => {
-      var time
-      window.onload = resetTimer
+      var time;
+      window.onload = resetTimer;
       // DOM Events
-      document.onmousemove = resetTimer
-      document.onkeydown = resetTimer
+      document.onmousemove = resetTimer;
+      document.onkeydown = resetTimer;
 
       function logout() {
-        alert('Inactivity Timeout')
-        this.$store.dispatch('signOut')
+        alert("Inactivity Timeout");
+        this.$store.dispatch("signOut");
       }
 
       function resetTimer() {
-        clearTimeout(time)
-        time = setTimeout(logout, 60 * this.idleTimeLimit * 1000)
+        clearTimeout(time);
+        time = setTimeout(logout, 60 * this.idleTimeLimit * 1000);
         // 1000 milliseconds = 1 second
       }
     },
   },
   async mounted() {
-    this.initScrollbar()
-    this.$store.dispatch('checkTokenExpiration')
+    this.initScrollbar();
+    this.$store.dispatch("checkTokenExpiration");
+    await getPlatformData();
   },
   watch: {
     $route(to, from) {
-      this.$store.dispatch('checkTokenExpiration')
+      this.$store.dispatch("checkTokenExpiration");
+    },
+    async activeCampaignId(to, from) {
+      this.isLoading = true;
+      await getPlatformData();
+      this.isLoading = false;
     },
   },
-}
+};
 </script>
+<style lang="scss" scoped>
+.global-loading {
+  padding: 30px 15px;
+  min-height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  z-index: 1000;
+  padding-top: 90px;
+  text-align: center;
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .spinner-border {
+      z-index: 1001;
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.5em;
+    }
+  }
+}
+</style>

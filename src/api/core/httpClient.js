@@ -2,16 +2,13 @@ import { store } from "@/store";
 import router from "@/router";
 import axios from "axios";
 
-const apiURL = process.env.NODE_ENV === 'production' ? "https://api.cause-foundation.org.uk/" : "https://causeapi.bouchelle.co.uk/" 
+const apiURL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.cause-foundation.org.uk/"
+    : "https://causeapi.bouchelle.co.uk/";
+// "https://ig3hly0ga3.execute-api.eu-west-2.amazonaws.com/"
 
 const httpClient = axios.create({
-  baseURL: apiURL + (process.env.NODE_ENV === 'production' ? "live" : "dev"),
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const httpClientV2 = axios.create({
   baseURL: apiURL,
   headers: {
     "Content-Type": "application/json",
@@ -30,9 +27,9 @@ const authInterceptor = (config) => {
 
 const errorInterceptor = (error) => {
   if (!error.response) {
-    if (error.toString().includes('Network Error')) {
+    if (error.toString().includes("Network Error")) {
       // store.dispatch("signOut");
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         router.push({
           path: "/error/unexpected",
         });
@@ -43,7 +40,6 @@ const errorInterceptor = (error) => {
   const { response } = error;
   // console.log(error, response);
   switch (error.response.status) {
-
     case 502:
     case 504:
     case 400:
@@ -61,8 +57,11 @@ const errorInterceptor = (error) => {
     case 403:
       if (response.config && response.config.url === "/auth/refresh") {
         store.dispatch("signOut");
-      } else if (response.config && response.config.url !== "/auth/reset-password/auth") {
-        if (process.env.NODE_ENV === 'production') {
+      } else if (
+        response.config &&
+        response.config.url !== "/auth/reset-password/auth"
+      ) {
+        if (process.env.NODE_ENV === "production") {
           router.push({
             path: "/",
           });
@@ -71,12 +70,13 @@ const errorInterceptor = (error) => {
 
     // eslint-disable-next-line no-fallthrough
     default: {
-      let errorCode, message = "";
+      let errorCode,
+        message = "";
       if (response.data?.errorInfo) {
         const { details } = response.data?.errorInfo;
         const obj = details[0];
         errorCode = obj.errorCode;
-        message = obj.message
+        message = obj.message;
       } else if (response.data) {
         errorCode = error.response.status;
         message = response.data.messages;
@@ -84,7 +84,9 @@ const errorInterceptor = (error) => {
 
       const err = {
         statusCode: response.status,
-        error: response.data?.errorString ? response.data?.errorString : message,
+        error: response.data?.errorString
+          ? response.data?.errorString
+          : message,
         code: errorCode,
         message,
       };
@@ -111,11 +113,4 @@ httpClient.interceptors.request.use(requestInterceptor);
 httpClient.interceptors.response.use(responseInterceptor, errorInterceptor);
 httpClient.interceptors.request.use(authInterceptor);
 
-httpClientV2.interceptors.request.use(requestInterceptor);
-httpClientV2.interceptors.response.use(responseInterceptor, errorInterceptor);
-httpClientV2.interceptors.request.use(authInterceptor);
-
-export {
-  httpClient,
-  httpClientV2
-}
+export { httpClient };

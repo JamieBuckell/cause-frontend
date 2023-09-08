@@ -1,2 +1,8 @@
+node_modules
+public
+.cache
+husky
+src/stories
+.prettierrc
 build/*.js
 config/*.js

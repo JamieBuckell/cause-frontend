@@ -1,4 +1,7 @@
-import { httpClientV2 } from '@/api/core/httpClient'
+import { httpClient } from "@/api/core/httpClient";
 
 export const getAllCampaigns = async () =>
-  await httpClientV2.get(`/campaigns/list`)
+  await httpClient.get(`/campaigns/list`);
+
+export const getByCampaign = async (campaignId) =>
+  await httpClient.get(`/campaigns/get-by-id/${campaignId}`);

@@ -1,12 +1,12 @@
 import { httpClient } from "@/api/core/httpClient";
 
-export const nominatorRegister = async (
-  body
-) =>
+export const nominatorRegister = async (body) =>
   httpClient.post(`/nominators-register`, body);
 
 export const getNominators = async (organisationId) =>
-  await httpClient.get(`/nominators/list${organisationId ? '/' +organisationId : ''}`);
+  await httpClient.get(
+    `/nominators/list${organisationId ? "/" + organisationId : ""}`
+  );
 
 export const getNominatorByRequest = async (requestId) =>
   await httpClient.get(`/nominators/get-by-request/${requestId}`);
@@ -22,4 +22,6 @@ export const approveNominator = async (nominatorId, organisationId) =>
 
 export const resetNominatorPassword = async (nominatorId) =>
   await httpClient.post(`/nominators/reset-password/${nominatorId}`);
-  
+
+export const createNominator = async (body) =>
+  await httpClient.post(`/nominators/create`);

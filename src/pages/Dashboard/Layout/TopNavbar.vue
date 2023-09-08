@@ -91,7 +91,6 @@
               class="select-default mb-3"
               v-model="activeCampaignId"
               placeholder="Choose Campaign"
-              @change="changeCampaign()"
               style="width: 280px"
             >
               <el-option
@@ -112,48 +111,35 @@
 </template>
 <script>
 import { Select, Option } from "element-ui";
-import { getAllCampaigns } from "@/api/campaign.api";
+import { getAllCampaigns, getByCampaign } from "@/api/campaign.api";
 export default {
   components: {
     [Select.name]: Select,
     [Option.name]: Option,
   },
   computed: {
+    activeCampaigns() {
+      return this.$store.getters.getAllCampaigns;
+    },
+    activeCampaignId: {
+      get() {
+        return this.$store.getters.getActiveCampaign;
+      },
+      set(val) {
+        this.$store.commit("setActiveCampaign", val);
+      },
+    },
     routeName() {
       const { name } = this.$route;
       return this.capitalizeFirstLetter(name);
     },
   },
-  async mounted() {
-    if (!this.activeCampaigns.length) {
-      const allCampaigns = await getAllCampaigns();
-      if (allCampaigns?.data) {
-        await this.$store.dispatch(
-          "setCampaignData",
-          allCampaigns.data.map((c) => ({
-            campaignId: c.requestId,
-            name: c.name,
-            sort: c.sort,
-          }))
-        );
-      }
-      this.activeCampaigns = this.$store.getters.getAllCampaigns;
-      this.activeCampaignId = this.$store.getters.getActiveCampaign;
-    }
-  },
   data() {
-    const activeCampaignId = this.$store.getters.getActiveCampaign;
-    const activeCampaigns = this.$store.getters.getAllCampaigns;
     return {
       activeNotifications: false,
-      activeCampaignId,
-      activeCampaigns,
     };
   },
   methods: {
-    changeCampaign() {
-      this.$store.commit("setActiveCampaign", this.activeCampaignId);
-    },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     },

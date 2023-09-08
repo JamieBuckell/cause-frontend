@@ -1,6 +1,11 @@
 <template>
   <card class="nominators-list">
-    <el-dialog center title="Nominate Families" :visible.sync="modals.create" width="80%">
+    <el-dialog
+      center
+      title="Nominate Families"
+      :visible.sync="modals.create"
+      width="80%"
+    >
       <FamilyAdd
         :key="createKey"
         :orgRef="`${hamperRef}`"
@@ -8,12 +13,12 @@
         :hamperCount="familyCount"
         :nominatorsFamilies="nominatorsFamilies"
         @saveFamilies="saveFamilies"
-                  z-index="1050"
+        z-index="1050"
       />
     </el-dialog>
     <template slot="header">
       <h4 class="card-title">
-        Families ({{orgFamiliesTotal}})
+        Families ({{ orgFamiliesTotal }})
 
         <button
           type="submit"
@@ -27,7 +32,7 @@
           Add Family
         </button>
         <p class="pull-right">
-          <l-alert type="danger"  v-if="canUserCreate && !maxFamilysCheck">
+          <l-alert type="danger" v-if="canUserCreate && !maxFamilysCheck">
             <span>Your team has reached the maximum family submissions.</span>
           </l-alert>
         </p>
@@ -128,7 +133,14 @@
 </template>
 <script>
 import Vue from "vue";
-import { Dialog, MessageBox, Table, TableColumn, Select, Option } from "element-ui";
+import {
+  Dialog,
+  MessageBox,
+  Table,
+  TableColumn,
+  Select,
+  Option,
+} from "element-ui";
 import { Pagination as LPagination } from "src/components/index";
 import {
   getFamilyByOrganisation,
@@ -259,7 +271,9 @@ export default {
         "families",
       ],
       fuseSearch: null,
-      orgFamiliesTotal: this.organisation?.familiesTotal ? this.organisation.familiesTotal : 0
+      orgFamiliesTotal: this.organisation?.familiesTotal
+        ? this.organisation.familiesTotal
+        : 0,
     };
   },
   computed: {
@@ -267,7 +281,10 @@ export default {
       return this.allowCreate;
     },
     maxFamilysCheck() {
-      return this.organisation.familiesLimit <= 0 || this.orgFamiliesTotal < this.organisation.familiesLimit;
+      return (
+        this.organisation.familiesLimit <= 0 ||
+        this.orgFamiliesTotal < this.organisation.familiesLimit
+      );
     },
     familyCount() {
       return this.tableData.filter(
@@ -321,11 +338,9 @@ export default {
     this.getListData();
     this.isLoading = false;
 
-    this.fuseSearch = new Fuse(this.tableData, { keys: ["companyName",
-        "firstName",
-        "lastName",
-        "email",
-        "families"] });
+    this.fuseSearch = new Fuse(this.tableData, {
+      keys: ["companyName", "firstName", "lastName", "email", "families"],
+    });
   },
   methods: {
     async handleDelete(i, r) {
@@ -353,7 +368,7 @@ export default {
             if (indexToDelete >= 0) {
               this.tableData.splice(indexToDelete, 1);
             }
-            this.orgFamiliesTotal --;
+            this.orgFamiliesTotal--;
           }
           /* */
         }
@@ -367,7 +382,7 @@ export default {
     },
     saveFamilies(families) {
       this.tableData = [...this.tableData, ...families];
-      this.createKey = !this.createKey
+      this.createKey = !this.createKey;
 
       Swal.fire({
         title: "Success",
@@ -376,9 +391,9 @@ export default {
         showConfirmButton: false,
       });
 
-      this.orgFamiliesTotal ++;
+      this.orgFamiliesTotal++;
       if (!this.maxFamilysCheck) {
-        this.closeModal('create');
+        this.closeModal("create");
       }
     },
     checkRole(role) {
@@ -386,13 +401,13 @@ export default {
     },
     async getListData() {
       if (this.organisationId) {
-        const res = await getFamilyByOrganisation(this.organisationId);
+        const res = {}; // await getFamilyByOrganisation(this.organisationId);
         this.tableData = Object.values(res.data.families);
         this.allMembers = Object.values(res.data.members);
 
         this.$emit("resultData", "families", this.tableData);
       } else if (this.checkRole("Admin")) {
-        const res = await getFamilies();
+        const res = {}; // await getFamilies();
         this.tableData = Object.values(res.data);
 
         this.$emit("resultData", "families", this.tableData);
