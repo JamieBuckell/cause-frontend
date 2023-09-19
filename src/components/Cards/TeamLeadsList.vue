@@ -406,16 +406,6 @@ export default {
           ...pData,
         });
 
-        this.tableData.push({
-          requestId: res.data.adminId ?? "",
-          organisationId: this.organisationId,
-          emailAddress: this.model.email,
-          telephoneNumber: this.model.telephone,
-          firstName: this.model.firstName,
-          lastName: this.model.lastName,
-          emailSent: false,
-        });
-
         this.model.email = "";
         this.model.telephone = "";
         this.model.firstName = "";
