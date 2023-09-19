@@ -3,8 +3,6 @@ import { httpClient } from "@/api/core/httpClient";
 export const donorRegister = async (body) =>
   httpClient.post(`/donors/register`, body);
 
-export const getDonors = async () => await httpClient.get(`/donors/list`);
-
 export const getDonorsByCampaign = async (campaignId) =>
   await httpClient.get(`/donors/campaign/list/${campaignId}`);
 

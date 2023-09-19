@@ -8,7 +8,9 @@
       This donors email has bounced:
       {{
         getBouncedReason(
-          donor && donor.bouncedDetail ? donor.bouncedDetail : {}
+          donor && donor.emailVerification.bouncedDetail
+            ? donor.emailVerification.bouncedDetail
+            : {}
         )
       }}
     </div>
@@ -48,7 +50,11 @@
                 <form @submit.prevent="handleSubmit(saveEmail)">
                   <div class="row">
                     <div class="col-12">
-                      <l-alert type="danger" v-for="m in messages" :key="m">
+                      <l-alert
+                        type="danger"
+                        v-for="(m, idx) in messages"
+                        :key="idx"
+                      >
                         <span> {{ getErrorMessage(m) }}</span>
                       </l-alert>
                       <ValidationProvider
@@ -302,12 +308,12 @@
                       >
                         <div
                           class="row"
-                          v-for="fi in parseInt(
+                          v-for="(fi, idx) in parseInt(
                             editPledgeData.numberOfFamilies
                               ? editPledgeData.numberOfFamilies
                               : 0
                           )"
-                          :key="fi"
+                          :key="idx"
                         >
                           <div class="col-12 col-md-3">
                             <label :for="`familyDetail[${fi - 1}]`"
@@ -422,7 +428,6 @@
 import Vue from "vue";
 import {
   downloadFile,
-  getDonorById,
   donorEmailUpdate,
   donorPledgeUpdate,
   confirmPledgeManual,
@@ -598,7 +603,7 @@ export default {
       }`;
     },
     async doConfirmAllocation(donor) {
-      const verification = await confirmPledgeManual(donor.email, "v");
+      const verification = await confirmPledgeManual(donor.GSI3PK, "v");
 
       const verifyResponse = {
         title: "Error",
@@ -717,10 +722,7 @@ export default {
       await Swal.fire({
         title: "Are you sure?",
         text: `If you send this allocation, the process cannot be undone.`,
-        type: "warning",
         showCancelButton: true,
-        confirmButtonClass: "btn btn-success btn-fill",
-        cancelButtonClass: "btn btn-danger btn-fill",
         confirmButtonText: "Yes",
         cancelButtonText: "No",
         buttonsStyling: false,
@@ -779,14 +781,11 @@ export default {
       }
     },
     async saveEmail() {
-      if (this.updatedEmail != this.donor.email) {
+      if (this.updatedEmail != this.donor.GSI3PK) {
         await Swal.fire({
           title: "Do you want to resend the verification email?",
           text: `As you have updated this users email, you should also ask them to verify it unless you're confident the email is correct.`,
-          type: "warning",
           showCancelButton: true,
-          confirmButtonClass: "btn btn-success btn-fill",
-          cancelButtonClass: "btn btn-danger btn-fill",
           confirmButtonText: "Yes, resend it!",
           cancelButtonText: "No, just save",
           buttonsStyling: false,
@@ -794,21 +793,43 @@ export default {
           const sendEmail = d.isConfirmed || d.dismiss === "esc";
           if (!d.isDismissed || d.dismiss === "cancel") {
             const updateRes = await donorEmailUpdate({
+              campaign: this.$store.getters.getActiveCampaign,
               donorId: this.donor.GSI2PK,
-              previousEmail: this.donor.email,
+              previousEmail: this.donor.GSI3PK,
               updatedEmail: this.updatedEmail,
               sendEmail,
             });
-            if (updateRes.data.status != 200 && updateRes.data?.messages) {
+            if (updateRes.data?.messages) {
               this.messages = Object.keys(updateRes?.data?.messages).map(
                 (k) => ({
                   error: updateRes?.data?.messages[k],
                 })
               );
-            } else {
-              this.donor.email = this.updatedEmail;
-              this.subscriber.bounced = false;
-              this.subscriber.bouncedDetail = "";
+            }
+            if (updateRes.status == 200) {
+              const pData = this.$store.getters.getPlatformData;
+
+              const i = pData.donors.findIndex(
+                (d) => d.GSI3PK === this.donor.GSI3PK
+              );
+              const donorUpdates = { ...pData.donors[i] };
+
+              if (donorUpdates.PK) {
+                donorUpdates.GSI3PK = this.updatedEmail;
+                donorUpdates.GSI2SK = `EMAIL#${this.updatedEmail}`;
+
+                if (sendEmail) {
+                  donorUpdates.emailVerification.dateVerified = "";
+                  donorUpdates.emailVerification.verified = false;
+                }
+                this.donor = donorUpdates;
+
+                pData.donors[i] = donorUpdates;
+
+                await this.$store.dispatch("setPlatformData", {
+                  ...pData,
+                });
+              }
             }
           }
         });
@@ -834,7 +855,7 @@ export default {
           const updateRes = await donorPledgeUpdate({
             ...this.editPledgeData,
             donorId: this.donor.GSI2PK,
-            donorEmail: this.donor.email,
+            donorEmail: this.donor.GSI3PK,
             sendEmail,
           });
           if (updateRes.data.status != 200 && updateRes.data?.messages) {
@@ -851,7 +872,7 @@ export default {
     doEditPledge(c) {
       this.editPledge = true;
       this.editPledgeData = { ...c };
-      this.editPledgeData.familyDetail = JSON.parse(c.familyDetail);
+      this.editPledgeData.familyDetail = []; // JSON.parse(c.familyDetail);
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {

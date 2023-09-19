@@ -18,7 +18,7 @@
     </div>
     <div class="row" v-if="messages.length">
       <div class="col-12">
-        <l-alert type="danger" v-for="m in messages" :key="m">
+        <l-alert type="danger" v-for="(m, i) in messages" :key="i">
           <span> {{ getErrorMessage(m) }}</span>
         </l-alert>
       </div>
@@ -42,7 +42,7 @@
                     class="select-default"
                     v-for="nominator in allNominators"
                     :key="nominator.requestId"
-                    :label="nominator.fullName"
+                    :label="`${nominator.fullName} (${nominator.userReference})`"
                     :value="nominator.requestId"
                   >
                   </el-option>
@@ -364,7 +364,7 @@ export default {
       if (newVal?.requestId) {
         this.nominations = [];
         await this.updateFamilyData(newVal.requestId);
-        this.addFamily(this.editFamilyData);
+        this.addFamily();
       }
     },
   },
@@ -418,7 +418,7 @@ export default {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
       );
-      if (nominator) {
+      if (this?.chosenNominatorId && nominator) {
         this.setChosenNominator(nominator);
         this.nominations[0].hamperId = this.getHamperReference;
       }
@@ -440,23 +440,21 @@ export default {
     async createFamilies() {
       this.submittingFamily = true;
       const res = await createFamily({
-        nominatorId: this.chosenNominatorId
-          ? this.chosenNominatorId
-          : this.nominatorId,
+        campaign: this.$store.getters.getActiveCampaign,
         nominations: this.nominations,
+        nominator: this.chosenNominatorId,
       });
+      if (res?.data?.messages) {
+        this.messages = Object.keys(res?.data?.messages).map((k) => ({
+          error: res?.data?.messages[k],
+        }));
+      }
       if (res.status == 200) {
         const familyData = res?.data?.families;
         this.$emit("saveFamilies", familyData);
         this.nominations = [];
-      } else {
-        if (res?.data?.messages) {
-          this.messages = Object.keys(res?.data?.messages).map((k) => ({
-            error: res?.data?.messages[k],
-          }));
-        }
       }
-      this.submittingFamily = true;
+      this.submittingFamily = false;
     },
     async updateFamilies() {
       this.submittingFamily = true;
@@ -468,6 +466,7 @@ export default {
         const familyData = res?.data?.families;
         this.$emit("saveFamilies", { families: familyData, update: true });
         this.nominations = [];
+        this.addFamily();
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({

@@ -18,6 +18,13 @@
     <div class="spinner-border text-muted" role="status" v-if="isLoading">
       <span class="sr-only">Loading...</span>
     </div>
+    <div class="row" v-if="messages.length">
+      <div class="col-12">
+        <l-alert type="danger" v-for="(m, i) in messages" :key="i">
+          <span> {{ getErrorMessage(m) }}</span>
+        </l-alert>
+      </div>
+    </div>
     <div v-if="!isLoading && !createMode" :class="!paginate ? 'pb-4' : ''">
       <div
         class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap"
@@ -191,16 +198,13 @@
 <script>
 import Vue from "vue";
 import { Table, TableColumn, Select, Option } from "element-ui";
-import {
-  getOrganisationAdmins,
-  createOrganisationAdmin,
-} from "@/api/organisations.api";
-import { sendNominatorAdminEmail, createNominator } from "@/api/nominators.api";
+import { sendWelcomeEmail, createNominator } from "@/api/nominators.api";
 import { deleteUser } from "@/api/users.api";
 
 import Fuse from "fuse.js";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
+import LAlert from "src/components/Alert";
 
 Vue.prototype.$confirm = MessageBox.confirm;
 
@@ -210,6 +214,7 @@ export default {
     [Option.name]: Option,
     [Table.name]: Table,
     [TableColumn.name]: TableColumn,
+    LAlert,
   },
   props: {
     organisationId: {
@@ -242,6 +247,7 @@ export default {
           minWidth: 250,
         },
       ],
+      messages: [],
       tableData: [],
       pagination: {
         perPage: 5,
@@ -302,21 +308,40 @@ export default {
       return this.$store.getters.getPlatformData;
     },
   },
-  async mounted() {
-    if (this.userInGroup("admin") || this.userInGroup("teamlead")) {
-      this.getListData();
-      this.isLoading = false;
-    }
-
-    this.fuseSearch = new Fuse(this.tableData, { keys: ["name", "email"] });
-  },
   methods: {
     async sendWelcome(i, u) {
+      this.messages = [];
       u.emailSent = true;
-      const sent = await sendNominatorAdminEmail(u.requestId);
+      const sent = await sendWelcomeEmail(u.requestId);
+
+      if (sent.data?.messages) {
+        this.messages = Object.keys(sent?.data?.messages).map((k) => ({
+          error: sent?.data?.messages[k],
+        }));
+      }
+
       if (sent.status !== 200) {
         u.emailSent = false;
       } else {
+        const pData = this.$store.getters.getPlatformData;
+        const indexToReplace = pData.nominators.findIndex(
+          (d) =>
+            d?.SK === `EMAIL#${u?.emailAddress}` &&
+            d?.GSI3PK === this.organisationId
+        );
+        if (indexToReplace >= 0) {
+          const nom = { ...pData.nominators[indexToReplace] };
+          if (!nom?.emailVerification) {
+            nom.emailVerification = {};
+          }
+          nom.emailVerification.sent = true;
+          pData.nominators[indexToReplace] = nom;
+
+          await this.$store.dispatch("setPlatformData", {
+            ...pData,
+          });
+        }
+
         Swal.fire({
           title: "Success",
           text: "Welcome email sent successfully.",
@@ -355,16 +380,31 @@ export default {
     },
     async createAdmin() {
       this.isLoading = true;
+      this.messages = [];
       const res = await createNominator({
+        campaign: this.$store.getters.getActiveCampaign,
         organisationId: this.organisationId,
         email: this.model.email,
         telephone: this.model.telephone,
         firstname: this.model.firstName,
         lastname: this.model.lastName,
+        type: "team-lead",
+        sendEmail: false,
       });
-      // console.log(res);
-      if (res.data.success) {
+
+      if (res.data?.messages) {
+        this.messages = Object.keys(res?.data?.messages).map((k) => ({
+          error: res?.data?.messages[k],
+        }));
+      }
+      if (res.status == 200) {
         this.switchAdminMode();
+        const pData = this.$store.getters.getPlatformData;
+
+        pData.nominators.push(res.data?.nominator);
+        await this.$store.dispatch("setPlatformData", {
+          ...pData,
+        });
 
         this.tableData.push({
           requestId: res.data.adminId ?? "",
@@ -380,12 +420,6 @@ export default {
         this.model.telephone = "";
         this.model.firstName = "";
         this.model.lastName = "";
-
-        /* *
-        {"0":{"lastName":"Buckell","organisationId":"a2321430-7059-4064-859b-7f2097a546fc","status":"Approved","isAdmin":"true","telephoneNumber":"0191 123 4567","firstName":"Laura","requestId":"4edf0011-379b-433b-8631-adaf9975b069","emailAddress":"laurabuckell24+org@gmail.com","userReference":"LB","emailSent":false,"cognitoId":"","dateSubmitted":"2022-09-05 21:33:24"}}
-        /* */
-      } else {
-        //Handle Error
       }
       this.isLoading = false;
     },
@@ -417,9 +451,43 @@ export default {
             if (indexToDelete >= 0) {
               this.tableData.splice(indexToDelete, 1);
             }
+
+            const pData = this.$store.getters.getPlatformData;
+            indexToDelete = pData.nominators.findIndex(
+              (d) =>
+                d?.SK === `EMAIL#${r.emailAddress}` &&
+                d?.GSI3PK === this.organisationId
+            );
+            if (indexToDelete >= 0) {
+              pData.nominators.splice(indexToDelete, 1);
+
+              await this.$store.dispatch("setPlatformData", {
+                ...pData,
+              });
+            }
           }
         }
       });
+    },
+    getErrorMessage(m) {
+      for (const [key, value] of Object.entries(m)) {
+        return `${value}`;
+      }
+    },
+  },
+  async mounted() {
+    if (this.userInGroup("admin") || this.userInGroup("teamlead")) {
+      this.getListData();
+      this.isLoading = false;
+    }
+
+    this.fuseSearch = new Fuse(this.tableData, { keys: ["name", "email"] });
+  },
+  watch: {
+    async platformData() {
+      if (this.userInGroup("admin") || this.userInGroup("teamlead")) {
+        await this.getListData();
+      }
     },
   },
 };

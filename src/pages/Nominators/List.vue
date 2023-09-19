@@ -133,7 +133,6 @@
 <script>
 import Vue from "vue";
 import {
-  getNominators,
   approveNominator,
   updateNominator,
   resetNominatorPassword,
@@ -217,6 +216,11 @@ export default {
   watch: {
     data(newVal) {
       this.tableData = newVal;
+    },
+    async platformData() {
+      if (this.userInGroup("admin") || this.userInGroup("teamlead")) {
+        await this.getListData();
+      }
     },
   },
   data() {
@@ -381,7 +385,14 @@ export default {
     },
     async handleDelete(i, r) {
       const updateRes = await deleteUser(this.organisationId, r.emailAddress);
-      if (updateRes?.status != 200 && updateRes?.data?.messages) {
+
+      if (updateRes.data?.messages) {
+        this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
+          error: updateRes?.data?.messages[k],
+        }));
+      }
+
+      if (updateRes.status !== 200) {
         this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
           error: updateRes?.data?.messages[k],
         }));
@@ -391,6 +402,20 @@ export default {
         );
         if (indexToDelete >= 0) {
           this.tableData.splice(indexToDelete, 1);
+        }
+
+        const pData = this.$store.getters.getPlatformData;
+        indexToDelete = pData.nominators.findIndex(
+          (d) =>
+            d?.SK === `EMAIL#${r.emailAddress}` &&
+            d?.GSI3PK === this.organisationId
+        );
+        if (indexToDelete >= 0) {
+          pData.nominators.splice(indexToDelete, 1);
+
+          await this.$store.dispatch("setPlatformData", {
+            ...pData,
+          });
         }
       }
     },
@@ -425,7 +450,24 @@ export default {
         updatedData[foundIndex] = nominator;
 
         this.tableData = updatedData;
+
+        const pData = this.$store.getters.getPlatformData;
+        const indexToReplace = pData.nominators.findIndex(
+          (d) =>
+            d?.GSI2PK === nominator.requestId &&
+            d?.GSI3PK === this.organisationId
+        );
+        if (indexToReplace >= 0) {
+          const nom = { ...pData.nominators[indexToReplace] };
+          nom.status = "Approved";
+          pData.nominators[indexToReplace] = nom;
+
+          await this.$store.dispatch("setPlatformData", {
+            ...pData,
+          });
+        }
       }
+      /* */
     },
     async doResetPassword(i, n) {
       await Swal.fire({
@@ -539,17 +581,17 @@ export default {
                     <div class="col-12">
                       <span class="nominatorName">
                         <strong>
-                          ${nominator.nominatorDetails.firstName}
-                          ${nominator.nominatorDetails.lastName}
+                          ${nominator?.nominatorDetails?.firstName ?? ""}
+                          ${nominator?.nominatorDetails?.lastName ?? ""}
                         </strong>`;
-      if (nominator.nominatorDetails.telephoneNumber) {
+      if (nominator?.nominatorDetails?.telephoneNumber) {
         nominatorDetail += `
                         -
                         <a href="tel:${nominator.nominatorDetails.telephoneNumber}">${nominator.nominatorDetails.telephoneNumber}</a>`;
       }
       nominatorDetail += `
                       </span>`;
-      if (nominator.nominatorDetails.email) {
+      if (nominator?.nominatorDetails?.email) {
         nominatorDetail += `
                       <span class="nominatorEmail">
                         <a href="mailto:${nominator.nominatorDetails.email}">${nominator.nominatorDetails.email}</a>
@@ -593,42 +635,42 @@ export default {
               `;
       return nominatorDetail;
     },
+    async getListData() {
+      if (this.platformData?.nominators) {
+        this.tableData = await this.platformData?.nominators
+          .filter(
+            (n) =>
+              n?.GSI3PK === this.organisationId &&
+              (n?.type === "nominator" || n?.type === "team-lead")
+          )
+          .map((n) => ({
+            requestId: n?.GSI2PK ?? "",
+            nominatorDetail: n.PK ? this.setNominatorDetail(n) : "",
+            userReference: n?.nominatorDetails?.reference ?? "",
+            emailAddress: n?.nominatorDetails?.email ?? "",
+            fullName: `${n?.nominatorDetails?.firstName ?? ""} ${
+              n?.nominatorDetails?.lastName ?? ""
+            }`,
+          }));
+      }
+
+      this.organisationData = await this.platformData.organisations.find(
+        (o) => o.GSI2PK === this.organisationId
+      );
+    },
   },
   async mounted() {
     if (!this.userInGroup("admin") && !this.userInGroup("teamlead")) {
       this.$router.push("/");
     }
-    let res = {};
     if (!this.data || typeof this.data != "object") {
-      this.tableData = this.platformData?.nominators
-        .filter(
-          (n) =>
-            n?.GSI3PK === this.organisationId &&
-            (n?.type === "nominator" || n?.type === "team-lead")
-        )
-        .map((n) => ({
-          nominatorDetail: this.setNominatorDetail(n),
-          userReference: n.nominatorDetails.reference,
-        }));
-      // await getNominators(this.organisationId != '' ? this.organisationId : false);
-      // this.tableData = Object.values(res?.data);
-
-      //const organisationsRes = await getOrganisations();
-      this.organisationData = await this.platformData.organisations.find(
-        (o) => o.GSI2PK === this.organisationId
-      );
+      await this.getListData();
     } else {
       this.tableData = this.data;
     }
 
     this.$emit("resultData", "nominators", this.tableData);
     this.isLoading = false;
-
-    this.tableData.map((o) => {
-      o.fullName = `${o.firstName} ${o.lastName}`;
-      o.nominatorDetail = this.setNominatorDetail(o);
-      return true;
-    });
 
     EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },

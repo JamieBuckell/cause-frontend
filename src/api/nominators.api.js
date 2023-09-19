@@ -1,7 +1,7 @@
 import { httpClient } from "@/api/core/httpClient";
 
 export const nominatorRegister = async (body) =>
-  httpClient.post(`/nominators-register`, body);
+  httpClient.post(`/nominators/register`, body);
 
 export const getNominators = async (organisationId) =>
   await httpClient.get(
@@ -24,4 +24,7 @@ export const resetNominatorPassword = async (nominatorId) =>
   await httpClient.post(`/nominators/reset-password/${nominatorId}`);
 
 export const createNominator = async (body) =>
-  await httpClient.post(`/nominators/create`);
+  await httpClient.post(`/nominators/create`, body);
+
+export const sendWelcomeEmail = async (userId) =>
+  await httpClient.post(`/nominators/send-welcome/${userId}`);

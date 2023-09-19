@@ -493,6 +493,18 @@ export default {
           this.donorData.familyDetail.push("Please Choose");
         }
       }
+      if (
+        this.donorData &&
+        this.donorData.familyDetail &&
+        this.donorData.families > 0 &&
+        this.donorData.families < this.donorData.familyDetail.length
+      ) {
+        while (
+          this.donorData.familyDetail.length > parseInt(this.donorData.families)
+        ) {
+          this.donorData.familyDetail.pop();
+        }
+      }
       if (this.donorData.families > this.maxFamilyDetail) {
         this.donorData.familyDetail = [];
       }

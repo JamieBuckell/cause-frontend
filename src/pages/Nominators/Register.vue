@@ -7,106 +7,120 @@
           <form @submit.prevent="handleSubmit(handleNominatorRegisterSubmit)">
             <fade-render-transition>
               <card>
-                <div slot="header" class="text-center">
-                  <img :src="logo" :alt="logoAlt" class="site-logo" />
-                  <h3 class="card-title text-center">Nominator Registration</h3>
-                </div>
-                <div>
-                  <div class="row" v-if="messages.length">
-                    <div class="col-12">
-                      <l-alert type="danger" v-for="m in messages" :key="m">
-                        <span v-html="m" />
-                      </l-alert>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12 col-md-6">
-                      <ValidationProvider
-                        name="firstname"
-                        rules="required"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          placeholder="Your First name"
-                          :error="
-                            failed ? 'The First name field is required' : null
-                          "
-                          :hasSuccess="passed"
-                          label="First name"
-                          name="firstname"
-                          v-model="nominatorData.firstname"
-                        ></fg-input>
-                      </ValidationProvider>
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <ValidationProvider
-                        name="lastname"
-                        rules="required"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          placeholder="Your Last name"
-                          :error="
-                            failed ? 'The Last name field is required' : null
-                          "
-                          :hasSuccess="passed"
-                          label="Last name"
-                          name="lastname"
-                          v-model="nominatorData.lastname"
-                        ></fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider
-                        name="email"
-                        rules="required|email"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          type="email"
-                          placeholder="Your Email address"
-                          :error="failed ? 'The Email field is required' : null"
-                          :hasSuccess="passed"
-                          label="Email address"
-                          name="email"
-                          v-model="nominatorData.email"
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                    <div class="col-12">
-                      <ValidationProvider
-                        name="telephone"
-                        rules="required"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          type="telephone"
-                          placeholder="Your Contact number"
-                          :error="
-                            failed
-                              ? 'The Contact number field is required'
-                              : null
-                          "
-                          :hasSuccess="passed"
-                          label="Contact number"
-                          name="telephone"
-                          v-model="nominatorData.telephone"
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                </div>
-                <div class="text-center">
-                  <button
-                    type="submit"
-                    class="btn btn-fill btn-info btn-round btn-wd"
+                <div class="text-center" v-if="isLoading">
+                  <div
+                    class="spinner-border text-muted text-center"
+                    role="status"
                   >
-                    Register
-                  </button>
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                </div>
+                <div class="container" v-if="!isLoading">
+                  <div slot="header" class="text-center">
+                    <img :src="logo" :alt="logoAlt" class="site-logo" />
+                    <h3 class="card-title text-center">
+                      Nominator Registration
+                    </h3>
+                  </div>
+                  <div>
+                    <div class="row" v-if="messages.length">
+                      <div class="col-12">
+                        <l-alert type="danger" v-for="m in messages" :key="m">
+                          <span v-html="m" />
+                        </l-alert>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12 col-md-6">
+                        <ValidationProvider
+                          name="firstname"
+                          rules="required"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            placeholder="Your First name"
+                            :error="
+                              failed ? 'The First name field is required' : null
+                            "
+                            :hasSuccess="passed"
+                            label="First name"
+                            name="firstname"
+                            v-model="nominatorData.firstname"
+                          ></fg-input>
+                        </ValidationProvider>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <ValidationProvider
+                          name="lastname"
+                          rules="required"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            placeholder="Your Last name"
+                            :error="
+                              failed ? 'The Last name field is required' : null
+                            "
+                            :hasSuccess="passed"
+                            label="Last name"
+                            name="lastname"
+                            v-model="nominatorData.lastname"
+                          ></fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="email"
+                          rules="required|email"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            type="email"
+                            placeholder="Your Email address"
+                            :error="
+                              failed ? 'The Email field is required' : null
+                            "
+                            :hasSuccess="passed"
+                            label="Email address"
+                            name="email"
+                            v-model="nominatorData.email"
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="telephone"
+                          rules="required"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            type="telephone"
+                            placeholder="Your Contact number"
+                            :error="
+                              failed
+                                ? 'The Contact number field is required'
+                                : null
+                            "
+                            :hasSuccess="passed"
+                            label="Contact number"
+                            name="telephone"
+                            v-model="nominatorData.telephone"
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <button
+                      type="submit"
+                      class="btn btn-fill btn-info btn-round btn-wd"
+                    >
+                      Register
+                    </button>
+                  </div>
                 </div>
               </card>
             </fade-render-transition>
@@ -148,6 +162,8 @@ export default {
       logo: "/static/img/cause-foundation-logo.png",
       logoAlt: "CAUSE Foundation Logo",
       nominatorData,
+      campaignId: "unknown",
+      isLoading: true,
       messages: [],
     };
   },
@@ -164,6 +180,8 @@ export default {
         this.nominatorData.hashPassword = this.$route.params.hashPassword;
         const response = await nominatorRegister({
           ...this.nominatorData,
+          campaign: this.campaignId,
+          sendEmail: true,
         });
         if (response.status == 400) {
           if (response.data.messages) {
@@ -195,10 +213,18 @@ export default {
         orgFound =
           res.data.organisationId &&
           res.data.organisationId == this.$route.params.requestId;
+        this.campaignId = res?.data?.campaignId ?? "UNKNOWN";
+
+        this.isLoading = false;
       } catch (e) {}
     }
     if (!orgFound) {
-      router.push("/login?error="+encodeURI("This link is invalid, please ensure you've copied the full link correctly and try again. Contact us if this problem persists"));
+      router.push(
+        "/login?error=" +
+          encodeURI(
+            "This link is invalid, please ensure you've copied the full link correctly and try again. Contact us if this problem persists"
+          )
+      );
     }
   },
 };

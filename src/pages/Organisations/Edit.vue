@@ -206,6 +206,7 @@
         <FamiliesList
           v-if="organisation.requestId"
           :organisation="organisation"
+          :organisationId="organisationId"
           heading="Families"
           subHeading=" "
           :options="familyOptions"
@@ -220,13 +221,7 @@
 <script>
 import Vue from "vue";
 import { Table, TableColumn, Select, Option } from "element-ui";
-import {
-  getOrganisationByRequest,
-  updateOrganisation,
-  createOrganisationAdmin,
-} from "@/api/organisations.api";
-import { getNominators, resetNominatorPassword } from "@/api/nominators.api";
-import { getFamilyByOrganisation } from "@/api/families.api";
+import { updateOrganisation } from "@/api/organisations.api";
 import Fuse from "fuse.js";
 import TeamLeadsList from "@/components/Cards/TeamLeadsList.vue";
 import NominatorsList from "@/pages/Nominators/List.vue";
@@ -289,6 +284,7 @@ export default {
       baseUrl: this.$hostname,
       organisation: {
         requestId: "",
+        campaign: "",
         urlHash: "",
         name: "",
         reference: "",
@@ -501,6 +497,37 @@ export default {
         return `${value}`;
       }
     },
+    async getOrganisationData() {
+      var pData = this.$store.getters.getPlatformData;
+
+      const organisationData = await pData?.organisations.find(
+        (o) => o.GSI2PK === this.organisationId
+      );
+
+      this.organisation = {
+        requestId: organisationData?.GSI2PK ?? "",
+        campaign: organisationData?.PK ?? "",
+        urlHash: organisationData?.urlHash ?? "",
+        name: organisationData?.organisation?.name ?? "",
+        reference: organisationData?.SK ?? "",
+        referenceSet: organisationData?.SK !== "",
+        contacts: {
+          lead: {
+            name: organisationData?.organisation?.leadContactName,
+            number: organisationData?.organisation?.leadContactNumber,
+            email: organisationData?.organisation?.leadContactEmail,
+          },
+          secondary: {
+            name: organisationData?.organisation?.secondaryContactName,
+            number: organisationData?.organisation?.secondaryContactNumber,
+            email: organisationData?.organisation?.secondaryContactEmail,
+          },
+        },
+        familiesLimit: organisationData?.organisation?.familiesLimit ?? null,
+        familiesTotal: organisationData?.organisation?.totalFamilies ?? 0,
+        status: organisationData?.status ?? "",
+      };
+    },
   },
   async mounted() {
     if (!this.userInGroup("admin")) {
@@ -510,41 +537,27 @@ export default {
       this.$router.push("/");
     }
     this.organisationId = this.$route.params.requestId;
+    await this.getOrganisationData();
+
+    if (
+      !this.organisation ||
+      this.organisation?.campaign !== this.$store.getters.getActiveCampaign
+    ) {
+      this.$router.push("/organisations/list");
+    }
 
     this.fuseSearch = new Fuse(this.tableData, { keys: ["name", "email"] });
-
-    const organisationData = await this.platformData.organisations.find(
-      (o) => o.GSI2PK === this.organisationId
-    );
-
-    this.organisation = {
-      requestId: organisationData?.GSI2PK ?? "",
-      urlHash: organisationData?.urlHash ?? "",
-      name: organisationData?.organisation?.name ?? "",
-      reference: organisationData?.SK ?? "",
-      referenceSet: organisationData?.SK !== "",
-      contacts: {
-        lead: {
-          name: organisationData?.organisation?.leadContactName,
-          number: organisationData?.organisation?.leadContactNumber,
-          email: organisationData?.organisation?.leadContactEmail,
-        },
-        secondary: {
-          name: organisationData?.organisation?.secondaryContactName,
-          number: organisationData?.organisation?.secondaryContactNumber,
-          email: organisationData?.organisation?.secondaryContactEmail,
-        },
-      },
-      familiesLimit: organisationData?.organisation?.familiesLimit ?? null,
-      familiesTotal: organisationData?.organisation?.totalFamilies ?? 0,
-      status: organisationData?.status ?? "",
-    };
     this.isLoading.organisation = false;
 
     const familiesData = {}; //await getFamilyByOrganisation(this.organisationId);
 
-    this.families = familiesData.data?.families;
+    this.families = familiesData.data?.families ?? {};
     this.isLoading.organisation = false;
+  },
+  watch: {
+    async platformData() {
+      await this.getOrganisationData();
+    },
   },
 };
 </script>

@@ -256,7 +256,7 @@ export default {
           }
         }
       });
-    }
+    },
   },
   async mounted() {
     const tableData = await getAdminUsers();

@@ -7,12 +7,14 @@ const getDefaultState = () => {
       example: "any data",
     },
     lastUpdated: "",
+    forceRefresh: false,
   };
 };
 const state = getDefaultState();
 
 const getters = {
   getAllCampaigns: (state) => state.allCampaigns,
+  getForceRefresh: (state) => state.forceRefresh,
   getActiveCampaign: (state) => state.activeCampaign,
   getGenericData: (state) => (key) => state.genericData[key],
   getPlatformData: (state) => state.platformData,
@@ -25,6 +27,9 @@ const mutations = {
   },
   setActiveCampaign(state, campaignId) {
     state.activeCampaign = campaignId;
+  },
+  setForceRefresh(state, forceRefresh) {
+    state.forceRefresh = forceRefresh;
   },
   setGenData(state, { key, data }) {
     state.genericData[key] = data;

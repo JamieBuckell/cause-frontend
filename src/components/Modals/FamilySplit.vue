@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row" v-if="messages.length">
       <div class="col-12">
-        <l-alert type="danger" v-for="m in messages" :key="m">
+        <l-alert type="danger" v-for="(m, i) in messages" :key="i">
           <span> {{ getErrorMessage(m) }}</span>
         </l-alert>
       </div>
@@ -82,7 +82,7 @@
                   {{
                     member.additionalInfo
                       ? member.additionalInfo
-                      : 'None specified'
+                      : "None specified"
                   }}
                 </div>
               </div>
@@ -113,10 +113,10 @@ import {
   Option,
   Collapse,
   CollapseItem,
-} from 'element-ui'
-import breakpoints from '@/util/breakpoints'
-import { splitFamily } from '@/api/families.api'
-import LAlert from 'src/components/Alert'
+} from "element-ui";
+import breakpoints from "@/util/breakpoints";
+import { splitFamily } from "@/api/families.api";
+import LAlert from "src/components/Alert";
 
 export default {
   components: {
@@ -131,11 +131,11 @@ export default {
   props: {
     orgRef: {
       type: String,
-      default: '',
+      default: "",
     },
     nominatorId: {
       type: String,
-      default: '',
+      default: "",
     },
     hamperCount: {
       type: Number,
@@ -156,8 +156,8 @@ export default {
   },
   watch: {
     familyData(newVal) {
-      this.resetWindow()
-      this.updatedData = newVal
+      this.resetWindow();
+      this.updatedData = newVal;
     },
   },
   data() {
@@ -165,104 +165,104 @@ export default {
       splittingFamily: false,
       activePanel: 0,
       nominations: [],
-      chosenNominatorId: '',
+      chosenNominatorId: "",
       chosenNominator: {},
       updatedData: [],
       splitData: [],
       selectionOptions: {
-        adult: ['mum', 'dad'],
-        child: ['Boy', 'Girl'],
+        adult: ["mum", "dad"],
+        child: ["Boy", "Girl"],
       },
       messages: [],
-    }
+    };
   },
   computed: {
     nominatorsFamilies() {
       return this.allFamilies.filter(
         (f) => f.nominatorId == this.chosenNominatorId
-      )
+      );
     },
     breakpoints: () => breakpoints.screen,
     ageList() {
-      return Array.from(Array(115).keys())
+      return Array.from(Array(115).keys());
     },
     ageTypes() {
-      return ['Years', 'Months']
+      return ["Years", "Months"];
     },
     whoList() {
       return [
-        'Mam',
-        'Dad',
-        'Boy',
-        'Girl',
-        'Grandma',
-        'Grandad',
-        'Male',
-        'Female',
-        'Other',
-      ]
+        "Mam",
+        "Dad",
+        "Boy",
+        "Girl",
+        "Grandma",
+        "Grandad",
+        "Male",
+        "Female",
+        "Other",
+      ];
     },
     familyCount() {
-      return this.nominatorsFamilies.length
+      return this.nominatorsFamilies.length;
     },
     nextHamperId() {
       const totalNewNominations = this?.nominations
         ? this.nominations.length + this.splitData.length
-        : 0
+        : 0;
 
       let validHamperId = (this.familyCount + totalNewNominations)
         .toString()
-        .padStart(3, '0')
+        .padStart(3, "0");
 
-      let existingRef = false
+      let existingRef = false;
       if (this.nominatorsFamilies) {
         existingRef = this.nominatorsFamilies.find(
           (f) =>
             f.reference ===
             `${this.orgRef}${this.nominatorsReference}-${validHamperId}`
-        )
+        );
       }
 
       if (existingRef) {
-        let isUnique = false
+        let isUnique = false;
 
-        let hamperIncrement = 0
+        let hamperIncrement = 0;
         while (!isUnique) {
-          hamperIncrement++
-          let checkIncrement = hamperIncrement.toString().padStart(3, '0')
+          hamperIncrement++;
+          let checkIncrement = hamperIncrement.toString().padStart(3, "0");
           const existingRefCheck = this.nominatorsFamilies.find(
             (f) =>
               f.reference ===
               `${this.orgRef}${this.nominatorsReference}-${checkIncrement}`
-          )
-          isUnique = existingRefCheck === undefined
+          );
+          isUnique = existingRefCheck === undefined;
 
           if (hamperIncrement >= 100) {
-            isUnique = true
+            isUnique = true;
           }
         }
-        validHamperId = hamperIncrement.toString().padStart(3, '0')
+        validHamperId = hamperIncrement.toString().padStart(3, "0");
       }
 
-      return validHamperId
+      return validHamperId;
     },
     nominatorsReference() {
-      let returnRef = this.nominatorRef
+      let returnRef = this.nominatorRef;
 
       if (!returnRef && this.chosenNominator.userReference) {
-        returnRef = this.chosenNominator.userReference
+        returnRef = this.chosenNominator.userReference;
       }
 
-      return returnRef
+      return returnRef;
     },
     getHamperReference() {
-      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`
+      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`;
     },
   },
   async mounted() {
-    this.resetWindow()
+    this.resetWindow();
 
-    this.chosenNominatorId = this.nominatorId
+    this.chosenNominatorId = this.nominatorId;
 
     /* *
     const storedNominator = this.$store.getters.getGenericData("SplitFamilyChosenNominator");
@@ -272,14 +272,14 @@ export default {
       this.chosenNominatorId = storedNomExists ? storedNomExists.requestId : this.allNominators[0].requestId;
     }
     /* */
-    this.changeNominator()
+    this.changeNominator();
   },
   methods: {
     manualHamperId(member) {
       const memberIndex = this.updatedData.members.findIndex(
         (fm) => fm.requestId === member.requestId
-      )
-      this.updatedData.members[memberIndex].hamperId = member.hamperId
+      );
+      this.updatedData.members[memberIndex].hamperId = member.hamperId;
     },
     assignNewHamperID(member, nomIndex) {
       if (member.familyNumber === 1) {
@@ -288,68 +288,69 @@ export default {
           this.splitData.splice(this.splitData.findIndex(fm => fm.hamperId === member.hamperId), 1);
         }
         /* */
-        member.hamperId = this.familyData.reference
+        member.hamperId = this.familyData.reference;
       } else {
         const existing = this.nominations[nomIndex].members.filter(
           (m) =>
             m.familyNumber === member.familyNumber &&
             m.requestId != member.requestId
-        )
+        );
         if (
           existing &&
           existing[0] &&
           existing[0].hamperId &&
           existing[0].hamperId !== this.familyData.reference
         ) {
-          member.hamperId = `${existing[0].hamperId}`
+          member.hamperId = `${existing[0].hamperId}`;
         } else {
-          member.hamperId = `${this.orgRef}-${this.nextHamperId}`
+          member.hamperId = `${this.orgRef}-${this.nextHamperId}`;
         }
         if (member.hamperId !== this.familyData.reference) {
           const refCheck = this.splitData.find(
             (f) => f.hamperId === member.hamperId
-          )
+          );
           if (!refCheck) {
-            this.splitData.push({ hamperId: member.hamperId })
+            this.splitData.push({ hamperId: member.hamperId });
           }
         }
       }
 
       const memberIndex = this.updatedData.members.findIndex(
         (fm) => fm.requestId === member.requestId
-      )
+      );
       if (memberIndex >= 0) {
-        this.updatedData.members[memberIndex].hamperId = member.hamperId
-        this.updatedData.members[memberIndex].familyNumber = member.familyNumber
+        this.updatedData.members[memberIndex].hamperId = member.hamperId;
+        this.updatedData.members[memberIndex].familyNumber =
+          member.familyNumber;
       }
     },
     setChosenNominator(nominator) {
-      this.chosenNominator = nominator
-      this.chosenNominatorId = nominator.requestId
+      this.chosenNominator = nominator;
+      this.chosenNominatorId = nominator.requestId;
 
-      this.$store.dispatch('setGenericData', {
-        key: 'SplitFamilyChosenNominator',
+      this.$store.dispatch("setGenericData", {
+        key: "SplitFamilyChosenNominator",
         data: nominator,
-      })
+      });
     },
     changeNominator() {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
-      )
+      );
       if (nominator) {
-        this.setChosenNominator(nominator)
-        this.nominations[0].hamperId = this.getHamperReference
+        this.setChosenNominator(nominator);
+        this.nominations[0].hamperId = this.getHamperReference;
       }
     },
     async resetWindow() {
-      this.activePanel = 0
+      this.activePanel = 0;
 
       const familyDetail = {
         hamperId: `${this.familyData.reference}`,
         adults: 0,
         children: 0,
         members: [],
-      }
+      };
 
       for (const [key, member] of Object.entries(this.familyData.members)) {
         familyDetail.members.push({
@@ -360,29 +361,29 @@ export default {
           ageType: member.ageType,
           who: member.who,
           additionalInfo: member.additionalInfo,
-        })
+        });
       }
-      this.updatedData = { ...this.familyData }
+      this.updatedData = { ...this.familyData };
 
-      this.nominations = [familyDetail]
+      this.nominations = [familyDetail];
     },
     async splitFamilies() {
-      this.splittingFamily = true
+      this.splittingFamily = true;
       /* */
-      const res = await splitFamily(this.updatedData)
+      const res = await splitFamily(this.updatedData);
       if (res.status == 200) {
-        const familyData = res?.data?.families
-        this.$emit('splitFamilies', familyData)
-        this.nominations = []
+        const familyData = res?.data?.families;
+        this.$emit("splitFamilies", familyData);
+        this.nominations = [];
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
             error: res?.data?.messages[k],
-          }))
+          }));
         }
       }
       /* */
-      this.splittingFamily = false
+      this.splittingFamily = false;
     },
     addFamily() {
       this.nominations.unshift({
@@ -391,52 +392,52 @@ export default {
         children: 0,
         members: [
           {
-            age: '',
-            ageType: 'Years',
-            who: '',
-            additionalInfo: '',
+            age: "",
+            ageType: "Years",
+            who: "",
+            additionalInfo: "",
           },
         ],
-      })
+      });
     },
     calculateAges(index) {
       this.nominations[index].adults = this.nominations[index].members.reduce(
         function (a, b) {
-          return a + (b['age'] === '' || b['age'] < 18 ? 0 : 1)
+          return a + (b["age"] === "" || b["age"] < 18 ? 0 : 1);
         },
         0
-      )
+      );
       this.nominations[index].children = this.nominations[index].members.reduce(
         function (a, b) {
-          return a + (b['age'] !== '' && b['age'] < 18 ? 1 : 0)
+          return a + (b["age"] !== "" && b["age"] < 18 ? 1 : 0);
         },
         0
-      )
+      );
     },
 
     collapseTitle: (member, i) => {
       return (
-        (member.who ? '' : 'Member ') +
-        ('#' + i) +
-        (member.who || member.age ? ' - ' : '') +
-        (member.who && member.who != 'Other' ? member.who : '') +
-        (member.who == 'Other' ? member.whoOther : '') +
+        (member.who ? "" : "Member ") +
+        ("#" + i) +
+        (member.who || member.age ? " - " : "") +
+        (member.who && member.who != "Other" ? member.who : "") +
+        (member.who == "Other" ? member.whoOther : "") +
         (member.age
           ? ` (${member.age}${
-              member.ageType != 'Years' ? ' ' + member.ageType : ''
+              member.ageType != "Years" ? " " + member.ageType : ""
             })`
-          : '') +
-        (member.additionalInfo ? ' - ' : '') +
-        (member.additionalInfo ?? '')
-      )
+          : "") +
+        (member.additionalInfo ? " - " : "") +
+        (member.additionalInfo ?? "")
+      );
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
-}
+};
 </script>
 <style lang="scss">
 .family-actions {

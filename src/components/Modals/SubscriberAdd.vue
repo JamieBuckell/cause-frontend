@@ -10,7 +10,7 @@
 
             <div class="row" v-if="messages.length">
               <div class="col-12">
-                <l-alert type="danger" v-for="m in messages" :key="m">
+                <l-alert type="danger" v-for="(m, i) in messages" :key="i">
                   <span> {{ m }}</span>
                 </l-alert>
               </div>

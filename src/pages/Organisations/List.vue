@@ -38,8 +38,8 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.hasNominatedOptions"
-                :key="item"
+                v-for="(item, idx) in filters.hasNominatedOptions"
+                :key="idx"
                 :label="item"
                 :value="item"
               >
@@ -61,8 +61,8 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.organisationTypeOptions"
-                :key="item"
+                v-for="(item, idx) in filters.organisationTypeOptions"
+                :key="idx"
                 :label="item"
                 :value="item"
               >
@@ -83,8 +83,8 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.sortOptions"
-                :key="item"
+                v-for="(item, idx) in filters.sortOptions"
+                :key="idx"
                 :label="item"
                 :value="item"
               >
@@ -326,16 +326,28 @@ export default {
         r.GSI2PK,
         this.$store.getters.getActiveCampaign
       );
-      if (updateRes?.status != 200 && updateRes?.data?.messages) {
+      if (updateRes.data?.messages) {
         this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
           error: updateRes?.data?.messages[k],
         }));
-      } else {
+      }
+      if (updateRes?.status === 200) {
         let indexToDelete = this.tableData.findIndex(
           (tableRow) => tableRow.GSI2PK === r.GSI2PK
         );
         if (indexToDelete >= 0) {
           this.tableData.splice(indexToDelete, 1);
+        }
+        const pData = this.$store.getters.getPlatformData;
+        indexToDelete = pData.organisations.findIndex(
+          (d) => d?.GSI2PK === r.GSI2PK
+        );
+        if (indexToDelete >= 0) {
+          pData.organisations.splice(indexToDelete, 1);
+
+          await this.$store.dispatch("setPlatformData", {
+            ...pData,
+          });
         }
       }
     },
@@ -359,7 +371,10 @@ export default {
       this.tableData.map((o) => {
         o.reference = `${o.SK}`;
         o.name = `${o.organisation.name}`;
-        o.totalFamilies = `${o.organisation.totalFamilies}`;
+        o.totalFamilies = `${
+          this.platformData.families.filter((f) => f?.GSI3PK === o.GSI2PK)
+            .length ?? 0
+        }`;
         return true;
       });
     },

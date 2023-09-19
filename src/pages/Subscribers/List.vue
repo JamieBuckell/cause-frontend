@@ -123,7 +123,7 @@
                   <a
                     v-tooltip.top-center="'donor'"
                     class="btn-success btn-simple btn-link"
-                    :href="`/donors/view/${props.row.requestId}`"
+                    :href="`/donors/view/${props.row.PK}`"
                     target="_blank"
                     ><i class="fa fa-globe"></i
                   ></a>
@@ -296,6 +296,9 @@ export default {
       // this.paginationTotal(this.tableData.length);
       return this.pagination.total;
     },
+    platformData() {
+      return this.$store.getters.getPlatformData;
+    },
   },
   methods: {
     openModal(name) {
@@ -312,7 +315,7 @@ export default {
       return value;
     },
     handleEdit(index, row) {
-      this.$router.push(`/subscribers/view/${row.requestId}`);
+      this.$router.push(`/subscribers/view/${row.PK}`);
     },
     async handleDelete(index, row) {
       await Swal.fire({
@@ -327,7 +330,7 @@ export default {
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteSubscriber(row.requestId);
+          const updateRes = await deleteSubscriber(row.PK);
           /* */
           if (updateRes?.data?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
@@ -353,17 +356,49 @@ export default {
         return `${value}`;
       }
     },
+    async getSubscriberData() {
+      var pData = this.$store.getters.getPlatformData;
+      if (!pData?.subscribers) {
+        const platformData = await getByCampaign(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (platformData?.data) {
+          await this.$store.dispatch("setPlatformData", {
+            ...platformData.data,
+          });
+          pData = platformData?.data;
+        }
+      }
+
+      this.tableData = Object.values(pData?.subscribers ?? []);
+
+      this.tableData.map((s) => ({
+        PK: s.PK,
+        firstName: s?.firstName,
+        lastName: s?.lastName,
+        company: s?.company,
+      }));
+
+      this.fuseSearch = new Fuse(this.tableData, {
+        keys: ["PK", "firstName", "lastName", "company"],
+        includeScore: true,
+      });
+    },
   },
   async mounted() {
-    const tableData = await getSubscribers();
-    this.tableData = Object.values(tableData.data);
+    if (!this.userInGroup("admin")) {
+      this.$router.push("/");
+    }
+    await this.getSubscriberData();
 
+    EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
     this.isLoading = false;
-
-    this.fuseSearch = new Fuse(this.tableData, {
-      keys: ["PK", "firstName", "lastName", "company"],
-      includeScore: true,
-    });
+  },
+  watch: {
+    async platformData() {
+      await this.getDonorData();
+    },
   },
 };
 </script>

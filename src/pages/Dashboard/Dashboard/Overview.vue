@@ -41,7 +41,6 @@
 </template>
 <script>
 import { StatsCard } from "src/components/index";
-import { getSubscribers } from "@/api/subscribers.api";
 
 export default {
   components: {
@@ -160,11 +159,18 @@ export default {
         return;
       }
 
-      const donors = [...this.$store.getters.getPlatformData?.donors];
-      const families = [...this.$store.getters.getPlatformData?.families];
-      const nominators = [...this.$store.getters.getPlatformData?.nominators];
+      const donors = [...(this.$store.getters.getPlatformData?.donors ?? [])];
+      const families = [
+        ...(this.$store.getters.getPlatformData?.families ?? []),
+      ];
+      const nominators = [
+        ...(this.$store.getters.getPlatformData?.nominators ?? []),
+      ];
       const organisations = [
-        ...this.$store.getters.getPlatformData?.organisations,
+        ...(this.$store.getters.getPlatformData?.organisations ?? []),
+      ];
+      const subscribers = [
+        ...(this.$store.getters.getPlatformData?.subscribers ?? []),
       ];
       if (donors.length) {
         const verifiedDonors = donors.filter(
@@ -206,14 +212,13 @@ export default {
         }, 0);
       }
 
-      const subscribers = await getSubscribers();
-      if (subscribers.data) {
+      if (subscribers.length) {
         this.dashdata.subscribers.value =
-          Object.values(subscribers.data).filter(
+          Object.values(subscribers).filter(
             (s) => s.subscribed === true && s.verified === true
           ).length ?? 0;
         this.dashdata.subscribers.subvalue =
-          (Object.values(subscribers.data).filter(
+          (Object.values(subscribers).filter(
             (s) => s.subscribed === false && s.verified === true
           ).length ?? 0) + " Unsubscribed";
       }

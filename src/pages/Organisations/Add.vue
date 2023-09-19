@@ -4,7 +4,7 @@
       <h4 class="title">Organisation</h4>
     </div>
     <div v-if="messages.length">
-      <l-alert type="danger" v-for="m in messages" :key="m">
+      <l-alert type="danger" v-for="(m, idx) in messages" :key="idx">
         <span>{{ getErrorMessage(m) }}</span>
       </l-alert>
     </div>
@@ -35,7 +35,7 @@
             </fg-input>
           </div>
           <div class="col-md-3">
-            <span class="text-muted small d-block py-1 px-2">Type</span>
+            <label>Type</label>
             <el-select
               class="select-default w-100"
               label="Reference"
@@ -47,8 +47,8 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.orgTypes"
-                :key="item"
+                v-for="(item, idx) in filters.orgTypes"
+                :key="idx"
                 :label="item"
                 :value="item"
               >
@@ -56,61 +56,65 @@
             </el-select>
           </div>
         </div>
-        <!--
-        <div class="row">
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Lead Contact Name"
-              v-model="organisation.contacts.lead.name"
-            >
-            </fg-input>
-          </div>
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Contact number"
-              v-model="organisation.contacts.lead.number"
-            >
-            </fg-input>
-          </div>
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Email"
-              v-model="organisation.contacts.lead.email"
-            >
-            </fg-input>
-          </div>
-        </div>
+        <form>
+          <div class="row">
+            <div class="col">
+              <div class="row" v-for="(tl, i) in teamLeads" :key="i">
+                <div class="col-md-2">
+                  <fg-input
+                    type="text"
+                    label="Firstname"
+                    v-model="tl.firstName"
+                  >
+                  </fg-input>
+                </div>
+                <div class="col-md-2">
+                  <fg-input type="text" label="Lastname" v-model="tl.lastName">
+                  </fg-input>
+                </div>
+                <div class="col col-md-3">
+                  <fg-input type="text" label="Email" v-model="tl.email">
+                  </fg-input>
+                </div>
+                <div class="col-md-3">
+                  <fg-input
+                    type="text"
+                    label="Telephone"
+                    v-model="tl.telephone"
+                  >
+                  </fg-input>
+                </div>
+                <div class="col-md-2">
+                  <label>Send Welcome Email</label>
 
-        <div class="row">
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Secondary Contact Name"
-              v-model="organisation.contacts.secondary.name"
-            >
-            </fg-input>
+                  <el-select
+                    class="select-default w-100"
+                    v-model="tl.sendEmail"
+                    autocomplete="off"
+                    data-lpignore="true"
+                    data-form-type="other"
+                  >
+                    <el-option
+                      class="select-default"
+                      key="yes"
+                      label="Yes"
+                      value="yes"
+                    />
+                    <el-option key="no" label="No" value="no" />
+                  </el-select>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-1">
+              <button
+                class="btn btn-outline btn-fill btn-round btn-icon d-none d-lg-block mx-auto mt-4"
+                @click.prevent="addTeamLead"
+              >
+                <i class="fa fa-plus"></i>
+              </button>
+            </div>
           </div>
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Contact number"
-              v-model="organisation.contacts.secondary.number"
-            >
-            </fg-input>
-          </div>
-          <div class="col-md-4">
-            <fg-input
-              type="text"
-              label="Email"
-              v-model="organisation.contacts.secondary.email"
-            >
-            </fg-input>
-          </div>
-        </div>
-        -->
+        </form>
 
         <div class="text-right">
           <button
@@ -135,6 +139,7 @@
 </template>
 <script>
 import { createOrganisation, checkReference } from "@/api/organisations.api";
+import { createNominator } from "@/api/nominators.api";
 import { Select, Option } from "element-ui";
 import LAlert from "src/components/Alert";
 
@@ -152,6 +157,7 @@ export default {
         orgTypes: ["charity", "local-authority", "school"],
       },
       messages: [],
+      teamLeads: [],
     };
   },
   async mounted() {
@@ -159,6 +165,15 @@ export default {
     this.isLoading = false;
   },
   methods: {
+    async addTeamLead() {
+      this.teamLeads.push({
+        firstName: "",
+        lastName: "",
+        telephone: "",
+        email: "",
+        sendEmail: "no",
+      });
+    },
     async initOrg() {
       this.organisation = {
         name: "",
@@ -178,6 +193,8 @@ export default {
           },
         },
       };
+      this.teamLeads = [];
+      this.addTeamLead();
     },
     async updateRef() {
       if (!this.organisation.referenceSet) {
@@ -205,15 +222,50 @@ export default {
     async doCreate(redirect = true) {
       this.isLoading = true;
 
+      /* */
       const res = await createOrganisation(JSON.stringify(this.organisation));
-      if (res?.status != 200 && res?.data?.messages) {
+
+      if (res.data?.messages) {
         this.messages = Object.keys(res?.data?.messages).map((k) => ({
           error: res?.data?.messages[k],
         }));
-      } else if (res?.data?.organisation?.GSI2PK) {
+      }
+      if (res.status == 200 && res?.data?.organisation?.GSI2PK) {
         var pData = this.$store.getters.getPlatformData;
+
+        const tlPromises = [];
+        for (const tl of this.teamLeads) {
+          if (tl?.email) {
+            tlPromises.push(
+              createNominator({
+                campaign: this.$store.getters.getActiveCampaign,
+                organisationId: res?.data?.organisation?.GSI2PK,
+                email: tl.email,
+                telephone: tl?.telephone ?? "",
+                firstname: tl?.firstName ?? "",
+                lastname: tl?.lastName ?? "",
+                type: "team-lead",
+                sendEmail: tl?.sendEmail === "yes" ?? false,
+              })
+            );
+          }
+        }
+
+        await Promise.all(tlPromises).then((users) => {
+          if (users.length) {
+            for (const tl of users) {
+              console.log("tl promise", tl, tl?.data, tl?.data?.nominator);
+              if (tl?.data?.nominator) {
+                pData.nominators.push(tl.data.nominator);
+              }
+            }
+          }
+          console.log(users);
+        });
+
+        pData.organisations.push(res?.data?.organisation);
         await this.$store.dispatch("setPlatformData", {
-          pData,
+          ...pData,
         });
 
         if (redirect) {
@@ -224,6 +276,7 @@ export default {
           await this.initOrg();
         }
       }
+      /* */
 
       this.isLoading = false;
     },

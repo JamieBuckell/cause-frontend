@@ -70,7 +70,6 @@
         </sidebar-item>
         -->
 
-        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Families', icon: 'nc-icon nc-app' }"
@@ -78,11 +77,12 @@
           <sidebar-item
             :link="{ name: 'View All', path: '/families/list' }"
           ></sidebar-item>
+          <!----
           <sidebar-item
             :link="{ name: 'Hampers', path: '/hampers/list' }"
           ></sidebar-item>
-        </sidebar-item>
         -->
+        </sidebar-item>
 
         <sidebar-item
           v-if="checkRole('admin')"
@@ -348,6 +348,9 @@ export default {
     activeCampaignId() {
       return this.$store.getters.getActiveCampaign;
     },
+    forceRefresh() {
+      return this.$store.getters.getForceRefresh;
+    },
   },
   methods: {
     checkRole(role) {
@@ -398,10 +401,17 @@ export default {
     $route(to, from) {
       this.$store.dispatch("checkTokenExpiration");
     },
-    async activeCampaignId(to, from) {
+    async activeCampaignId() {
       this.isLoading = true;
       await getPlatformData();
       this.isLoading = false;
+    },
+    async forceRefresh(to) {
+      if (to) {
+        this.isLoading = true;
+        await getPlatformData(true);
+        this.isLoading = false;
+      }
     },
   },
 };

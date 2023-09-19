@@ -2,19 +2,22 @@ import { getAllCampaigns, getByCampaign } from "@/api/campaign.api";
 
 import { store } from "@/store";
 
-export const getPlatformData = async () => {
+export const getPlatformData = async (force = false) => {
   let activeCampaignId = store.getters.getActiveCampaign;
   let activePlatformData = store.getters.getPlatformData;
   const lastUpdated = store.getters.getLastUpdated;
   const currentTime = new Date().getTime() / 1000;
 
+  const refreshMinutes = 1;
+
   if (
+    force ||
     !activeCampaignId ||
     !activePlatformData ||
     !activePlatformData?.campaignId ||
     activePlatformData?.campaignId != activeCampaignId ||
     !lastUpdated ||
-    currentTime - lastUpdated >= 300
+    currentTime - lastUpdated >= refreshMinutes * 60
   ) {
     const allCampaigns = await getCampaigns();
     if (allCampaigns.length) {
@@ -30,6 +33,9 @@ export const getPlatformData = async () => {
           campaignId: activeCampaignId,
         });
       }
+    }
+    if (force) {
+      await store.commit("setForceRefresh", false);
     }
   }
 };

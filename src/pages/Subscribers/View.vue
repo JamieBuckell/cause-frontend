@@ -18,11 +18,12 @@
             </h4>
           </div>
           <div class="row">
-            <div class="col col-12" v-if="subscriber.email">
+            <div class="col col-12" v-if="subscriber.PK">
               <label>Email</label><br />
               <p v-if="!editEmailAddress">
-                {{ subscriber.email }}
+                {{ subscriber.PK }}
                 <button
+                  v-if="1 === 2"
                   @click.prevent="editEmailAddress = true"
                   class="btn btn-fill btn-info pull-right"
                 >
@@ -120,7 +121,11 @@ export default {
       },
     };
   },
-  computed: {},
+  computed: {
+    platformData() {
+      return this.$store.getters.getPlatformData;
+    },
+  },
   methods: {
     async saveEmail() {
       if (this.updatedEmail != this.subscriber.email) {
@@ -175,11 +180,13 @@ export default {
     if (!this.userInGroup("admin")) {
       this.$router.push("/");
     }
+    const pData = this.$store.getters.getPlatformData;
+    this.subscriber = pData.subscribers.find(
+      (s) => s?.PK === this.$route.params.subscriberId
+    );
+    console.log(pData, this.subscriber);
 
-    const donorRes = await getDonorById(this.$route.params.subscriberId);
-
-    this.subscriber = donorRes?.data?.donor;
-    this.updatedEmail = this.subscriber?.email;
+    this.updatedEmail = this.subscriber?.PK;
   },
 };
 </script>

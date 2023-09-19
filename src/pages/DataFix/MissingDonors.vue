@@ -7,68 +7,67 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { uuid } from 'vue-uuid'
-import { getDonorsByCampaign, getDonors } from '@/api/donors.api'
+import Vue from "vue";
+import { uuid } from "vue-uuid";
 
 window.EventBus = new Vue({
   methods: {
     emit(payload) {
-      this.$emit('$EventBusEvent', payload)
+      this.$emit("$EventBusEvent", payload);
     },
   },
-})
+});
 
 export default {
   components: {},
   props: {},
   data() {
     return {
-      output: '',
-    }
+      output: "",
+    };
   },
   computed: {},
   methods: {},
   async mounted() {
     if (!this.isJamie()) {
-      this.$router.push('/')
+      this.$router.push("/");
     }
 
-    const donorsData = await getDonors()
-    const donorsCampaignData = await getDonorsByCampaign(
+    const donorsData = []; //await getDonors()
+    const donorsCampaignData = []; /*await getDonorsByCampaign(
       this.$store.getters.getActiveCampaign
-    )
+    )*/
 
-    let errors = 0
-    let donorCount = 0
+    let errors = 0;
+    let donorCount = 0;
     for (
       var index = 0;
       index < Object.values(donorsData.data).length;
       index++
     ) {
-      const donor = Object.values(donorsData.data)[index]
+      const donor = Object.values(donorsData.data)[index];
 
       if (donor?.bounced) {
-        continue
+        continue;
       }
 
       if (
         donor?.dateSubscribed &&
-        donor.dateSubscribed.indexOf('2022-08-27') >= 0 &&
+        donor.dateSubscribed.indexOf("2022-08-27") >= 0 &&
         !donor?.dateAdded
       ) {
-        continue
+        continue;
       }
 
       const donorsOnly = Object.values(donorsCampaignData.data).filter(
         (dc) => dc.donorId === donor.requestId
-      )
+      );
 
       if (donorsOnly && donorsOnly.length > 0) {
-        donorCount++
+        donorCount++;
       } else {
-        errors++
-        this.output += `<a href="/donors/view/${donor.requestId}">${donor.email}</a><br />${donor.dateVerified} - ${donor.verified}<br /><br />`
+        errors++;
+        this.output += `<a href="/donors/view/${donor.requestId}">${donor.email}</a><br />${donor.dateVerified} - ${donor.verified}<br /><br />`;
         this.output += `
         {
           "requestId": {
@@ -92,13 +91,13 @@ export default {
           "numberOfFamilies": {
             "N": "1"
           }
-        }<br /><br />`
+        }<br /><br />`;
       }
     }
 
-    this.output += `<br />Total Errors: ${errors}`
+    this.output += `<br />Total Errors: ${errors}`;
   },
-}
+};
 </script>
 <style lang="scss">
 .donors-list {

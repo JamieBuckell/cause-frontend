@@ -16,7 +16,7 @@
           :key="createKey"
           :orgRef="`${orgRef}`"
           :nominatorRef="`${nominatorRef}`"
-          :nominatorId="currentNominator ? currentNominator.requestId : ''"
+          :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
           :nominatorsFamilies="nominatorsFamilies"
           :allFamilies="tableData"
@@ -35,7 +35,7 @@
           :key="createKey"
           :orgRef="`${orgRef}`"
           :nominatorRef="`${nominatorRef}`"
-          :nominatorId="currentNominator ? currentNominator.requestId : ''"
+          :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
           :nominatorsFamilies="nominatorsFamilies"
           :allFamilies="tableData"
@@ -55,7 +55,7 @@
         <FamilySplit
           :key="createKey"
           :orgRef="`${hamperRef}`"
-          :nominatorId="currentNominator ? currentNominator.requestId : ''"
+          :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
           :nominatorsFamilies="nominatorsFamilies"
           :allFamilies="tableData"
@@ -217,7 +217,6 @@ import {
   deleteFamily,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
-import { getDonors } from "@/api/donors.api";
 
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import FamilyAdd from "@/components/Modals/FamilyAdd.vue";
@@ -321,6 +320,11 @@ export default {
     allNominators(newVal) {
       this.allNominatorsData = newVal;
     },
+    async platformData() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
+    },
   },
   data() {
     const tableColumns = [
@@ -344,14 +348,16 @@ export default {
       {
         prop: "totalUnit",
         label: "Family Unit",
-        minWidth: 50,
+        minWidth: 60,
       },
-      {
+    ];
+    if (this.userInGroup("admin")) {
+      tableColumns.push({
         prop: "bagsReceived",
         label: "Bags",
         minWidth: 50,
-      },
-    ];
+      });
+    }
     if (this.options.showDonor && this.userInGroup("admin")) {
       tableColumns.push({
         prop: "donorDetail",
@@ -463,15 +469,15 @@ export default {
     },
     nominatorRef() {
       let nominatorReference = "";
-      if (this.currentNominator?.userReference) {
-        nominatorReference = this.currentNominator?.userReference;
+      if (this.currentNominator?.nominatorDetails?.reference) {
+        nominatorReference = this.currentNominator.nominatorDetails.reference;
       } else {
         if (this.allNominatorsData.length) {
           const nominator = this.allNominatorsData.find(
             (n) => n.requestId === this.familyData.nominatorId
           );
-          if (nominator?.userReference) {
-            nominatorReference = nominator.userReference;
+          if (nominator?.nominatorDetails?.reference) {
+            nominatorReference = nominator.nominatorDetails.reference;
           }
         }
       }
@@ -489,12 +495,12 @@ export default {
     },
     familyCount() {
       return this.tableData.filter(
-        (f) => f.nominatorId == this?.currentNominator?.requestId
+        (f) => f.nominatorId == this?.currentNominator?.GSI2PK
       ).length;
     },
     nominatorsFamilies() {
       return this.tableData.filter(
-        (f) => f.nominatorId == this?.currentNominator?.requestId
+        (f) => f.nominatorId == this?.currentNominator?.GSI2PK
       );
     },
     getSubHeading() {
@@ -506,8 +512,11 @@ export default {
     listingsData() {
       let result = this?.tableData ? this.tableData : [];
 
+      const pData = this.$store.getters.getPlatformData;
       result.map((f) => {
-        f.authorised = this.currentNominator.authorised;
+        f.authorised =
+          pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)?.status ===
+            "Approved" ?? false;
         return f;
       });
       if (result.length) {
@@ -625,6 +634,9 @@ export default {
         }
       }
       return propCustomActions;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
     },
   },
   methods: {
@@ -836,8 +848,46 @@ export default {
       this.orgFamiliesTotal += families.lenght;
       this.closeModal("split");
     },
-    saveFamilies(families) {
-      this.tableData = [...this.tableData, ...families];
+    async saveFamilies(families) {
+      const familyData = families.map((f) => ({
+        requestId: f?.GSI2PK ?? "",
+        organisationId: f?.GSI3PK,
+        nominatorId: f?.GSI3SK,
+        reference: f?.SK ? f.SK.replace("REF#", "") : "",
+        nominatorDetail: f?.nominatorDetail ?? "",
+        familyDetail: f?.familyDetail ?? "",
+        totalUnit: f?.totalUnit ?? 0,
+        bagsReceived: f?.bagsReceived ?? 0,
+      }));
+      this.tableData = [...familyData];
+
+      //Update platform data...
+      /* */
+      const pData = this.$store.getters.getPlatformData;
+      const nominatorSpecific = !(
+        this.userInGroup("admin") || this.userInGroup("teamlead")
+      );
+
+      const familiesToRemove = pData.families.filter(
+        (f) =>
+          f?.GSI3PK === this.organisationId &&
+          (!nominatorSpecific || f?.GSI3SK === this.currentNominator?.GSI2PK)
+      );
+      for (const family of familiesToRemove) {
+        const indexToDelete = pData.families.findIndex(
+          (f) => f?.GSI2PK === family?.GSI2PK
+        );
+        if (indexToDelete >= 0) {
+          pData.families.splice(indexToDelete, 1);
+        }
+      }
+
+      pData.families = [...pData.families, ...families];
+
+      await this.$store.dispatch("setPlatformData", {
+        ...pData,
+      });
+
       this.createKey = !this.createKey;
 
       Swal.fire({
@@ -898,25 +948,42 @@ export default {
         return `${value}`;
       }
     },
+    async getFamilyData() {
+      let familiesData = [];
+      if (this.organisation.requestId) {
+        familiesData = await this.platformData?.families.filter(
+          (f) =>
+            (this.userInGroup("admin") ||
+              this.userInGroup("teamlead") ||
+              f?.GSI3SK === this.currentNominator?.GSI2PK) &&
+            f?.GSI3PK === this.organisation.requestId &&
+            f?.type === "family"
+        );
+
+        this.familyMemberData = []; //Object.values(res?.data?.members);
+      } else if (this.userInGroup("admin")) {
+        familiesData = await this.platformData?.families.filter(
+          (n) => n?.type === "family"
+        );
+      }
+      this.tableData = familiesData.map((f) => ({
+        requestId: f?.GSI2PK ?? "",
+        organisationId: f?.GSI3PK,
+        nominatorId: f?.GSI3SK,
+        reference: f?.SK ? f.SK.replace("REF#", "") : "",
+        nominatorDetail: f?.nominatorDetail ?? "",
+        familyDetail: f?.familyDetail ?? "",
+        totalUnit: f?.totalUnit ?? 0,
+        bagsReceived: f?.bagsReceived ?? 0,
+      }));
+    },
   },
   async mounted() {
-    if (!this.userInGroup("admin") && !this.userInGroup("teamlead")) {
-      // this.$router.push("/");
-    }
-
     this.allNominatorsData = this.allNominators;
     this.currentNominator = this.nominator;
 
-    let res = {};
     if (!this.data || typeof this.data != "object") {
-      if (this.organisation.requestId) {
-        res = {}; // await getFamilyByOrganisation(this.organisation.requestId)
-        this.tableData = Object.values(res?.data?.families);
-        this.familyMemberData = Object.values(res?.data?.members);
-      } else if (this.userInGroup("admin")) {
-        res = {}; // await getFamilies()
-        this.tableData = Object.values(res?.data);
-      }
+      await this.getFamilyData();
     } else {
       this.tableData = this.data;
     }
@@ -942,8 +1009,8 @@ export default {
     }
 
     if (this.options.showDonor && this.userInGroup("admin")) {
-      const donorsRequest = await getDonors();
-      this.allDonorsData = Object.values(donorsRequest.data);
+      const donorsRequest = {}; // await getDonors();
+      this.allDonorsData = Object.values(donorsRequest?.data ?? []);
 
       this.tableData.map((o) => {
         if (this.options.showDonor) {

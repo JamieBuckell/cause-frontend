@@ -587,7 +587,9 @@ export default {
                         - ${this.getPreferenceDetail(preference)}<br />`;
             }
           } catch (e) {
+            /* eslint-disable no-console */
             console.log(e, familyRequest);
+            /* eslint-enable no-console */
           }
         }
       }

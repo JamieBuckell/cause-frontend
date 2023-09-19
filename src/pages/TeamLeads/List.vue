@@ -14,7 +14,7 @@
 </template>
 <script>
 import Vue from "vue";
-import { getNominators, approveNominator } from "@/api/nominators.api";
+import { approveNominator } from "@/api/nominators.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 
 window.EventBus = new Vue({

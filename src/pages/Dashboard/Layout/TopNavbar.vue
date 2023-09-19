@@ -83,7 +83,10 @@
       </div>
 
       <!-- -->
-      <div class="justify-content-end campaign-selector">
+      <div
+        class="justify-content-end campaign-selector"
+        v-if="isAdmin || activeCampaigns.length > 1"
+      >
         <div class="text-center">
           <p class="text-info">
             <strong>Campaign: </strong>
@@ -105,13 +108,24 @@
           </p>
         </div>
       </div>
+      <div
+        class="justify-content-end refresh-campaign"
+        v-if="isAdmin || activeCampaigns.length > 1"
+      >
+        <button
+          class="btn btn-outline btn-fill btn-round btn-icon d-none d-lg-block ml-3"
+          @click="refreshData"
+        >
+          <i class="fa fa-refresh"></i>
+        </button>
+      </div>
       <!-- -->
     </div>
   </nav>
 </template>
 <script>
 import { Select, Option } from "element-ui";
-import { getAllCampaigns, getByCampaign } from "@/api/campaign.api";
+
 export default {
   components: {
     [Select.name]: Select,
@@ -137,6 +151,7 @@ export default {
   data() {
     return {
       activeNotifications: false,
+      isAdmin: this.userInGroup("admin"),
     };
   },
   methods: {
@@ -161,6 +176,9 @@ export default {
     logOut() {
       this.$store.dispatch("signOut");
       return false;
+    },
+    async refreshData() {
+      await this.$store.commit("setForceRefresh", true);
     },
   },
 };

@@ -32,7 +32,7 @@
             <h3>Subject</h3>
             <p v-html="previewData.subject" />
             <h3>Date Sent</h3>
-            <p v-html="previewData.dateCreated" />
+            <p v-html="previewData.dateAdded" />
             <h3>Recipient Count</h3>
             <p v-html="previewData.recipientCount" />
             <h3>Additional Options</h3>
@@ -47,7 +47,7 @@
                   previewData.options.toAddresses.length
                 "
                 ><strong>To:</strong>
-                {{ previewData.options.toAddresses.join('; ') }}<br
+                {{ previewData.options.toAddresses.join("; ") }}<br
               /></small>
               <small v-if="previewData.options.excludePledged"
                 ><strong>Exclude Pledged Subscribers:</strong>
@@ -65,17 +65,17 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { sendEmail } from '@/api/communications.api'
-import { getSentCommuncations } from '@/api/communications.api'
-import ListingsPage from '@/components/Cards/ListingsPage.vue'
-import EmailPreview from '@/components/Communications/EmailPreview.vue'
-import { Dialog } from 'element-ui'
-import Swal from 'sweetalert2'
-import { MessageBox } from 'element-ui'
-import parseJson from 'parse-json'
+import Vue from "vue";
+import { sendEmail } from "@/api/communications.api";
+import { getSentCommuncations } from "@/api/communications.api";
+import ListingsPage from "@/components/Cards/ListingsPage.vue";
+import EmailPreview from "@/components/Communications/EmailPreview.vue";
+import { Dialog } from "element-ui";
+import Swal from "sweetalert2";
+import { MessageBox } from "element-ui";
+import parseJson from "parse-json";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
@@ -86,7 +86,7 @@ export default {
   props: {
     organisationId: {
       type: String,
-      default: '',
+      default: "",
     },
     paginateOptions: {
       type: Object,
@@ -100,12 +100,12 @@ export default {
     return {
       showPreview: false,
       previewData: {
-        template: '',
-        title: '',
-        subject: '',
-        content: '',
+        template: "",
+        title: "",
+        subject: "",
+        content: "",
         options: {},
-        dateCreated: '',
+        dateAdded: "",
         recipientCount: 0,
       },
       sentEmailsData: [],
@@ -118,89 +118,89 @@ export default {
       options: {
         columns: [
           {
-            prop: 'subject',
-            label: 'Email Subject',
+            prop: "subject",
+            label: "Email Subject",
             minWidth: 150,
           },
           {
-            prop: 'dateCreated',
-            label: 'Date Sent',
+            prop: "dateAdded",
+            label: "Date Sent",
             minWidth: 70,
           },
           {
-            prop: 'recipientCount',
-            label: 'Total Recipients',
+            prop: "recipientCount",
+            label: "Total Recipients",
             minWidth: 60,
           },
         ],
-        searchKeys: ['subject', 'title', 'content'],
+        searchKeys: ["subject", "title", "content"],
         delete: false,
         edit: true,
       },
-    }
+    };
   },
   computed: {
     getPreviewContent() {
-      let previewContent = this.previewData.template
+      let previewContent = this.previewData.template;
       previewContent = previewContent.replace(
-        '{{pageTitle}}',
+        "{{pageTitle}}",
         this.previewData.title
-      )
+      );
       previewContent = previewContent.replace(
-        '{{pageContent}}',
+        "{{pageContent}}",
         this.previewData.content
-      )
-      return previewContent
+      );
+      return previewContent;
     },
     getCustomActions() {
-      const propCustomActions = []
+      const propCustomActions = [];
 
       if (this.isJamie()) {
         propCustomActions.push({
-          emit: 'resendComms',
-          type: 'icon',
-          icon: 'nc-icon nc-send',
-          class: 'btn-danger',
-          text: 'Resend Email',
-        })
+          emit: "resendComms",
+          type: "icon",
+          icon: "nc-icon nc-send",
+          class: "btn-danger",
+          text: "Resend Email",
+        });
       }
-      return propCustomActions
+      return propCustomActions;
     },
   },
   methods: {
     async handleCreate(i, r) {
-      this.$router.push(`/communications/create`)
+      this.$router.push(`/communications/create`);
     },
     async handleEdit(i, r) {
-      this.showPreview = true
+      this.showPreview = true;
 
-      this.previewData.subject = r.subject
-      this.previewData.title = r.title
-      this.previewData.content = r.content
-      this.previewData.dateCreated = r.dateCreated
-      this.previewData.recipientCount = r.recipientCount
-      this.previewData.options = r?.options ? JSON.parse(r.options) : ''
+      this.previewData.subject = r.subject;
+      this.previewData.title = r.title;
+      this.previewData.content = r.content;
+      this.previewData.dateAdded = r.dateAdded;
+      this.previewData.recipientCount = r.recipientCount;
+      this.previewData.options = r?.options ? JSON.parse(r.options) : "";
     },
     async handleCustomAction(i, k, r) {
       switch (k) {
-        case 'resendComms':
+        case "resendComms":
           await Swal.fire({
-            title: 'Are you sure?',
+            title: "Are you sure?",
             text: `If you resent this communication all previous recipients will recieve the email again.`,
-            type: 'warning',
+            type: "warning",
             showCancelButton: true,
-            confirmButtonClass: 'btn btn-success btn-fill',
-            cancelButtonClass: 'btn btn-danger btn-fill',
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No',
+            confirmButtonClass: "btn btn-success btn-fill",
+            cancelButtonClass: "btn btn-danger btn-fill",
+            confirmButtonText: "Yes",
+            cancelButtonText: "No",
             buttonsStyling: false,
           }).then(async (d) => {
             if (d?.isConfirmed && !d?.isDismissed) {
-              const emailOptions = r?.options ? parseJson(r.options) : {}
-              //console.log(r, {
+              const emailOptions = r?.options ? parseJson(r.options) : {};
+
               const emailSendRes = await sendEmail({
                 options: {
-                  type: emailOptions?.type ? emailOptions?.type : 'specific',
+                  type: emailOptions?.type ? emailOptions?.type : "specific",
                   toAddresses: emailOptions?.toAddresses
                     ? emailOptions?.toAddresses
                     : [],
@@ -214,74 +214,51 @@ export default {
                 },
                 existingEmailId: r.requestId,
                 email: {
-                  fromAddress: r?.fromAddress ? r?.fromAddress : 'hampers',
+                  fromAddress: r?.fromAddress ? r?.fromAddress : "hampers",
                   subject: r.subject,
                   title: r.title,
                   content: r.content,
                 },
-              })
+              });
               if (emailSendRes.status == 200) {
                 Swal.fire({
-                  title: 'Success',
-                  text: 'Email sent successfully.',
+                  title: "Success",
+                  text: "Email sent successfully.",
                   timer: 3000,
                   showConfirmButton: false,
-                })
-                /* *
-                this.emailSubject = `CAUSE Foundation: `;
-                this.emailTitle = "";
-                this.htmlContent = "";
-                this.toAddresses = [];
-                /* */
+                });
               } else {
                 Swal.fire({
-                  title: 'Error',
-                  text: 'An unexpected error occurred',
+                  title: "Error",
+                  text: "An unexpected error occurred",
                   timer: 3000,
                   showConfirmButton: false,
-                })
+                });
               }
-              /* *
-              const updateRes = await deleteUser(
-                this.organisationId,
-                r.emailAddress
-              )
-              if (updateRes?.status != 200 && updateRes?.data?.messages) {
-                this.messages = Object.keys(updateRes?.data?.messages).map(
-                  (k) => ({
-                    error: updateRes?.data?.messages[k],
-                  })
-                )
-              } else {
-                let indexToDelete = this.tableData.findIndex(
-                  (tableRow) => tableRow.requestId === r.requestId
-                )
-                if (indexToDelete >= 0) {
-                  this.tableData.splice(indexToDelete, 1)
-                }
-              }
-              /* */
             }
-          })
-          break
+          });
+          break;
         default:
-          this.$emit(k, i, r)
-          break
+          this.$emit(k, i, r);
+          break;
       }
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin') && !this.organisationId) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin") && !this.organisationId) {
+      this.$router.push("/");
     }
-    const res = await getSentCommuncations()
-    this.sentEmailsData = Object.values(res.data?.emails)
+    const res = await getSentCommuncations();
+    this.sentEmailsData = Object.values(res.data?.emails).map((e) => ({
+      dateAdded: e.dateAdded,
+      ...e.email,
+    }));
 
-    this.previewData.template = res.data?.template
+    this.previewData.template = res.data?.template;
 
     this.sentEmailsData.sort((a, b) =>
-      b.dateCreated > a.dateCreated ? 1 : a.dateCreated > b.dateCreated ? -1 : 0
-    )
+      b.dateAdded > a.dateAdded ? 1 : a.dateAdded > b.dateAdded ? -1 : 0
+    );
   },
-}
+};
 </script>
