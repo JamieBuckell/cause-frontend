@@ -184,7 +184,6 @@ export default {
     this.subscriber = pData.subscribers.find(
       (s) => s?.PK === this.$route.params.subscriberId
     );
-    console.log(pData, this.subscriber);
 
     this.updatedEmail = this.subscriber?.PK;
   },

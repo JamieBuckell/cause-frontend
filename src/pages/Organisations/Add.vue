@@ -152,6 +152,7 @@ export default {
   data() {
     return {
       isLoading: true,
+      lastType: "",
       organisation: {},
       filters: {
         orgTypes: ["charity", "local-authority", "school"],
@@ -179,6 +180,7 @@ export default {
         name: "",
         reference: "",
         referenceSet: false,
+        type: this.lastType,
         campaignId: this.$store.getters.getActiveCampaign,
         contacts: {
           lead: {
@@ -222,6 +224,8 @@ export default {
     async doCreate(redirect = true) {
       this.isLoading = true;
 
+      this.lastType = this.organisation.type;
+
       /* */
       const res = await createOrganisation(JSON.stringify(this.organisation));
 
@@ -254,13 +258,11 @@ export default {
         await Promise.all(tlPromises).then((users) => {
           if (users.length) {
             for (const tl of users) {
-              console.log("tl promise", tl, tl?.data, tl?.data?.nominator);
               if (tl?.data?.nominator) {
                 pData.nominators.push(tl.data.nominator);
               }
             }
           }
-          console.log(users);
         });
 
         pData.organisations.push(res?.data?.organisation);
