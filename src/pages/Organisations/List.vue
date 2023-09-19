@@ -147,6 +147,11 @@ export default {
         minWidth: 300,
       },
       {
+        prop: "totalNominators",
+        label: "Nominators",
+        minWidth: 80,
+      },
+      {
         prop: "totalFamilies",
         label: "Families",
         minWidth: 80,
@@ -373,6 +378,10 @@ export default {
         o.name = `${o.organisation.name}`;
         o.totalFamilies = `${
           this.platformData.families.filter((f) => f?.GSI3PK === o.GSI2PK)
+            .length ?? 0
+        }`;
+        o.totalNominators = `${
+          this.platformData.nominators.filter((f) => f?.GSI3PK === o.GSI2PK)
             .length ?? 0
         }`;
         return true;
