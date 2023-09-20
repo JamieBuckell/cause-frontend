@@ -195,7 +195,8 @@ export default {
         searchKeys: this.searchKeys,
         modalMessages: {
           delete: {
-            message: "If you delete this donor, the process cannot be undone.",
+            message:
+              "If you delete this organisation, the process cannot be undone.",
           },
         },
         create: this.options?.create ? this.options.create : false,

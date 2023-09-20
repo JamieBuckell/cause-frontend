@@ -1,5 +1,27 @@
 <template>
   <div>
+    <div class="row" v-if="isJamie()">
+      <div class="col-12">
+        <card>
+          <div>
+            <button
+              type="submit"
+              class="btn btn-info btn-outline btn-wd pull-left"
+              @click.prevent="changeOrg('prev')"
+            >
+              Previous Org
+            </button>
+            <button
+              type="submit"
+              class="btn btn-info btn-outline btn-wd pull-right"
+              @click.prevent="changeOrg('next')"
+            >
+              Next Org
+            </button>
+          </div>
+        </card>
+      </div>
+    </div>
     <div class="row">
       <div class="col-12">
         <card>
@@ -70,60 +92,6 @@
                     placeholder="CSCT1"
                     disabled="true"
                     v-model="organisation.reference"
-                  >
-                  </fg-input>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Lead Contact Name"
-                    v-model="organisation.contacts.lead.name"
-                  >
-                  </fg-input>
-                </div>
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Contact number"
-                    v-model="organisation.contacts.lead.number"
-                  >
-                  </fg-input>
-                </div>
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Email"
-                    v-model="organisation.contacts.lead.email"
-                  >
-                  </fg-input>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Secondary Contact Name"
-                    v-model="organisation.contacts.secondary.name"
-                  >
-                  </fg-input>
-                </div>
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Contact number"
-                    v-model="organisation.contacts.secondary.number"
-                  >
-                  </fg-input>
-                </div>
-                <div class="col-md-4">
-                  <fg-input
-                    type="text"
-                    label="Email"
-                    v-model="organisation.contacts.secondary.email"
                   >
                   </fg-input>
                 </div>
@@ -449,6 +417,9 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
+    currentOrg() {
+      return this.organisationId;
+    },
   },
   methods: {
     copyURL() {
@@ -477,7 +448,20 @@ export default {
     },
     async doUpdate() {
       const res = await updateOrganisation(this.organisation);
-      if (res.data.success) {
+
+      if (res?.status === 200) {
+        const pData = this.platformData;
+        const indexToUpdate = pData.organisations.findIndex(
+          (d) => d?.GSI2PK === this.organisationId
+        );
+        if (indexToUpdate >= 0) {
+          pData.organisations[indexToUpdate].organisation.name =
+            this.organisation.name;
+
+          await this.$store.dispatch("setPlatformData", {
+            ...pData,
+          });
+        }
         this.switchOrgEdit();
       } else {
         //Handle Error
@@ -528,6 +512,35 @@ export default {
         status: organisationData?.status ?? "",
       };
     },
+    changeOrg(type) {
+      let orgUrl = "/organisations/list";
+      const pData = this.platformData;
+      const currentIndex = pData.organisations.findIndex(
+        (d) =>
+          d?.GSI2PK === this.organisationId &&
+          d?.PK === this.$store.getters.getActiveCampaign
+      );
+
+      let newIndex = 0;
+      switch (type) {
+        case "next":
+          newIndex = currentIndex + 1;
+          if (!pData.organisations[newIndex]?.GSI2PK) {
+            newIndex = 0;
+          }
+          orgUrl = `/organisations/view/${pData.organisations[newIndex]?.GSI2PK}`;
+          break;
+        case "prev":
+          newIndex = currentIndex - 1;
+          if (!pData.organisations[newIndex]?.GSI2PK) {
+            newIndex = pData.organisations.length - 1;
+          }
+          orgUrl = `/organisations/view/${pData.organisations[newIndex]?.GSI2PK}`;
+          break;
+      }
+
+      this.$router.push(orgUrl);
+    },
   },
   async mounted() {
     if (!this.userInGroup("admin")) {
@@ -557,6 +570,16 @@ export default {
   watch: {
     async platformData() {
       await this.getOrganisationData();
+    },
+    "$route.params.requestId": {
+      handler: async function (requestId) {
+        this.isLoading.organisation = true;
+        this.organisationId = requestId;
+        await this.getOrganisationData();
+        this.isLoading.organisation = false;
+      },
+      deep: true,
+      immediate: true,
     },
   },
 };
