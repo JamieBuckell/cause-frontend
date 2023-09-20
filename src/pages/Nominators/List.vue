@@ -222,6 +222,11 @@ export default {
         await this.getListData();
       }
     },
+    async organisationId() {
+      this.isLoading = true;
+      await this.getListData();
+      this.isLoading = false;
+    },
   },
   data() {
     const tableColumns = [
