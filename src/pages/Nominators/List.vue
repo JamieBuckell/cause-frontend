@@ -236,7 +236,7 @@ export default {
         minWidth: 70,
       },
       {
-        prop: "nominatorDetail",
+        component: "NominatorDetail",
         label: "User Details",
         html: true,
         minWidth: 250,
@@ -546,6 +546,9 @@ export default {
         case "viewOrganisation":
           this.$router.push(`/organisations/view/${r.organisationId}`);
           break;
+        case "approve":
+          this.approveNom(r);
+          break;
         case "migrateUser":
           this.migrateNom(r);
           break;
@@ -656,6 +659,10 @@ export default {
             fullName: `${n?.nominatorDetails?.firstName ?? ""} ${
               n?.nominatorDetails?.lastName ?? ""
             }`,
+            firstName: `${n?.nominatorDetails?.firstName ?? ""}`,
+            lastName: `${n?.nominatorDetails?.lastName ?? ""}`,
+            telephoneNumber: `${n?.nominatorDetails?.telephoneNumber ?? ""}`,
+            status: `${n?.status ?? ""}`,
           }));
       }
 

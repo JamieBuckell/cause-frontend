@@ -75,12 +75,22 @@
             :key="column.label"
             :min-width="column.minWidth"
             :prop="column.prop"
+            :component="column.component"
             :label="column.label"
           >
             <template slot-scope="col">
               <div :class="checkClasses(col.row)">
+                <component
+                  v-if="column.component"
+                  :is="column.component"
+                  :nominator="col.row"
+                  :options="options"
+                  @approve="
+                    handleCustomAction(col.$index, 'approve', col.row, {})
+                  "
+                />
                 <div
-                  v-if="column.html == true"
+                  v-else-if="column.html == true"
                   v-html="col.row[column.prop]"
                 ></div>
                 <div v-else>{{ col.row[column.prop] }}</div>
@@ -177,6 +187,7 @@ import { Pagination as LPagination } from "src/components/index";
 import Fuse from "fuse.js";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
+import NominatorDetail from "@/components/Cards/NominatorDetail";
 
 Vue.prototype.$confirm = MessageBox.confirm;
 
@@ -188,6 +199,7 @@ export default {
     [Table.name]: Table,
     [TableColumn.name]: TableColumn,
     LPagination,
+    NominatorDetail,
   },
   props: {
     listingsData: {

@@ -21,6 +21,7 @@ import Lock from "src/pages/Dashboard/Pages/Lock.vue";
 import HartlepoolTest from "src/pages/DataFix/HartlepoolTest.vue";
 import AllocatedCounts from "src/pages/DataFix/AllocatedCounts.vue";
 import MissingDonors from "src/pages/DataFix/MissingDonors.vue";
+import DonorVerificationFix from "src/pages/DataFix/DonorVerificationFix.vue";
 
 // Components pages
 import Buttons from "src/pages/Dashboard/Components/Buttons.vue";
@@ -594,6 +595,12 @@ let missingDonorsPage = {
   component: MissingDonors,
 };
 
+let donorVerificationIssue = {
+  path: "/fix/donor-verification",
+  name: "MissingDonorsFix",
+  component: DonorVerificationFix,
+};
+
 let logoutPage = {
   path: "/logout",
   name: "Logout",
@@ -650,6 +657,7 @@ const routes = [
   hartlepoolTestPage,
   allocatedCountsPage,
   missingDonorsPage,
+  donorVerificationIssue,
   logoutPage,
   setPasswordPage,
   resetPasswordPage,
