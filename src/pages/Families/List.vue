@@ -638,6 +638,9 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
+    platformFamilies() {
+      return this.$store.getters.getPlatformFamilies;
+    },
   },
   methods: {
     updateSearch(results) {
@@ -863,26 +866,26 @@ export default {
 
       //Update platform data...
       /* */
-      const pData = this.$store.getters.getPlatformData;
+      const pData = { ...this.platformData };
       const nominatorSpecific = !(
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
 
-      const familiesToRemove = pData.families.filter(
+      const familiesToRemove = this.platformFamilies.filter(
         (f) =>
           f?.GSI3PK === this.organisationId &&
           (!nominatorSpecific || f?.GSI3SK === this.currentNominator?.GSI2PK)
       );
       for (const family of familiesToRemove) {
-        const indexToDelete = pData.families.findIndex(
+        const indexToDelete = this.platformFamilies.findIndex(
           (f) => f?.GSI2PK === family?.GSI2PK
         );
         if (indexToDelete >= 0) {
-          pData.families.splice(indexToDelete, 1);
+          this.platformFamilies.splice(indexToDelete, 1);
         }
       }
 
-      pData.families = [...pData.families, ...families];
+      pData.families = [...this.platformFamilies, ...families];
 
       await this.$store.dispatch("setPlatformData", {
         ...pData,
@@ -948,10 +951,51 @@ export default {
         return `${value}`;
       }
     },
+    createNominatorDetail(nominatorId) {
+      var rtnStr = "";
+      const nominator = this.platformData.nominators.find(
+        (n) => n.GSI2PK === nominatorId
+      );
+      if (nominator?.PK) {
+        rtnStr = `<strong>${nominator.nominatorDetails.firstName} ${nominator.nominatorDetails.lastName}</strong>`;
+        if (nominator.nominatorDetails.telephone) {
+          rtnStr += ` - <a href="tel:${nominator.nominatorDetails.telephone}">${nominator.nominatorDetails.telephone}</a>`;
+        }
+        if (nominator.nominatorDetails.email) {
+          rtnStr += `<br /><a href="tel:${nominator.nominatorDetails.email}">${nominator.nominatorDetails.email}</a>`;
+        }
+      }
+      return rtnStr;
+    },
+    createFamilyDetail(members) {
+      var rtnString = "";
+      if (members) {
+        /* */
+        for (const [key, m] of Object.entries(members)) {
+          rtnString += `
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>
+                            ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
+                            </strong>
+                            ${m.age} ${m.age ? m.ageType : ""}
+                            ${
+                              m.additionalInfo
+                                ? "<br />Info: " + m.additionalInfo
+                                : ""
+                            }
+                        </div>
+                    </div>
+                    `;
+        }
+        /* */
+      }
+      return rtnString;
+    },
     async getFamilyData() {
       let familiesData = [];
       if (this.organisation.requestId) {
-        familiesData = await this.platformData?.families.filter(
+        familiesData = await this.platformFamilies.filter(
           (f) =>
             (this.userInGroup("admin") ||
               this.userInGroup("teamlead") ||
@@ -962,7 +1006,7 @@ export default {
 
         this.familyMemberData = []; //Object.values(res?.data?.members);
       } else if (this.userInGroup("admin")) {
-        familiesData = await this.platformData?.families.filter(
+        familiesData = await this.platformFamilies.filter(
           (n) => n?.type === "family"
         );
       }
@@ -971,8 +1015,8 @@ export default {
         organisationId: f?.GSI3PK,
         nominatorId: f?.GSI3SK,
         reference: f?.SK ? f.SK.replace("REF#", "") : "",
-        nominatorDetail: f?.nominatorDetail ?? "",
-        familyDetail: f?.familyDetail ?? "",
+        nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
+        familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
       }));

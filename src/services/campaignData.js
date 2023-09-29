@@ -42,17 +42,18 @@ export const getPlatformData = async (force = false) => {
 
 export const getCampaigns = async () => {
   let allCampaigns = store.getters.getAllCampaigns;
+
   if (!allCampaigns.length) {
     allCampaigns = await getAllCampaigns();
     if (allCampaigns?.data) {
-      await store.dispatch(
-        "setCampaignData",
-        allCampaigns.data.map((c) => ({
-          campaignId: c.PK,
-          name: c.campaignName,
-          sort: c.campaignDetails.campaignStart,
-        }))
-      );
+      let mappedCampaigns = [...allCampaigns.data];
+      allCampaigns = mappedCampaigns.map((c) => ({
+        campaignId: c.PK,
+        name: c.campaignName,
+        campaignDetails: c?.campaignDetails,
+        sort: c.campaignDetails.campaignStart,
+      }));
+      await store.dispatch("setCampaignData", allCampaigns);
     }
   }
   return allCampaigns;

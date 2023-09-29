@@ -210,13 +210,8 @@
 <script>
 import Vue from "vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
-import {
-  getFamilyByOrganisation,
-  getFamilies,
-  deleteFamily,
-} from "@/api/families.api";
+import { deleteFamily } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
-import { getDonors } from "@/api/donors.api";
 
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import FamilyAdd from "@/components/Modals/FamilyAdd.vue";
@@ -836,7 +831,7 @@ export default {
     }
 
     if (this.options.showDonor && this.userInGroup("admin")) {
-      const donorsRequest = await getDonors();
+      const donorsRequest = []; // await getDonors();
       const allDonors = Object.values(donorsRequest.data);
 
       this.tableData.map((o) => {

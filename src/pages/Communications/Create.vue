@@ -119,6 +119,23 @@
                     </el-option>
                   </el-select>
                 </div>
+                <div class="col-4" v-if="emailType === 'donors'">
+                  <label for="excludeSubscribers">Exclude Subscribers:</label>
+                  <el-select
+                    name="excludeSubscribers"
+                    class="select-default w-100"
+                    v-model="excludeSubscribers"
+                  >
+                    <el-option
+                      class="select-default"
+                      v-for="item in genericOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    >
+                    </el-option>
+                  </el-select>
+                </div>
                 <div class="col-8" v-if="emailType === 'nominators'">
                   <label for="includeTeamLeads">Include Team Leads:</label>
                   <el-select
@@ -226,6 +243,7 @@ export default {
       emailSubject: ``,
       emailTitle: ``,
       htmlContent: ``,
+      excludeSubscribers: false,
       campaignId: this.$store.getters.getActiveCampaign,
     };
   },
@@ -300,6 +318,7 @@ export default {
                 toAddresses: this.specificAddresses,
                 excludeTeamLeads: !this.includeTeamLeads,
                 excludePledged: !this.includePledged,
+                excludeSubscribers: this.excludeSubscribers,
               },
               email: {
                 fromAddress: this.sendFrom,

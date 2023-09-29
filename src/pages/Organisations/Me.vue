@@ -141,6 +141,7 @@ import { getMeData } from "@/api/users.api";
 import NominatorsList from "@/pages/Nominators/List.vue";
 import FamiliesList from "@/pages/Families/List.vue";
 import LAlert from "src/components/Alert";
+import moment from "moment";
 
 export default {
   components: {
@@ -264,14 +265,16 @@ export default {
   },
   computed: {
     nominationsClosed() {
-      const closingDate = new Date("2023-10-05");
-      closingDate.setHours(18, 0, 0, 0);
-      const now = new Date();
+      const currentCampaign = this.$store.getters.getAllCampaigns.find(
+        (c) => c.campaignId === this.$store.getters.getActiveCampaign
+      );
+      const closingDate = moment(
+        currentCampaign?.campaignDetails?.nominationsClosed
+      );
 
-      return !this.allowedOrganisations && closingDate < now;
-    },
-    allowedOrganisations() {
-      return this.organisationId == "1c0ab939-458f-4bf7-9d46-4b52094d8a60";
+      return (
+        !this.organisation?.alwaysNominate && moment().isAfter(closingDate)
+      );
     },
     queriedData() {
       let result = this.tableData;
@@ -401,20 +404,27 @@ export default {
     async getNominatorData() {
       var pData = this.$store.getters.getPlatformData;
 
-      const nominatorData = await pData?.nominators.find(
-        (n) => n?.nominatorDetails?.email === this.$store?.getters?.usersEmail
-      );
+      const nominatorData =
+        pData?.nominators &&
+        pData.nominators.find(
+          (n) => n?.nominatorDetails?.email === this.$store?.getters?.usersEmail
+        );
 
-      this.organisationId = nominatorData?.GSI3PK;
-      this.nominator = nominatorData;
+      if (nominatorData) {
+        this.organisationId = nominatorData?.GSI3PK;
+        this.nominator = nominatorData;
 
-      this.nominatorData = nominatorData;
-      this.hasTelephone = nominatorData?.nominatorDetails?.telephone.length;
+        this.nominatorData = nominatorData;
+        this.hasTelephone = nominatorData?.nominatorDetails?.telephone.length;
+      }
     },
     async getOrganisationData() {
       var pData = this.$store.getters.getPlatformData;
 
-      const organisationData = await pData.organisations[0];
+      const organisationData =
+        pData?.organisations && pData.organisations.length
+          ? pData.organisations[0]
+          : {};
 
       this.organisation = {
         requestId: organisationData?.GSI2PK ?? "",
@@ -422,6 +432,8 @@ export default {
         urlHash: organisationData?.urlHash ?? "",
         name: organisationData?.organisation?.name ?? "",
         reference: organisationData?.SK ?? "",
+        alwaysNominate:
+          organisationData?.organisation?.ignoreNominationEndDate ?? false,
         referenceSet: organisationData?.SK !== "",
         contacts: {
           lead: {

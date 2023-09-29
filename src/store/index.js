@@ -37,7 +37,6 @@ export const store = new Vuex.Store({
         // 'authenticate.authChecked',
         "campaigns.allCampaigns",
         "campaigns.activeCampaign",
-        "campaigns.platformData",
         "campaigns.genericData",
         "campaigns.lastUpdated",
         "authenticate.timestamps",
@@ -46,6 +45,15 @@ export const store = new Vuex.Store({
         "authenticate.tokens.accessToken",
         "authenticate.tokens.refreshToken",
       ],
+    }),
+    createPersistedState({
+      key: "CFFLS",
+      storage: {
+        getItem: (key) => ls.get(key),
+        setItem: (key, value) => ls.set(key, value),
+        removeItem: (key) => ls.remove(key),
+      },
+      paths: ["campaigns.platformFamilies"],
     }),
     createPersistedState({
       key: "CFS",

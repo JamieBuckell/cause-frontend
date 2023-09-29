@@ -53,6 +53,9 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
+    platformFamilies() {
+      return this.$store.getters.getPlatformFamilies;
+    },
   },
   data() {
     return {
@@ -79,6 +82,7 @@ export default {
           class: "order-3 order-xl-2",
           title: "Families",
           value: "0",
+          subvalue: "0 Individuals",
           active: true,
         },
         organisations: {
@@ -152,6 +156,11 @@ export default {
       await this.updateDashData();
       this.isLoading = false;
     },
+    async platformFamilies() {
+      this.isLoading = true;
+      await this.updateDashData();
+      this.isLoading = false;
+    },
   },
   methods: {
     async updateDashData() {
@@ -160,9 +169,7 @@ export default {
       }
 
       const donors = [...(this.$store.getters.getPlatformData?.donors ?? [])];
-      const families = [
-        ...(this.$store.getters.getPlatformData?.families ?? []),
-      ];
+      const families = [...(this.$store.getters.getPlatformFamilies ?? [])];
       const nominators = [
         ...(this.$store.getters.getPlatformData?.nominators ?? []),
       ];
@@ -181,6 +188,12 @@ export default {
         this.dashdata.donors.subvalue =
           (verifiedDonors.length ?? 0).toString() + " Verified";
         this.dashdata.families.value = (families.length ?? 0).toString();
+
+        this.dashdata.families.subvalue =
+          families
+            .reduce((a, b) => parseInt(a) + parseInt(b?.totalUnit ?? 0), 0)
+            .toString() + " Individuals";
+
         this.dashdata.organisations.value = (
           organisations.length ?? 0
         ).toString();

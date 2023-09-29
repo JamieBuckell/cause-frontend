@@ -252,6 +252,10 @@ export default {
       });
       pagination = defaultPagination;
     }
+
+    if (!pagination?.perPage) {
+      pagination.perPage = 5;
+    }
     return {
       type: this.listingsType,
       createKey: 0,

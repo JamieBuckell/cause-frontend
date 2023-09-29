@@ -190,7 +190,7 @@
                       </div>
                       <div class="col-1">
                         <button
-                          @click.prevent="doEditPledge(campaign)"
+                          @click.prevent="doEditPledge(campaign, ci)"
                           class="btn btn-fill btn-info pull-right"
                         >
                           Edit
@@ -381,6 +381,17 @@
                             class="btn btn-fill btn-info w-100"
                           >
                             Save
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-12">
+                          <button
+                            type="button"
+                            @click="savePledge(true)"
+                            class="btn btn-fill btn-danger w-100"
+                          >
+                            Delete
                           </button>
                         </div>
                       </div>
@@ -838,30 +849,73 @@ export default {
         this.editEmailAddress = false;
       }
     },
-    async savePledge() {
+    async savePledge(delteItem = false) {
       await Swal.fire({
         title: "Do you want to send a pledge updated email?",
-        text: `As you have updated this users pledge details, you should send a confirmation of the updated details to toe donor.`,
+        text: `As you have updated this users pledge details, you should send a confirmation of the updated details to the donor.`,
         type: "warning",
         showCancelButton: true,
+        showDenyButton: true,
         confirmButtonClass: "btn btn-success btn-fill",
-        cancelButtonClass: "btn btn-danger btn-fill",
+        denyButtonClass: "btn btn-danger btn-fill",
+        cancelButtonClass: "btn btn-secondary btn-fill",
         confirmButtonText: "Yes, send it!",
-        cancelButtonText: "No, just save",
+        denyButtonText: "No, just save",
+        cancelButtonText: "Cancel",
         buttonsStyling: false,
       }).then(async (d) => {
-        const sendEmail = d.isConfirmed || d.dismiss === "esc";
-        if (!d.isDismissed || d.dismiss === "cancel") {
-          const updateRes = await donorPledgeUpdate({
-            ...this.editPledgeData,
-            donorId: this.donor.GSI2PK,
-            donorEmail: this.donor.GSI3PK,
-            sendEmail,
-          });
-          if (updateRes.data.status != 200 && updateRes.data?.messages) {
-            this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
-              error: updateRes?.data?.messages[k],
-            }));
+        const sendEmail = d.isConfirmed;
+        if (d.isConfirmed || d.isDenied) {
+          const ci = this.editPledgeData?.campaignIndex ?? false;
+          if (ci >= 0) {
+            if (
+              this.editPledgeData.familyDetail.length >
+              this.editPledgeData.numberOfFamilies
+            ) {
+              this.editPledgeData.familyDetail =
+                this.editPledgeData.familyDetail.slice(
+                  0,
+                  this.editPledgeData.numberOfFamilies
+                );
+            }
+
+            this.campaigns[ci] = this.editPledgeData;
+            if (delteItem) {
+              this.campaigns.splice(ci, 1);
+            }
+
+            const updateRes = await donorPledgeUpdate({
+              campaignData: JSON.stringify(this.campaigns),
+              donorId: this.donor.GSI2PK,
+              sendEmail,
+              campaignId: this.$store.getters.getActiveCampaign,
+            });
+
+            if (updateRes?.data?.messages) {
+              this.messages = Object.keys(updateRes?.data?.messages).map(
+                (k) => ({
+                  error: updateRes?.data?.messages[k],
+                })
+              );
+            }
+            if (updateRes.status == 200) {
+              const pData = this.$store.getters.getPlatformData;
+
+              const i = pData.donors.findIndex(
+                (d) => d.GSI3PK === this.donor.GSI3PK
+              );
+              const donorUpdates = { ...pData.donors[i] };
+
+              if (donorUpdates.PK) {
+                donorUpdates.familyDetails.request = this.campaigns;
+
+                pData.donors[i] = donorUpdates;
+
+                await this.$store.dispatch("setPlatformData", {
+                  ...pData,
+                });
+              }
+            }
           }
         }
       });
@@ -869,10 +923,14 @@ export default {
         this.editPledge = false;
       }
     },
-    doEditPledge(c) {
+    doEditPledge(c, ci) {
       this.editPledge = true;
       this.editPledgeData = { ...c };
-      this.editPledgeData.familyDetail = []; // JSON.parse(c.familyDetail);
+      this.editPledgeData.familyDetail =
+        typeof c.familyDetail === "string"
+          ? JSON.parse(c.familyDetail)
+          : c.familyDetail;
+      this.editPledgeData.campaignIndex = ci;
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
@@ -916,35 +974,25 @@ export default {
     },
     async getDonorData() {
       var pData = this.$store.getters.getPlatformData;
-      if (!pData?.donors) {
-        const platformData = await getByCampaign(
-          this.$store.getters.getActiveCampaign
+      if (pData?.donors) {
+        this.donor = pData.donors.find(
+          (d) =>
+            d.GSI2PK === this.$route.params.donorId &&
+            d.PK === this.$store.getters.getActiveCampaign
         );
-
-        if (platformData?.data) {
-          await this.$store.dispatch("setPlatformData", {
-            ...platformData.data,
-          });
-          pData = platformData?.data;
+        if (!this.donor) {
+          this.$router.push("/donors");
         }
-      }
-      this.donor = pData.donors.find(
-        (d) =>
-          d.GSI2PK === this.$route.params.donorId &&
-          d.PK === this.$store.getters.getActiveCampaign
-      );
-      if (!this.donor) {
-        this.$router.push("/donors");
-      }
-      this.updatedEmail = this.donor?.GSI3PK;
+        this.updatedEmail = this.donor?.GSI3PK;
 
-      this.activeCampaign = this.$store.getters.getAllCampaigns.find(
-        (c) => c.campaignId === this.$store.getters.getActiveCampaign
-      );
-      this.campaigns = this.donor?.familyDetails?.request ?? [];
+        this.activeCampaign = this.$store.getters.getAllCampaigns.find(
+          (c) => c.campaignId === this.$store.getters.getActiveCampaign
+        );
+        this.campaigns = this.donor?.familyDetails?.request ?? [];
 
-      this.assignedFamilies =
-        this.donor?.familyDetails?.allocation?.families ?? [];
+        this.assignedFamilies =
+          this.donor?.familyDetails?.allocation?.families ?? [];
+      }
     },
   },
   async mounted() {

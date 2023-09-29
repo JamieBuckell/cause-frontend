@@ -27,7 +27,7 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.verifiedOptions"
+                v-for="item in filters.genericOptions"
                 :key="item"
                 :label="item"
                 :value="item"
@@ -117,7 +117,7 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.bouncedOptions"
+                v-for="item in filters.genericOptions"
                 :key="item"
                 :label="item"
                 :value="item"
@@ -140,7 +140,30 @@
             >
               <el-option
                 class="select-default"
-                v-for="item in filters.hasAdditionalInformationOptions"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2"
+              >Subscribed to Mailing List?</span
+            >
+            <el-select
+              class="select-default w-100"
+              v-model="filters.isSubscribed"
+              @change="filtersChanged()"
+              placeholder="Subscribed to Mailing List?"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
                 :key="item"
                 :label="item"
                 :value="item"
@@ -245,11 +268,9 @@ export default {
       },
       filters: {
         verified: savedFilters?.verified ? savedFilters.verified : "Yes",
-        verifiedOptions: ["All", "Yes", "No"],
         bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
-        bouncedOptions: ["All", "Yes", "No"],
-        pledged: savedFilters?.pledged ? savedFilters.pledged : "Any",
-        pledgedOptions: ["Any", "1", "2", "3", "4", "5+"],
+        pledged: savedFilters?.pledged ? savedFilters.pledged : "All",
+        pledgedOptions: ["All", "1", "2", "3", "4", "5+"],
         allocated: savedFilters?.allocated ? savedFilters.allocated : "All",
         allocatedOptions: [
           "All",
@@ -259,8 +280,11 @@ export default {
         ],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
-          : "Any",
-        hasAdditionalInformationOptions: ["All", "Yes", "No"],
+          : "All",
+        isSubscribed: savedFilters?.hasAdditionalInformation
+          ? savedFilters.hasAdditionalInformation
+          : "All",
+        genericOptions: ["All", "Yes", "No"],
         sort: savedFilters?.sort ? savedFilters.sort : "Newest First",
         sortOptions: ["Newest First", "Oldest First"],
       },
@@ -300,7 +324,7 @@ export default {
               (!d?.emailVerification?.bounced && !b)
           );
         }
-        if (this.filters.pledged && this.filters.pledged != "Any") {
+        if (this.filters.pledged && this.filters.pledged != "All") {
           result = result.filter((d) => {
             const p = d?.familyDetails?.request
               ? d.familyDetails.request.reduce(
@@ -349,7 +373,7 @@ export default {
 
         if (
           this.filters.hasAdditionalInformation &&
-          this.filters.hasAdditionalInformation != "Any"
+          this.filters.hasAdditionalInformation != "All"
         ) {
           result = result.filter((d) => {
             const aI = d?.familyDetails?.request
@@ -361,6 +385,22 @@ export default {
             return this.filters.hasAdditionalInformation === "Yes"
               ? aI !== ""
               : aI === "";
+          });
+        }
+
+        if (this.filters.isSubscribed && this.filters.isSubscribed != "All") {
+          var pData = this.$store.getters.getPlatformData;
+
+          result = result.filter((d) => {
+            const isSubscriber = pData.subscribers.find((s) => {
+              return s?.PK === d?.GSI3PK && s?.subscribed;
+            });
+
+            // console.log(isSubscriber, d);
+
+            return this.filters.isSubscribed === "Yes"
+              ? isSubscriber?.PK
+              : !isSubscriber?.PK;
           });
         }
       }
@@ -422,9 +462,11 @@ export default {
           : 0;
         return [
           `"${donor.firstName} ${donor.lastName}"`,
-          `"${donor.email ? donor.email : ""}"`,
-          `"${donor.telephone ? donor.telephone : ""}"`,
-          `"${donor.company ? donor.company : ""}"`,
+          `"${donor.GSI3PK ? donor.GSI3PK : ""}"`,
+          `"${
+            donor.donorDetails.telephone ? donor.donorDetails.telephone : ""
+          }"`,
+          `"${donor.donorDetails.company ? donor.donorDetails.company : ""}"`,
           `"${numberofFamilies ?? ""}"`,
           `"${
             donor.familyDetail ? JSON.parse(donor.familyDetail).join(", ") : ""
@@ -632,7 +674,19 @@ export default {
       this.tableData = Object.values(pData?.donors ?? []);
 
       this.tableData.map((o) => {
+        o.firstName = o.donorDetails.firstName;
+        o.lastName = o.donorDetails.lastName;
         o.fullName = `${o.donorDetails.firstName} ${o.donorDetails.lastName}`;
+        o.email = o.GSI3PK;
+        o.company = o.donorDetails.company;
+        o.telephone = o.donorDetails.telephone;
+        o.additionalInfo = o?.familyDetails?.request
+          ? o.familyDetails.request.reduce(
+              (a, b) =>
+                a + b.additionalInfo + (b.additionalInfo ? "<br />" : ""),
+              ""
+            )
+          : "";
         o.donorDetail = this.setDonorDetail(o);
         o.pledgeDetail = this.setPledgeDetail(o);
         o.dateAddedSort = moment(o.dateAdded).format("YYYYMMDDHHmmss");

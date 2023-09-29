@@ -143,8 +143,8 @@ export default {
       this[l] = !this[l];
 
       var authData = {
-        Username: this.email,
-        Password: this.password,
+        Username: this.email.trim(),
+        Password: this.password.trim(),
       };
       await this.$store.dispatch("signIn", authData);
     },

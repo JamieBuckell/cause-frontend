@@ -14,6 +14,18 @@
           }"
         >
         </sidebar-item>
+
+        <sidebar-item
+          v-if="checkRole('admin')"
+          :link="{ name: 'Campaigns', icon: 'nc-icon nc-spaceship' }"
+        >
+          <sidebar-item
+            :link="{ name: 'View All', path: '/campaigns' }"
+          ></sidebar-item>
+          <sidebar-item
+            :link="{ name: 'Add New', path: '/campaigns/add' }"
+          ></sidebar-item>
+        </sidebar-item>
         <!----
         <sidebar-item
           v-if="checkRole('admin')"
@@ -44,7 +56,6 @@
           ></sidebar-item>
         </sidebar-item>
 
-        <!----
         <sidebar-item
           v-if="
             !checkRole('admin') &&
@@ -57,9 +68,7 @@
           }"
         >
         </sidebar-item>
-        -->
 
-        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Nominators', icon: 'nc-icon nc-light-3' }"
@@ -68,7 +77,6 @@
             :link="{ name: 'View All', path: '/nominators' }"
           ></sidebar-item>
         </sidebar-item>
-        -->
 
         <sidebar-item
           v-if="checkRole('admin')"

@@ -1,7 +1,7 @@
 <template>
   <div class="row nominators-list">
     <div class="col-12" v-if="messages && messages.length">
-      <l-alert type="danger" v-for="m in messages" :key="m">
+      <l-alert type="danger" v-for="(m, idx) in messages" :key="idx">
         <span> {{ getErrorMessage(m) }}</span>
       </l-alert>
     </div>
@@ -137,20 +137,11 @@ import {
   updateNominator,
   resetNominatorPassword,
 } from "@/api/nominators.api";
-import { getOrganisations } from "@/api/organisations.api";
-import { deleteUser, migrateUserPoolManual } from "@/api/users.api";
+import { deleteUser } from "@/api/users.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import LAlert from "src/components/Alert";
 import Swal from "sweetalert2";
 import { Dialog, MessageBox } from "element-ui";
-
-window.EventBus = new Vue({
-  methods: {
-    emit(type, payload) {
-      this.$emit("$EventBusEvent", type, payload);
-    },
-  },
-});
 
 Vue.prototype.$confirm = MessageBox.confirm;
 
@@ -309,9 +300,6 @@ export default {
 
       return result;
     },
-    allowMigrate() {
-      return this.isJamie();
-    },
     getCustomActions() {
       const propCustomActions = this.customActions;
       if (!this.organisationId) {
@@ -332,17 +320,6 @@ export default {
           text: "Reset Password",
         });
       }
-      /* *
-      if (this.isJamie()) {
-        propCustomActions.push({
-          emit: "migrateUser",
-          type: "icon",
-          icon: "nc-icon nc-cloud-upload-94",
-          class: "btn-danger",
-          text: "Migrate User",
-        });
-      }
-      /* */
       return propCustomActions;
     },
     platformData() {
@@ -359,10 +336,6 @@ export default {
             if (n.requestId === this.nominatorData.requestId) {
               this.nominatorData = { ...res.data.nominator };
               this.nominatorData.fullName = `${this.nominatorData.firstName} ${this.nominatorData.lastName}`;
-
-              this.nominatorData.nominatorDetail = this.setNominatorDetail(
-                this.nominatorData
-              );
 
               newNomData[i] = this.nominatorData;
               return true; // stop searching
@@ -424,20 +397,6 @@ export default {
         }
       }
     },
-    async migrateNom(nominator) {
-      const resApprove = await migrateUserPoolManual({
-        Username: nominator.emailAddress,
-        Manual: true,
-      });
-      if (resApprove.status == 200) {
-        Swal.fire({
-          title: "Success",
-          text: "User migrated successfully.",
-          timer: 3000,
-          showConfirmButton: false,
-        });
-      }
-    },
     async approveNom(nominator) {
       const resApprove = await approveNominator(
         nominator.requestId,
@@ -447,7 +406,6 @@ export default {
       );
       if (resApprove.status == 200 && this.tableData) {
         nominator.status = "Approved";
-        nominator.nominatorDetail = this.setNominatorDetail(nominator);
         var foundIndex = this.tableData.findIndex(
           (n) => n.requestId == nominator.requestId
         );
@@ -489,11 +447,13 @@ export default {
         if (d?.isConfirmed && !d?.isDismissed) {
           /* */
           const updateRes = await resetNominatorPassword(n.requestId);
-          if (updateRes?.status != 200 && updateRes?.data?.messages) {
+
+          if (updateRes.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
             }));
-          } else {
+          }
+          if (updateRes.status == 200) {
             Swal.fire({
               title: "Success",
               text: "Password reset was succesful.",
@@ -549,9 +509,6 @@ export default {
         case "approve":
           this.approveNom(r);
           break;
-        case "migrateUser":
-          this.migrateNom(r);
-          break;
         case "resetPassword":
           this.doResetPassword(i, r);
           break;
@@ -560,100 +517,16 @@ export default {
           break;
       }
     },
-    handleEventBusEvent(type, requestId) {
-      if (!this.tableData) return false;
-      const nominator = this.tableData.find((n) => n?.requestId === requestId);
-      if (!nominator?.requestId) {
-        return false;
-      }
-      switch (type) {
-        case "approve":
-          this.approveNom(nominator);
-          return;
-        case "migrate":
-          this.migrateNom(nominator);
-          return;
-      }
-    },
-    setNominatorDetail(nominator) {
-      let nominatorDetail = `
-              <div
-                class="${
-                  !this?.options?.highlight.unauthorised ||
-                  nominator.status == "Approved"
-                    ? ""
-                    : "unauthorised"
-                }"
-              >
-                  <div class="row">
-                    <div class="col-12">
-                      <span class="nominatorName">
-                        <strong>
-                          ${nominator?.nominatorDetails?.firstName ?? ""}
-                          ${nominator?.nominatorDetails?.lastName ?? ""}
-                        </strong>`;
-      if (nominator?.nominatorDetails?.telephoneNumber) {
-        nominatorDetail += `
-                        -
-                        <a href="tel:${nominator.nominatorDetails.telephoneNumber}">${nominator.nominatorDetails.telephoneNumber}</a>`;
-      }
-      nominatorDetail += `
-                      </span>`;
-      if (nominator?.nominatorDetails?.email) {
-        nominatorDetail += `
-                      <span class="nominatorEmail">
-                        <a href="mailto:${nominator.nominatorDetails.email}">${nominator.nominatorDetails.email}</a>
-                      </span>`;
-      }
-      nominatorDetail += `
-                    </div>
-                  </div>`;
-      if (
-        this?.options?.highlight.admin &&
-        nominator?.type &&
-        nominator?.type === "team-lead"
-      ) {
-        nominatorDetail += `
-                  <div class="row always-show" v-if="">
-                    <div class="col-12">
-                      <span class="team-lead text-secondary">Team Lead</span>
-                    </div>
-                  </div>`;
-      }
-      if (this?.options?.authorise && nominator.status != "Approved") {
-        nominatorDetail += `
-                  <div class="row always-show" v-if="">
-                    <div class="col-12">`;
-        if (this?.options?.authorise && nominator.status != "Approved") {
-          nominatorDetail += `
-                      <button
-                        type="submit"
-                        class="btn btn-info btn-fill pull-right w-100 mt-3"
-                        onclick="EventBus.emit('approve', '${nominator.GSI2PK}')"
-                      >
-                        Authorise
-                      </button>`;
-        }
-        nominatorDetail += `
-                    </div>
-                  </div>`;
-      }
-      nominatorDetail += `
-              </div>
-              `;
-      return nominatorDetail;
-    },
     async getListData() {
       if (this.platformData?.nominators) {
-        this.tableData = await this.platformData?.nominators
+        this.tableData = this.platformData?.nominators
           .filter(
             (n) =>
-              n?.GSI3PK === this.organisationId &&
+              (!this.organisationId || n?.GSI3PK === this.organisationId) &&
               (n?.type === "nominator" || n?.type === "team-lead")
           )
           .map((n) => ({
             requestId: n?.GSI2PK ?? "",
-            nominatorDetail: n.PK ? this.setNominatorDetail(n) : "",
             userReference: n?.nominatorDetails?.reference ?? "",
             emailAddress: n?.nominatorDetails?.email ?? "",
             fullName: `${n?.nominatorDetails?.firstName ?? ""} ${
@@ -662,13 +535,21 @@ export default {
             firstName: `${n?.nominatorDetails?.firstName ?? ""}`,
             lastName: `${n?.nominatorDetails?.lastName ?? ""}`,
             telephoneNumber: `${n?.nominatorDetails?.telephoneNumber ?? ""}`,
+            organisationId: `${n?.GSI3PK ?? ""}`,
             status: `${n?.status ?? ""}`,
           }));
       }
 
-      this.organisationData = await this.platformData.organisations.find(
-        (o) => o.GSI2PK === this.organisationId
-      );
+      this.organisationData = this.organisationId
+        ? await this.platformData.organisations.find(
+            (o) => o.GSI2PK === this.organisationId
+          )
+        : {};
+    },
+    getErrorMessage(m) {
+      for (const [key, value] of Object.entries(m)) {
+        return `${value}`;
+      }
     },
   },
   async mounted() {
@@ -683,8 +564,6 @@ export default {
 
     this.$emit("resultData", "nominators", this.tableData);
     this.isLoading = false;
-
-    EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
 };
 </script>

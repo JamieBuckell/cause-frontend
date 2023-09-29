@@ -64,6 +64,10 @@ const OrganisationsAdd = () => import("src/pages/Organisations/Add.vue");
 const OrganisationsEdit = () => import("src/pages/Organisations/Edit.vue");
 const OrganisationsMe = () => import("src/pages/Organisations/Me.vue");
 
+const Campaigns = () => import("src/pages/Campaigns/List.vue");
+const CampaignsView = () => import("src/pages/Campaigns/View.vue");
+const CampaignsAdd = () => import("src/pages/Campaigns/Add.vue");
+
 const Donors = () => import("src/pages/Donors/List.vue");
 const DonorsRegister = () => import("src/pages/Donors/Register.vue");
 const DonorsView = () => import("src/pages/Donors/View.vue");
@@ -404,6 +408,38 @@ let feedbackMenu = {
   ],
 };
 
+let campaignsMenu = {
+  path: "/campaigns",
+  component: DashboardLayout,
+  redirect: "/campaigns/list",
+  children: [
+    {
+      path: "list",
+      name: "View All Campaigns",
+      component: Campaigns,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: "view/:campaignId",
+      name: "View Campaign",
+      component: CampaignsView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: "add",
+      name: "New Campaign",
+      component: CampaignsAdd,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+  ],
+};
+
 let donorsMenu = {
   path: "/donors",
   component: DashboardLayout,
@@ -597,7 +633,7 @@ let missingDonorsPage = {
 
 let donorVerificationIssue = {
   path: "/fix/donor-verification",
-  name: "MissingDonorsFix",
+  name: "DonorsVerificationFix",
   component: DonorVerificationFix,
 };
 
@@ -640,6 +676,7 @@ const routes = [
   listsMenu,
   hampersMenu,
   feedbackMenu,
+  campaignsMenu,
   donorsMenu,
   subscribersMenu,
   feedbackHamperMenu,

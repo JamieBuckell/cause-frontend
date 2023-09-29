@@ -1,7 +1,16 @@
 import { httpClient } from "@/api/core/httpClient";
 
+export const createCampaign = async (body) =>
+  httpClient.post(`/campaigns/create`, body);
+
 export const getAllCampaigns = async () =>
   await httpClient.get(`/campaigns/list`);
 
 export const getByCampaign = async (campaignId) =>
   await httpClient.get(`/campaigns/get-by-id/${campaignId}`);
+
+export const deleteCampaign = async (campaignId) =>
+  await httpClient.post(`/campaigns/delete/${campaignId}`);
+
+export const updateCampaign = async (body) =>
+  await httpClient.post(`/campaigns/update`, body);

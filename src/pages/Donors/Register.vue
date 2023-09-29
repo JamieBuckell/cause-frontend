@@ -230,14 +230,14 @@
                           >Family Preferences:</label
                         >
                       </div>
-                      <div class="col-12 col-md-9">
+                      <div class="col-12 col-md-9 mb-3">
                         <ValidationProvider
                           :name="`familyDetail[${index - 1}]`"
                           rules="required"
-                          v-slot="{ passed }"
+                          v-slot="{ passed, failed }"
                         >
                           <el-select
-                            class="select-default mb-3 w-100"
+                            class="select-default w-100"
                             :name="`familyDetail[${index - 1}]`"
                             :hasSuccess="passed"
                             style="width: 200px"
@@ -253,6 +253,13 @@
                             >
                             </el-option>
                           </el-select>
+                          <div
+                            v-if="failed"
+                            class="text-danger invalid-feedback"
+                            style="display: block"
+                          >
+                            Please specify your family preferences
+                          </div>
                         </ValidationProvider>
                       </div>
                     </div>
@@ -487,11 +494,13 @@ export default {
         this.donorData.families > 0 &&
         this.donorData.families <= this.maxFamilyDetail
       ) {
+        /* *
         while (
           this.donorData.familyDetail.length < parseInt(this.donorData.families)
         ) {
           this.donorData.familyDetail.push("Please Choose");
         }
+        /* */
       }
       if (
         this.donorData &&
@@ -511,8 +520,8 @@ export default {
     },
     async handleRegisterSubmit() {
       try {
-        /* */
         this.isLoading = true;
+        /* */
         const response = await donorRegister({
           ...this.donorData,
         });

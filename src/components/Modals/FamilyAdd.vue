@@ -310,7 +310,8 @@ export default {
         ? this.nominations.length
         : 0;
 
-      let validHamperId = (this.familyCount + totalNewNominations)
+      let hamperCount = this.familyCount + totalNewNominations;
+      let validHamperId = (hamperCount > 0 ? hamperCount : 1)
         .toString()
         .padStart(3, "0");
 
@@ -398,12 +399,19 @@ export default {
   },
   methods: {
     async updateFamilyData(requestId) {
+      /* *
       const familyReq = await getFamilyByRequest(requestId);
+      console.log(familyReq);
       this.editFamilyData = familyReq.data?.family;
       this.editFamilyMembers = familyReq.data?.members;
+      /* */
     },
     canChangeNominator() {
-      return this.saveType === "create" && this.allNominators.length > 1;
+      return (
+        this.userInGroup("Admin") &&
+        this.saveType === "create" &&
+        this.allNominators.length > 1
+      );
     },
     setChosenNominator(nominator) {
       this.chosenNominator = nominator;
@@ -418,7 +426,12 @@ export default {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
       );
-      if (this?.chosenNominatorId && nominator) {
+      if (
+        this?.chosenNominatorId &&
+        nominator?.requestId &&
+        this?.chosenNominatorId !== nominator?.requestId &&
+        1 === 1
+      ) {
         this.setChosenNominator(nominator);
         this.nominations[0].hamperId = this.getHamperReference;
       }
