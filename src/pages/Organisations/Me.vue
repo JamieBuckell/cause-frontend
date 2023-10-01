@@ -155,6 +155,9 @@ export default {
     LAlert,
   },
   watch: {
+    nominationsClosed(newVal) {
+      this.familyListOptions.create = !newVal;
+    },
     async platformData() {
       this.isLoading = true;
 
@@ -177,7 +180,7 @@ export default {
         showDonor: false,
       },
       nominatorListOptions: {
-        create: true,
+        create: false,
         update: true,
         delete: true,
         download: true,
@@ -465,7 +468,6 @@ export default {
     }
 
     await this.getOrganisationData();
-    this.familyListOptions.create = !this.nominationsClosed;
 
     this.isLoading.organisation = false;
   },

@@ -284,7 +284,8 @@ export default {
     },
     breakpoints: () => breakpoints.screen,
     ageList() {
-      return Array.from(Array(115).keys());
+      const ageListArray = Array.from(Array(115).keys());
+      return ageListArray;
     },
     ageTypes() {
       return ["Years", "Months"];
