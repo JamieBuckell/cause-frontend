@@ -177,7 +177,7 @@ export default {
         showDonor: false,
       },
       nominatorListOptions: {
-        create: false,
+        create: true,
         update: true,
         delete: true,
         download: true,
