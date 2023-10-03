@@ -1,16 +1,17 @@
 {
   "name": "cause-foundation-management-application",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Cause Foundation Management Application",
   "author": "Jamie Buckell",
   "private": true,
   "scripts": {
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build && npm run sentry:sourcemaps",
     "dev": "vue-cli-service serve --open",
     "lint": "vue-cli-service lint",
     "deploy": "aws s3 cp dist/ s3://causef.jamiebuckell.co.uk/ --profile jamiebuckell --recursive",
     "clear-cache": "aws cloudfront create-invalidation --profile jamiebuckell --distribution-id E3S4Z05K6XBLYL --paths /\\* /index.html /service-worker\\* /precache-manifest\\*",
-    "clear-cache-bouchelle": "aws cloudfront create-invalidation --profile jamiebuckell --distribution-id E2G9Q9M0SNBI07 --paths /\\* /index.html /service-worker\\* /precache-manifest\\*"
+    "clear-cache-bouchelle": "aws cloudfront create-invalidation --profile jamiebuckell --distribution-id E2G9Q9M0SNBI07 --paths /\\* /index.html /service-worker\\* /precache-manifest\\*",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cause-foundation --project javascript-vue ./dist && sentry-cli sourcemaps upload --org cause-foundation --project javascript-vue ./dist"
   },
   "dependencies": {
     "@fullcalendar/core": "5.10.1",
@@ -18,6 +19,7 @@
     "@fullcalendar/interaction": "5.10.1",
     "@fullcalendar/timegrid": "5.10.1",
     "@fullcalendar/vue": "5.10.1",
+    "@sentry/vue": "^7.73.0",
     "amazon-cognito-identity-js": "^5.2.8",
     "aws-sdk": "^2.1096.0",
     "axios": "^0.26.1",
