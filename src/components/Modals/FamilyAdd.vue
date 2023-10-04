@@ -408,7 +408,6 @@ export default {
   },
   methods: {
     async updateFamilyData(requestId) {
-      console.log(requestId);
       const familyData = this.platformFamilies.find(
         (f) => f.GSI2PK === requestId
       );

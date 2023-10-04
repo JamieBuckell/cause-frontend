@@ -771,6 +771,9 @@ export default {
       /* */
     },
     async handleEdit(i, r) {
+      this.currentNominator = this.platformData.nominators.find(
+        (n) => n.GSI2PK === r.nominatorId
+      );
       this.editFamilyData = r;
       this.openModal("update");
       // this.$router.push(`/donors/view/${r.requestId}`);
@@ -827,7 +830,6 @@ export default {
           /* */
           break;
         default:
-          console.log(k, i, r);
           this.currentNominator = this.allNominators.find(
             (n) => n.requestId === r.nominatorId
           );
