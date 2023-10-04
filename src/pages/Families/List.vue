@@ -43,7 +43,7 @@
           :allNominators="allNominators"
           :familyData="editFamilyData"
           saveType="update"
-          @saveFamilies="updateFamilies"
+          @saveFamilies="saveFamilies"
           z-index="1050"
         />
       </el-dialog>
@@ -911,31 +911,6 @@ export default {
       if (!this.maxFamilysCheck) {
         this.closeModal("create");
       }
-    },
-    updateFamilies({ families, update = false }) {
-      if (update) {
-        const newTableData = [...this.tableData];
-        for (const [k, f] of families.entries()) {
-          var foundIndex = newTableData.findIndex(
-            (td) => td.requestId === f.requestId
-          );
-          newTableData[foundIndex] = f;
-        }
-        this.tableData = [...newTableData];
-      } else {
-        this.tableData = [...this.tableData, ...families];
-      }
-      this.createKey = !this.createKey;
-
-      Swal.fire({
-        title: "Success",
-        text: "Your family was saved successfully.",
-        timer: 3000,
-        showConfirmButton: false,
-      });
-
-      this.orgFamiliesTotal++;
-      this.closeModal("update");
     },
     splitFamilies(families) {
       this.tableData = [...this.tableData, ...families];
