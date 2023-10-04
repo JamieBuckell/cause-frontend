@@ -470,23 +470,26 @@ export default {
         ["Nominator Name", "Email Address", "Organisation", "Telephone"],
       ];
 
-      const data = this.tableData.map((nominator) => {
-        const userOrg = this.organisationData
-          ? this.organisationData.find(
-              (o) =>
-                nominator.organisationId &&
-                o.requestId === nominator.organisationId
-            )
-          : {};
+      if (this.tableData) {
+        const data = this.tableData.map((nominator) => {
+          const userOrg =
+            this.organisationData && this.organisationData.length
+              ? this.organisationData.find(
+                  (o) =>
+                    nominator.organisationId &&
+                    o.requestId === nominator.organisationId
+                )
+              : {};
 
-        return [
-          `"${nominator.firstName} ${nominator.lastName}"`,
-          `"${nominator.emailAddress ? nominator.emailAddress : ""}"`,
-          `"${userOrg?.name}"`,
-          `"${nominator.telephoneNumber ? nominator.telephoneNumber : ""}"`,
-        ];
-      });
-      rows.push(...data);
+          return [
+            `"${nominator.firstName} ${nominator.lastName}"`,
+            `"${nominator.emailAddress ? nominator.emailAddress : ""}"`,
+            `"${userOrg?.name}"`,
+            `"${nominator.telephoneNumber ? nominator.telephoneNumber : ""}"`,
+          ];
+        });
+        rows.push(...data);
+      }
 
       let csvContent =
         "data:text/csv;charset=utf-8," +
