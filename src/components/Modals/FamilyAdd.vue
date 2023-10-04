@@ -227,6 +227,10 @@ export default {
     LAlert,
   },
   props: {
+    organisationId: {
+      type: String,
+      default: "",
+    },
     orgRef: {
       type: String,
       default: "",
@@ -361,6 +365,9 @@ export default {
     getHamperReference() {
       return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`;
     },
+    platformFamilies() {
+      return this.$store.getters.getPlatformFamilies;
+    },
   },
   watch: {
     async familyData(newVal) {
@@ -401,12 +408,16 @@ export default {
   },
   methods: {
     async updateFamilyData(requestId) {
-      /* *
-      const familyReq = await getFamilyByRequest(requestId);
-      console.log(familyReq);
-      this.editFamilyData = familyReq.data?.family;
-      this.editFamilyMembers = familyReq.data?.members;
-      /* */
+      console.log(requestId);
+      const familyData = this.platformFamilies.find(
+        (f) => f.GSI2PK === requestId
+      );
+      this.editFamilyData = {
+        requestId: familyData?.GSI2PK,
+        reference: familyData?.SK.replace("REF#", ""),
+        nominatorId: familyData?.GSI3PK,
+      };
+      this.editFamilyMembers = familyData.members;
     },
     canChangeNominator() {
       return (
@@ -473,23 +484,21 @@ export default {
     },
     async updateFamilies() {
       this.submittingFamily = true;
-      /* */
+
       const res = await updateFamily({
+        campaign: this.$store.getters.getActiveCampaign,
         nominations: this.nominations,
+        nominator: this.chosenNominatorId,
       });
+      if (res?.data?.messages) {
+        this.messages = Object.keys(res?.data?.messages).map((k) => ({
+          error: res?.data?.messages[k],
+        }));
+      }
       if (res.status == 200) {
         const familyData = res?.data?.families;
-        this.$emit("saveFamilies", { families: familyData, update: true });
-        this.nominations = [];
-        this.addFamily();
-      } else {
-        if (res?.data?.messages) {
-          this.messages = Object.keys(res?.data?.messages).map((k) => ({
-            error: res?.data?.messages[k],
-          }));
-        }
+        this.$emit("saveFamilies", familyData);
       }
-      /* */
       this.submittingFamily = false;
     },
     addFamily() {

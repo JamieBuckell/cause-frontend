@@ -34,6 +34,7 @@
         <FamilyAdd
           :key="createKey"
           :orgRef="`${orgRef}`"
+          :organisationId="organisationId"
           :nominatorRef="`${nominatorRef}`"
           :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
@@ -826,6 +827,10 @@ export default {
           /* */
           break;
         default:
+          console.log(k, i, r);
+          this.currentNominator = this.allNominators.find(
+            (n) => n.requestId === r.nominatorId
+          );
           this.$emit(k, i, r);
           break;
       }

@@ -484,9 +484,11 @@ export default {
     async getOrganisationData() {
       var pData = this.$store.getters.getPlatformData;
 
-      const organisationData = await pData?.organisations.find(
-        (o) => o.GSI2PK === this.organisationId
-      );
+      const organisationData = pData?.organisations
+        ? await pData?.organisations.find(
+            (o) => o.GSI2PK === this.organisationId
+          )
+        : {};
 
       this.organisation = {
         requestId: organisationData?.GSI2PK ?? "",
@@ -511,6 +513,14 @@ export default {
         familiesTotal: organisationData?.organisation?.totalFamilies ?? 0,
         status: organisationData?.status ?? "",
       };
+
+      if (
+        !this.isLoading.organisation &&
+        (!this.organisation ||
+          this.organisation?.campaign !== this.$store.getters.getActiveCampaign)
+      ) {
+        this.$router.push("/organisations/list");
+      }
     },
     changeOrg(type) {
       let orgUrl = "/organisations/list";
@@ -551,13 +561,6 @@ export default {
     }
     this.organisationId = this.$route.params.requestId;
     await this.getOrganisationData();
-
-    if (
-      !this.organisation ||
-      this.organisation?.campaign !== this.$store.getters.getActiveCampaign
-    ) {
-      this.$router.push("/organisations/list");
-    }
 
     this.fuseSearch = new Fuse(this.tableData, { keys: ["name", "email"] });
     this.isLoading.organisation = false;

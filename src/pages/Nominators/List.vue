@@ -471,10 +471,13 @@ export default {
       ];
 
       const data = this.tableData.map((nominator) => {
-        const userOrg = this.organisationData.find(
-          (o) =>
-            nominator.organisationId && o.requestId === nominator.organisationId
-        );
+        const userOrg = this.organisationData
+          ? this.organisationData.find(
+              (o) =>
+                nominator.organisationId &&
+                o.requestId === nominator.organisationId
+            )
+          : {};
 
         return [
           `"${nominator.firstName} ${nominator.lastName}"`,
@@ -540,11 +543,12 @@ export default {
           }));
       }
 
-      this.organisationData = this.organisationId
-        ? await this.platformData.organisations.find(
-            (o) => o.GSI2PK === this.organisationId
-          )
-        : {};
+      this.organisationData =
+        this.organisationId && this?.platformData?.organisations
+          ? await this.platformData.organisations.find(
+              (o) => o.GSI2PK === this.organisationId
+            )
+          : {};
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {

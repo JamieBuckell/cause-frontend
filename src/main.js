@@ -14,17 +14,7 @@ if (process.env.NODE_ENV === "production") {
   Sentry.init({
     Vue,
     dsn: "https://545dea5d3e63ea35e8b566787a6c2706@o4505988076011520.ingest.sentry.io/4505988079812608",
-    integrations: [
-      new Sentry.BrowserTracing({
-        // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-        tracePropagationTargets: [
-          "localhost",
-          /^https:\/\/api\.cause-foundation\.org\.uk/,
-        ],
-        routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      }),
-      new Sentry.Replay(),
-    ],
+    integrations: [new Sentry.Replay()],
     // Performance Monitoring
     tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
     // Session Replay

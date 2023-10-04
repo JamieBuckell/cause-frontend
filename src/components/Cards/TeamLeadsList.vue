@@ -354,7 +354,7 @@ export default {
       return this.userInGroup(role);
     },
     async getListData() {
-      if (this.organisationId) {
+      if (this.organisationId && this.platformData?.nominators) {
         this.tableData = await this.platformData?.nominators
           .filter(
             (n) => n?.GSI3PK === this.organisationId && n?.type === "team-lead"
