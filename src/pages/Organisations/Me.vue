@@ -70,6 +70,15 @@
                 >
               </p>
             </div>
+            <div>
+              <p>
+                To get started simply click the 'Add Family' button in the
+                section below to start nominating your families.<br />Please
+                ensure you provide any special requirements/allergies in the box
+                provided while ensuring you do not provide any information that
+                could be linked back to the families or individuals.
+              </p>
+            </div>
           </card>
         </div>
         <div class="col-12 col-md-6" v-if="checkRole('teamlead')">
