@@ -261,7 +261,7 @@ export default {
     return {
       tableData: [],
       pagination: {
-        perPage: this.paginateOptions.perPage ?? 5,
+        perPage: this.paginateOptions.perPage ?? 50,
         currentPage: 1,
         perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
         total: 0,

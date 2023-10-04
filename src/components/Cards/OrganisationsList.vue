@@ -158,7 +158,7 @@ export default {
     paginateOptions: {
       type: Object,
       default: () => ({
-        perPage: 5,
+        perPage: 25,
         perPageOptions: [5, 10, 25, 50],
       }),
     },
@@ -185,7 +185,7 @@ export default {
   },
   data() {
     const defaultPagination = {
-      perPage: this.paginateOptions.perPage ?? 5,
+      perPage: this.paginateOptions.perPage ?? 25,
       currentPage: 1,
       perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
       total: 0,

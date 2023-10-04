@@ -3,7 +3,7 @@ const getDefaultState = () => {
     activeCampaign: "",
     allCampaigns: [],
     platformData: {},
-    platformFamilies: [],
+    platformFamilies: JSON.stringify([]),
     genericData: {
       example: "any data",
     },
@@ -19,7 +19,7 @@ const getters = {
   getActiveCampaign: (state) => state.activeCampaign,
   getGenericData: (state) => (key) => state.genericData[key],
   getPlatformData: (state) => state.platformData,
-  getPlatformFamilies: (state) => state.platformFamilies,
+  getPlatformFamilies: (state) => JSON.parse(state.platformFamilies),
   getLastUpdated: (state) => state.lastUpdated,
 };
 
@@ -45,10 +45,14 @@ const mutations = {
     }
   },
   setPlatformData(state, data) {
-    state.platformFamilies = data.families;
-    // delete data.families;
+    state.platformFamilies = JSON.stringify(data.families);
+    delete data.families;
     state.platformData = data;
     state.platformData.campaignId = state.activeCampaign;
+    state.lastUpdated = new Date().getTime() / 1000;
+  },
+  setPlatformFamilyData(state, data) {
+    state.platformFamilies = JSON.stringify(data);
     state.lastUpdated = new Date().getTime() / 1000;
   },
 };
@@ -62,6 +66,9 @@ const actions = {
   },
   setPlatformData({ commit }, data) {
     commit("setPlatformData", data);
+  },
+  setPlatformFamilyData({ commit }, data) {
+    commit("setPlatformFamilyData", data);
   },
 };
 

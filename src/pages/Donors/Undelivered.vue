@@ -53,25 +53,25 @@
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import { Dialog, MessageBox, Select, Option } from 'element-ui'
-import { getUndelivereDonors } from '@/api/families.api'
+import Vue from "vue";
+import { Dialog, MessageBox, Select, Option } from "element-ui";
+import { getUndelivereDonors } from "@/api/families.api";
 
-import ListingsPage from '@/components/Cards/ListingsPage.vue'
-import LAlert from 'src/components/Alert'
-import Swal from 'sweetalert2'
+import ListingsPage from "@/components/Cards/ListingsPage.vue";
+import LAlert from "src/components/Alert";
+import Swal from "sweetalert2";
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 window.EventBus = new Vue({
   methods: {
     emit(payload) {
-      this.$emit('$EventBusEvent', payload)
+      this.$emit("$EventBusEvent", payload);
     },
   },
-})
+});
 
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
@@ -84,15 +84,15 @@ export default {
   props: {
     listKey: {
       type: String,
-      default: '',
+      default: "",
     },
     heading: {
       type: String,
-      default: 'Undelivered Hampers',
+      default: "Undelivered Hampers",
     },
     subHeading: {
       type: String,
-      default: '',
+      default: "",
     },
     data: {
       type: Array || null,
@@ -100,7 +100,7 @@ export default {
     },
     organisationId: {
       type: String,
-      default: '',
+      default: "",
     },
     organisation: {
       type: Object,
@@ -123,7 +123,7 @@ export default {
     },
     searchKeys: {
       type: Array,
-      default: () => ['reference', 'donor', 'pledged', 'dynamics'],
+      default: () => ["reference", "donor", "pledged", "dynamics"],
     },
     options: {
       type: Object,
@@ -148,39 +148,39 @@ export default {
   },
   watch: {
     data(newVal) {
-      this.tableData = newVal
+      this.tableData = newVal;
     },
     allNominators(newVal) {
-      this.allNominatorsData = newVal
+      this.allNominatorsData = newVal;
     },
   },
   data() {
     const tableColumns = [
       {
-        prop: 'reference',
-        label: 'Hamper ID',
+        prop: "reference",
+        label: "Hamper ID",
         minWidth: 125,
       },
       {
-        prop: 'donor',
-        label: 'Donator',
+        prop: "donor",
+        label: "Donator",
         html: true,
         minWidth: 250,
       },
       {
-        prop: 'dynamics',
-        label: 'Family Detail',
+        prop: "dynamics",
+        label: "Family Detail",
         html: true,
         minWidth: 150,
       },
       {
-        prop: 'totalUnit',
-        label: 'Unit Total',
+        prop: "totalUnit",
+        label: "Unit Total",
         minWidth: 100,
       },
       {
-        prop: 'pledged',
-        label: 'Unit Pledge',
+        prop: "pledged",
+        label: "Unit Pledge",
         minWidth: 100,
       },
       /*
@@ -190,10 +190,10 @@ export default {
         minWidth: 100,
       },
       */
-    ]
+    ];
     const savedFilters = this.$store.getters.getGenericData(
       `undeliveredFilters${this.listKey}`
-    )
+    );
     return {
       searchResults: [],
       isLoading: true,
@@ -205,16 +205,18 @@ export default {
       duplicateReferences: [],
       familyData: {},
       currentNominator: {},
-      fallBackSubHeading: '',
+      fallBackSubHeading: "",
       pagination: {
-        perPage: this.paginateOptions.perPage ?? 5,
+        perPage: this.paginateOptions.perPage ?? 100,
         currentPage: 1,
-        perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
+        perPageOptions: this.paginateOptions.perPageOptions ?? [
+          5, 10, 25, 50, 100,
+        ],
         total: 0,
       },
       filters: {
-        sort: savedFilters?.sort ? savedFilters.sort : 'Reference A-Z',
-        sortOptions: ['Reference A-Z', 'Reference Z-A', 'Pledged High - Low'],
+        sort: savedFilters?.sort ? savedFilters.sort : "Reference A-Z",
+        sortOptions: ["Reference A-Z", "Reference Z-A", "Pledged High - Low"],
       },
       listingsOptions: {
         columns: tableColumns,
@@ -230,79 +232,79 @@ export default {
       orgFamiliesTotal: this.organisation?.familiesTotal
         ? this.organisation.familiesTotal
         : 0,
-    }
+    };
   },
   computed: {
     getSubHeading() {
       if (this.subHeading) {
-        return this.subHeading
+        return this.subHeading;
       }
-      return this.fallBackSubHeading
+      return this.fallBackSubHeading;
     },
     listingsData() {
-      let result = this?.tableData ? this.tableData : []
+      let result = this?.tableData ? this.tableData : [];
 
-      if (this.filters.sort && this.filters.sort === 'Reference Z-A') {
+      if (this.filters.sort && this.filters.sort === "Reference Z-A") {
         result.sort((a, b) =>
           b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        )
+        );
       } else if (
         this.filters.sort &&
-        this.filters.sort === 'Pledged High - Low'
+        this.filters.sort === "Pledged High - Low"
       ) {
         result.sort((a, b) =>
           b.pledged > a.pledged ? 1 : a.pledged > b.pledged ? -1 : 0
-        )
+        );
       } else {
         result.sort((a, b) =>
           b.reference < a.reference ? 1 : a.reference < b.reference ? -1 : 0
-        )
+        );
       }
 
-      return result
+      return result;
     },
     getCustomActions() {
-      const propCustomActions = this.customActions
+      const propCustomActions = this.customActions;
       if (!this.organisationId) {
         propCustomActions.push({
-          emit: 'viewOrganisation',
-          type: 'icon',
-          icon: 'nc-icon nc-istanbul',
-          class: 'btn-primary',
-          text: 'View Organisation',
-        })
+          emit: "viewOrganisation",
+          type: "icon",
+          icon: "nc-icon nc-istanbul",
+          class: "btn-primary",
+          text: "View Organisation",
+        });
       }
-      return propCustomActions
+      return propCustomActions;
     },
   },
   methods: {
     updateSearch(results) {
-      this.searchResults = results
+      this.searchResults = results;
     },
     filtersChanged() {
-      this.$store.dispatch('setGenericData', {
+      this.$store.dispatch("setGenericData", {
         key: `familiesFilters${this.listKey}`,
         data: this.filters,
-      })
+      });
     },
     downloadCSV() {
       const downloadData = this.searchResults.length
         ? this.searchResults
-        : this.listingsData
+        : this.listingsData;
 
-      const header = ['Hamper ID', 'Nominator', 'Family Detail', 'Unit Total']
-      let rows = [header]
+      const header = ["Hamper ID", "Nominator", "Family Detail", "Unit Total"];
+      let rows = [header];
 
       const data = downloadData.map((f) => {
-        let tmp = document.createElement('DIV')
-        tmp.innerHTML = f.dynamics
-        const familyDetail = (tmp.textContent || tmp.innerText || '')
-          .replace(/\n+/g, ',')
-          .replace(/\s\s+/g, '')
-          .replace(/,,+/g, ',')
-          .replace(/^[,]+/g, '')
-          .replace(/[,]+$/g, '')
-          .replace(/,+/g, ', ')
+        let tmp = document.createElement("DIV");
+        tmp.innerHTML = f.dynamics;
+        const familyDetail = (tmp.textContent || tmp.innerText || "")
+          .replace(/\n+/g, ",")
+          .replace(/\s\s+/g, "")
+          .replace(/,,+/g, ",")
+          .replace(/^[,]+/g, "")
+          .replace(/[,]+$/g, "")
+          .replace(/,+/g, ", ");
 
         const returnRow = [
           `"${f.reference}"`,
@@ -310,44 +312,45 @@ export default {
           `"${familyDetail}"`,
           `"${f.totalUnit}"`,
           `"${f.pledged}"`,
-        ]
+        ];
 
-        return returnRow
-      })
-      rows.push(...data)
+        return returnRow;
+      });
+      rows.push(...data);
 
       let csvContent =
-        'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n')
+        "data:text/csv;charset=utf-8," +
+        rows.map((e) => e.join(",")).join("\n");
 
-      var encodedUri = encodeURI(csvContent)
+      var encodedUri = encodeURI(csvContent);
       // window.open(encodedUri);
       /* */
-      var link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
       link.setAttribute(
-        'download',
+        "download",
         `${
-          this.organisation.reference ? this.organisation.reference + '-' : ''
+          this.organisation.reference ? this.organisation.reference + "-" : ""
         }undelivered-hampers-list.csv`
-      )
-      document.body.appendChild(link) // Required for FF
+      );
+      document.body.appendChild(link); // Required for FF
 
-      link.click()
-      link.remove()
+      link.click();
+      link.remove();
       /* */
     },
     async handleCustomAction(i, k, r) {
       switch (k) {
-        case 'viewOrganisation':
-          this.$router.push(`/organisations/view/${r.organisationId}`)
-          break
+        case "viewOrganisation":
+          this.$router.push(`/organisations/view/${r.organisationId}`);
+          break;
         default:
-          this.$emit(k, i, r)
-          break
+          this.$emit(k, i, r);
+          break;
       }
     },
     handleEventBusEvent(requestId) {
-      const nominator = this.tableData.find((n) => n?.requestId === requestId)
+      const nominator = this.tableData.find((n) => n?.requestId === requestId);
 
       if (nominator?.requestId) {
         // this.approveNom(nominator);
@@ -355,37 +358,37 @@ export default {
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
   async mounted() {
-    if (!this.userInGroup('admin')) {
-      this.$router.push('/')
+    if (!this.userInGroup("admin")) {
+      this.$router.push("/");
     }
 
-    this.allNominatorsData = this.allNominators
-    this.currentNominator = this.nominator
+    this.allNominatorsData = this.allNominators;
+    this.currentNominator = this.nominator;
 
-    const res = await getUndelivereDonors()
-    this.tableData = Object.values(res?.data)
+    const res = await getUndelivereDonors();
+    this.tableData = Object.values(res?.data);
 
-    this.$emit('resultData', 'families', this.tableData)
-    this.isLoading = false
+    this.$emit("resultData", "families", this.tableData);
+    this.isLoading = false;
 
     var valueArr = this.tableData.map(function (item) {
-      return item.reference
-    })
+      return item.reference;
+    });
     valueArr.some((item, idx) => {
       if (valueArr.indexOf(item) != idx) {
-        this.duplicateReferences.push(valueArr[valueArr.indexOf(item)])
+        this.duplicateReferences.push(valueArr[valueArr.indexOf(item)]);
       }
-      return false
-    })
+      return false;
+    });
 
-    EventBus.$on('$EventBusEvent', this.handleEventBusEvent)
+    EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
-}
+};
 </script>
 <style lang="scss">
 .donors-list {

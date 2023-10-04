@@ -326,6 +326,11 @@ export default {
       await this.getFamilyData();
       this.isLoading = false;
     },
+    async platformFamilies() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
+    },
   },
   data() {
     const tableColumns = [
@@ -390,7 +395,7 @@ export default {
       currentNominator: {},
       fallBackSubHeading: "",
       pagination: {
-        perPage: this.paginateOptions.perPage ?? 5,
+        perPage: this.paginateOptions.perPage ?? 50,
         currentPage: 1,
         perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
         total: 0,
@@ -515,9 +520,10 @@ export default {
 
       const pData = this.$store.getters.getPlatformData;
       result.map((f) => {
-        f.authorised =
-          pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)?.status ===
-            "Approved" ?? false;
+        f.authorised = pData?.nominators
+          ? pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)
+              ?.status === "Approved" ?? false
+          : false;
         return f;
       });
       if (result.length) {
@@ -873,7 +879,6 @@ export default {
 
       //Update platform data...
       /* */
-      const pData = { ...this.platformData };
       const nominatorSpecific = !(
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
@@ -892,11 +897,10 @@ export default {
         }
       }
 
-      pData.families = [...this.platformFamilies, ...families];
-
-      await this.$store.dispatch("setPlatformData", {
-        ...pData,
-      });
+      await this.$store.dispatch("setPlatformFamilyData", [
+        ...this.platformFamilies,
+        ...families,
+      ]);
 
       this.createKey = !this.createKey;
 
@@ -935,9 +939,9 @@ export default {
     },
     createNominatorDetail(nominatorId) {
       var rtnStr = "";
-      const nominator = this.platformData.nominators.find(
-        (n) => n.GSI2PK === nominatorId
-      );
+      const nominator = this?.platformData?.nominators
+        ? this.platformData.nominators.find((n) => n.GSI2PK === nominatorId)
+        : {};
       if (nominator?.PK) {
         rtnStr = `<strong>${nominator.nominatorDetails.firstName} ${nominator.nominatorDetails.lastName}</strong>`;
         if (nominator.nominatorDetails.telephone) {

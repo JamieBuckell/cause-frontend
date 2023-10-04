@@ -35,7 +35,7 @@ export default {
     paginateOptions: {
       type: Object,
       default: () => ({
-        perPage: 50,
+        perPage: 5,
         perPageOptions: [25, 50, 100, 150, 200],
       }),
     },
