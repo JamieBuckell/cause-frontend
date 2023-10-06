@@ -79,9 +79,9 @@
           <button
             type="submit"
             class="btn btn-info btn-fill btn-wd ml-4"
-            @click.prevent="doCreate(false)"
+            @click.prevent="doUpdate(false)"
           >
-            Create Campaign
+            Update Campaign
           </button>
         </div>
         <div class="clearfix"></div>
@@ -190,7 +190,7 @@ export default {
       );
       this.campaign.reference = checkedReference;
     },
-    async doCreate() {
+    async doUpdate() {
       this.isLoading = true;
 
       if (this.campaign?.dates?.campaign?.length) {
