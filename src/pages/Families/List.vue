@@ -643,10 +643,10 @@ export default {
       return propCustomActions;
     },
     platformData() {
-      return this.$store.getters.getPlatformData;
+      return this.$store.getters?.getPlatformData ?? {};
     },
     platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
+      return this.$store.getters?.getPlatformFamilies ?? [];
     },
   },
   methods: {
@@ -883,15 +883,18 @@ export default {
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
 
-      const familiesToRemove = this.platformFamilies.filter(
-        (f) =>
-          f?.GSI3PK === this.organisationId &&
-          (!nominatorSpecific || f?.GSI3SK === this.currentNominator?.GSI2PK)
-      );
+      const familiesToRemove = this.platformFamilies
+        ? this.platformFamilies.filter(
+            (f) =>
+              f?.GSI3PK === this.organisationId &&
+              (!nominatorSpecific ||
+                f?.GSI3SK === this.currentNominator?.GSI2PK)
+          )
+        : [];
       for (const family of familiesToRemove) {
-        const indexToDelete = this.platformFamilies.findIndex(
-          (f) => f?.GSI2PK === family?.GSI2PK
-        );
+        const indexToDelete = this.platformFamilies
+          ? this.platformFamilies.findIndex((f) => f?.GSI2PK === family?.GSI2PK)
+          : null;
         if (indexToDelete >= 0) {
           this.platformFamilies.splice(indexToDelete, 1);
         }

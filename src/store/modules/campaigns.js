@@ -19,7 +19,8 @@ const getters = {
   getActiveCampaign: (state) => state.activeCampaign,
   getGenericData: (state) => (key) => state.genericData[key],
   getPlatformData: (state) => state.platformData,
-  getPlatformFamilies: (state) => JSON.parse(state.platformFamilies),
+  getPlatformFamilies: (state) =>
+    state.platformFamilies ? JSON.parse(state.platformFamilies) : [],
   getLastUpdated: (state) => state.lastUpdated,
 };
 
