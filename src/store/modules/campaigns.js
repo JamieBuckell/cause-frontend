@@ -46,8 +46,12 @@ const mutations = {
     }
   },
   setPlatformData(state, data) {
-    state.platformFamilies = JSON.stringify(data.families);
-    delete data.families;
+    if (data.families) {
+      state.platformFamilies = data.families.length
+        ? JSON.stringify(data.families)
+        : [];
+      delete data.families;
+    }
     state.platformData = data;
     state.platformData.campaignId = state.activeCampaign;
     state.lastUpdated = new Date().getTime() / 1000;
