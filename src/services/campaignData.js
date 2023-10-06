@@ -9,6 +9,7 @@ export const getPlatformData = async (force = false) => {
   const currentTime = new Date().getTime() / 1000;
 
   const refreshMinutes = 1;
+  const refreshCampaignMinutes = 10;
 
   if (
     force ||
@@ -19,7 +20,9 @@ export const getPlatformData = async (force = false) => {
     !lastUpdated ||
     currentTime - lastUpdated >= refreshMinutes * 60
   ) {
-    const allCampaigns = await getCampaigns();
+    const allCampaigns = await getCampaigns(
+      force || currentTime - lastUpdated >= refreshCampaignMinutes * 60
+    );
     if (allCampaigns.length) {
       if (!activeCampaignId) {
         activeCampaignId = allCampaigns[0]?.campaignId ?? "";
@@ -40,10 +43,10 @@ export const getPlatformData = async (force = false) => {
   }
 };
 
-export const getCampaigns = async () => {
+export const getCampaigns = async (refresh = false) => {
   let allCampaigns = store.getters.getAllCampaigns;
 
-  if (!allCampaigns.length) {
+  if (!allCampaigns.length || refresh) {
     allCampaigns = await getAllCampaigns();
     if (allCampaigns?.data) {
       let mappedCampaigns = [...allCampaigns.data];
