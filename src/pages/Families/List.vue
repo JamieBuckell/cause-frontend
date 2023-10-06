@@ -443,7 +443,12 @@ export default {
           "No Info",
         ],
         sort: savedFilters?.sort ? savedFilters.sort : "Reference A-Z",
-        sortOptions: ["Reference A-Z", "Reference Z-A"],
+        sortOptions: [
+          "Reference A-Z",
+          "Reference Z-A",
+          "Newest First",
+          "Oldest First",
+        ],
       },
       listingsOptions: {
         columns: tableColumns,
@@ -591,20 +596,38 @@ export default {
         }
       }
 
-      if (this.filters.sort && this.filters.sort === "Reference Z-A") {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
-      } else {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
-      }
+      if (this.filters.sort) {
+        if (this.filters.sort === "Reference A-Z") {
+          result.sort((a, b) =>
+            b.reference < a.reference ? 1 : a.reference < b.reference ? -1 : 0
+          );
+        }
 
-      if (this.filters.sort && this.filters.sort === "Reference Z-A") {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
+        if (this.filters.sort === "Reference Z-A") {
+          result.sort((a, b) =>
+            b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
+          );
+        }
+
+        if (this.filters.sort === "Newest First") {
+          result.sort((a, b) =>
+            a.dateAddedSort < b.dateAddedSort
+              ? 1
+              : b.dateAddedSort < a.dateAddedSort
+              ? -1
+              : 0
+          );
+        }
+
+        if (this.filters.sort === "Oldest First") {
+          result.sort((a, b) =>
+            a.dateAddedSort > b.dateAddedSort
+              ? 1
+              : b.dateAddedSort > a.dateAddedSort
+              ? -1
+              : 0
+          );
+        }
       }
 
       return result;
@@ -1008,6 +1031,7 @@ export default {
         familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
+        dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
     },
   },
@@ -1072,12 +1096,6 @@ export default {
         return true;
       });
     }
-
-    this.tableData.map((o) => {
-      o.fullName = `${o.firstName} ${o.lastName}`;
-      o.dateAddedSort = moment(o.dateAdded).format("YYYYMMDDHHmmss");
-      return true;
-    });
 
     EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
