@@ -20,7 +20,11 @@ const getters = {
   getGenericData: (state) => (key) => state.genericData[key],
   getPlatformData: (state) => state.platformData,
   getPlatformFamilies: (state) =>
-    state.platformFamilies ? JSON.parse(state.platformFamilies) : [],
+    state.platformFamilies
+      ? typeof state.platformFamilies === "object"
+        ? state.platformFamilies
+        : JSON.parse(state.platformFamilies)
+      : [],
   getLastUpdated: (state) => state.lastUpdated,
 };
 
