@@ -220,8 +220,8 @@ export default {
         if (this.filters.hasNominated && this.filters.hasNominated != "All") {
           result = result.filter((d) =>
             this.filters.hasNominated === "Yes"
-              ? d.totalFamilies > 0
-              : d.totalFamilies === 0
+              ? parseInt(d.totalFamilies) > 0
+              : parseInt(d.totalFamilies) === 0
           );
         }
         if (

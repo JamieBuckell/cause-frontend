@@ -158,7 +158,7 @@
         </sidebar-item>
         -->
 
-        <!----
+        <!---->
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Admin Users', icon: 'nc-icon nc-badge' }"
@@ -171,7 +171,7 @@
             :link="{ name: 'Add New', path: '/admin/users/add' }"
           ></sidebar-item>
         </sidebar-item>
-        -->
+        <!---->
 
         <!----
         <sidebar-item

@@ -242,7 +242,7 @@ export default {
       fallBackSubHeading: "",
       nominatorData: {},
       pagination: {
-        perPage: this.paginateOptions.perPage ?? 5,
+        perPage: this.paginateOptions.perPage ?? 25,
         currentPage: 1,
         perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
         total: 0,
@@ -370,11 +370,7 @@ export default {
         }));
       }
 
-      if (updateRes.status !== 200) {
-        this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
-          error: updateRes?.data?.messages[k],
-        }));
-      } else {
+      if (updateRes.status === 200) {
         let indexToDelete = this.tableData.findIndex(
           (tableRow) => tableRow.requestId === r.requestId
         );

@@ -430,11 +430,13 @@ export default {
             this.organisationId,
             r.emailAddress
           );
-          if (updateRes?.status != 200 && updateRes?.data?.messages) {
+
+          if (updateRes.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
             }));
-          } else {
+          }
+          if (updateRes?.status === 200) {
             let indexToDelete = this.tableData.findIndex(
               (tableRow) => tableRow.requestId === r.requestId
             );

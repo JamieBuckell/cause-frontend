@@ -110,7 +110,7 @@
 import Vue from "vue";
 import { Table, TableColumn, Select, Option } from "element-ui";
 import { Pagination as LPagination } from "src/components/index";
-import { getAdminUsers, deleteUser } from "@/api/users.api";
+import { getAdminUsers, deleteAdmin } from "@/api/users.api";
 import Fuse from "fuse.js";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
@@ -241,12 +241,14 @@ export default {
         buttonsStyling: false,
       }).then(async (d) => {
         if (d?.isConfirmed && !d?.isDismissed) {
-          const updateRes = await deleteUser(this.organisationId, r.email);
-          if (updateRes?.status != 200 && updateRes?.data?.messages) {
+          const updateRes = await deleteAdmin(this.organisationId, r.email);
+
+          if (updateRes.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
               error: updateRes?.data?.messages[k],
             }));
-          } else {
+          }
+          if (updateRes?.status === 200) {
             let indexToDelete = this.tableData.findIndex(
               (tableRow) => tableRow.requestId === r.requestId
             );
