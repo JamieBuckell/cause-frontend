@@ -83,7 +83,7 @@
                 <component
                   v-if="column.component"
                   :is="column.component"
-                  :nominator="col.row"
+                  :rowData="col.row"
                   :options="options"
                   @approve="
                     handleCustomAction(col.$index, 'approve', col.row, {})
@@ -188,6 +188,7 @@ import Fuse from "fuse.js";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
 import NominatorDetail from "@/components/Cards/NominatorDetail";
+import DonorDetail from "@/components/Cards/DonorDetail";
 
 Vue.prototype.$confirm = MessageBox.confirm;
 
@@ -200,6 +201,7 @@ export default {
     [TableColumn.name]: TableColumn,
     LPagination,
     NominatorDetail,
+    DonorDetail,
   },
   props: {
     listingsData: {

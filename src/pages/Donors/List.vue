@@ -238,7 +238,7 @@ export default {
   data() {
     const tableColumns = [
       {
-        prop: "donorDetail",
+        component: "DonorDetail",
         label: "Donor Details",
         html: true,
         minWidth: 450,
@@ -538,53 +538,6 @@ export default {
         }
       }
     },
-    setDonorDetail(donor) {
-      let donorDetail = `
-              <div>
-                  <div class="row">
-                    <div class="col-12">
-                      <span class="donorName">
-                        <strong>
-                          ${donor.donorDetails.firstName}
-                          ${donor.donorDetails.lastName}
-                        </strong>`;
-      if (donor.GSI3PK) {
-        donorDetail += `
-                        -
-                        <a href="mailto:${donor.GSI3PK}">${donor.GSI3PK}</a>`;
-      }
-      donorDetail += `
-                      </span>`;
-      if (donor.donorDetails.telephone) {
-        donorDetail += `
-                      <span class="donorEmail">
-                        <strong>Telephone:</strong> <a href="tel:${donor.donorDetails.telephone}">${donor.donorDetails.telephone}</a>
-                      </span>`;
-      }
-      if (donor?.donorDetails?.howHeard) {
-        donorDetail += `
-                      <span class="donorEmail">
-                        <strong>Source:</strong> ${donor.donorDetails.howHeard}
-                      </span>`;
-      }
-      if (!donor?.emailVerification?.verified) {
-        donorDetail += `
-                      <button
-                        type="submit"
-                        class="btn btn-info btn-fill pull-right w-100 mt-3 mt-xl-0"
-                        onclick="EventBus.emit('${donor.GSI3PK}')"
-                      >
-                        Resend Verification Email
-                      </button>`;
-      }
-      donorDetail += `
-                    </div>
-                  </div>`;
-      donorDetail += `
-              </div>
-              `;
-      return donorDetail;
-    },
     getPreferenceDetail(p) {
       switch (p.toLowerCase()) {
         case "single":
@@ -687,7 +640,6 @@ export default {
               ""
             )
           : "";
-        o.donorDetail = this.setDonorDetail(o);
         o.pledgeDetail = this.setPledgeDetail(o);
         o.dateAddedSort = moment(o.dateAdded).format("YYYYMMDDHHmmss");
         return true;
@@ -709,18 +661,3 @@ export default {
   },
 };
 </script>
-<style lang="scss">
-.donors-list {
-  .donorName,
-  .donorEmail,
-  .donorTelephone,
-  .donorCompany,
-  .donorAdditional {
-    display: block;
-  }
-
-  .donorAdditional {
-    padding-top: 10px;
-  }
-}
-</style>

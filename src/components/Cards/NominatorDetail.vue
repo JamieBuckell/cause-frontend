@@ -2,7 +2,7 @@
   <div
     class="nominator-detail"
     :class="
-      this.options.highlight.unauthorised || nominator.status == 'Approved'
+      this.options.highlight.unauthorised || rowData.status == 'Approved'
         ? ''
         : 'unauthorised'
     "
@@ -11,19 +11,19 @@
       <div class="col-12">
         <span class="nominatorName">
           <strong>
-            {{ nominator.firstName ? nominator.firstName : "" }}
-            {{ nominator.lastName ? nominator.lastName : "" }}
+            {{ rowData.firstName ? rowData.firstName : "" }}
+            {{ rowData.lastName ? rowData.lastName : "" }}
           </strong>
-          <span v-if="nominator.telephoneNumber" class="nominatorEmail"
+          <span v-if="rowData.telephoneNumber" class="nominatorEmail"
             >-
-            <a :href="`tel:${nominator.telephoneNumber}`">{{
-              nominator.telephoneNumber
+            <a :href="`tel:${rowData.telephoneNumber}`">{{
+              rowData.telephoneNumber
             }}</a>
           </span>
         </span>
-        <span v-if="nominator.emailAddress" class="nominatorEmail">
-          <a :href="`mailto:${nominator.emailAddress}`">{{
-            nominator.emailAddress
+        <span v-if="rowData.emailAddress" class="nominatorEmail">
+          <a :href="`mailto:${rowData.emailAddress}`">{{
+            rowData.emailAddress
           }}</a>
         </span>
       </div>
@@ -32,8 +32,8 @@
       class="row always-show"
       v-if="
         this.options.highlight.admin &&
-        nominator.type &&
-        nominator.type === 'team-lead'
+        rowData.type &&
+        rowData.type === 'team-lead'
       "
     >
       <div class="col-12">
@@ -42,7 +42,7 @@
     </div>
     <div
       class="row always-show"
-      v-if="this.options.authorise && nominator.status != 'Approved'"
+      v-if="this.options.authorise && rowData.status != 'Approved'"
     >
       <div class="col-12">
         <button
@@ -60,7 +60,7 @@
 export default {
   name: "NominatorDetail",
   props: {
-    nominator: {
+    rowData: {
       type: Object,
       default: () => ({}),
     },
@@ -71,8 +71,8 @@ export default {
   },
   methods: {
     approveNominator() {
-      if (this.nominator?.requestId) {
-        this.$emit("approve", this.nominator.requestId);
+      if (this.rowData?.requestId) {
+        this.$emit("approve", this.rowData.requestId);
       }
     },
   },
