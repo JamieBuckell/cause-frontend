@@ -15,25 +15,30 @@ export const verifySubscription = async (emailAddress, hash, campaignId = "") =>
 
 export const confirmPledge = async (emailAddress, hash, campaignRequestId) =>
   await httpClient.get(
-    `/donor/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
+    `/donors/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
   );
 
 export const confirmPledgeManual = async (emailAddress, hash) =>
-  await httpClient.post(`/donor/confirm-pledge/${emailAddress}?v=${hash}`);
+  await httpClient.post(`/donors/confirm-pledge/${emailAddress}?v=${hash}`);
 
-export const changePledge = async (emailAddress, hash, changeDetail) =>
-  await httpClient.post(`/donor/change-pledge/${emailAddress}?v=${hash}`, {
-    details: changeDetail,
-  });
-
-export const getDonorById = async (donorId) =>
-  await httpClient.get(`/donor/view/${donorId}`);
+export const changePledge = async (
+  emailAddress,
+  hash,
+  changeDetail,
+  campaign
+) =>
+  await httpClient.post(
+    `/donors/change-pledge/${emailAddress}?v=${hash}&c=${campaign}`,
+    {
+      details: changeDetail,
+    }
+  );
 
 export const deleteDonor = async (body) =>
   await httpClient.post(`/donors/delete`, body);
 
 export const deletePledge = async (body) =>
-  await httpClient.post(`/donor/delete-pledge`, body);
+  await httpClient.post(`/donors/delete-pledge`, body);
 
 export const resendVerification = async (body) =>
   await httpClient.post(`/donors/resend-verification`, body);

@@ -87,7 +87,7 @@
 </template>
 <script>
 import Vue from "vue";
-import { getDonorById, donorEmailUpdate } from "@/api/donors.api";
+import { donorEmailUpdate } from "@/api/donors.api";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
 import LAlert from "src/components/Alert";

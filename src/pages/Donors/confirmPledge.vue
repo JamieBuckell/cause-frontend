@@ -65,20 +65,20 @@
   </standalone-layout>
 </template>
 <script>
-import Vue from 'vue'
-import { extend } from 'vee-validate'
-import { required, email, confirmed } from 'vee-validate/dist/rules'
-import { FadeRenderTransition } from 'src/components/index'
-import StandaloneLayout from '../Dashboard/Pages/StandaloneLayout.vue'
-import { confirmPledge, changePledge } from '@/api/donors.api'
-import { Loading, Table, TableColumn, Select, Option } from 'element-ui'
-import LAlert from 'src/components/Alert'
+import Vue from "vue";
+import { extend } from "vee-validate";
+import { required, email, confirmed } from "vee-validate/dist/rules";
+import { FadeRenderTransition } from "src/components/index";
+import StandaloneLayout from "../Dashboard/Pages/StandaloneLayout.vue";
+import { confirmPledge, changePledge } from "@/api/donors.api";
+import { Loading, Table, TableColumn, Select, Option } from "element-ui";
+import LAlert from "src/components/Alert";
 
-extend('email', email)
-extend('required', required)
-extend('confirmed', confirmed)
+extend("email", email);
+extend("required", required);
+extend("confirmed", confirmed);
 
-Vue.use(Loading)
+Vue.use(Loading);
 
 export default {
   components: {
@@ -93,45 +93,47 @@ export default {
   data() {
     return {
       isLoading: true,
-      viewType: '',
-      logo: '/static/img/cause-foundation-logo.png',
-      logoAlt: 'CAUSE Foundation Logo',
+      viewType: "",
+      logo: "/static/img/cause-foundation-logo.png",
+      logoAlt: "CAUSE Foundation Logo",
       verificationMessage:
-        'Thank you, your pledge has been confirmed.<br /><br />You will shortly recieve an email with confirmation of your families along with your labels.',
-      changeDetail: '',
+        "Thank you, your pledge has been confirmed.<br /><br />You will shortly recieve an email with confirmation of your families along with your labels.",
+      changeDetail: "",
       messages: [],
-    }
+    };
   },
   methods: {
     async doChangePledge() {
-      const changeDetail = this.changeDetail.trim()
+      const changeDetail = this.changeDetail.trim();
       if (!changeDetail) {
         this.messages.push({
-          error: 'Please detail the changes you wish to make',
-        })
-        return
+          error: "Please detail the changes you wish to make",
+        });
+        return;
       }
-      this.isLoading = true
+      this.isLoading = true;
+      this.messages = [];
       const res = await changePledge(
         this.$route.query.e,
         this.$route.query.v,
-        changeDetail
-      )
+        changeDetail,
+        this.$store.getters.getActiveCampaign
+      );
       if (res?.data?.messages?.success) {
-        this.verificationMessage = res?.data?.messages?.success
-        this.viewType = 'complete'
+        this.verificationMessage = res?.data?.messages?.success;
+        this.viewType = "complete";
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
             error: res?.data?.messages[k],
-          }))
+          }));
         }
       }
-      this.isLoading = false
+      this.isLoading = false;
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
@@ -142,32 +144,32 @@ export default {
       this?.$route?.query?.v
     ) {
       /* */
-      if (this.$route.query.t === 'accept') {
-        this.viewType = 'accept'
+      if (this.$route.query.t === "accept") {
+        this.viewType = "accept";
         const verification = await confirmPledge(
           this.$route.query.e,
           this.$route.query.v,
-          this.$route.query?.c ? this.$route.query.c : ''
-        )
+          this.$route.query?.c ? this.$route.query.c : ""
+        );
         if (verification?.data?.messages?.success) {
-          this.verificationMessage = verification?.data?.messages?.success
+          this.verificationMessage = verification?.data?.messages?.success;
         } else if (verification?.data?.messages?.unexpected) {
-          this.verificationMessage = verification?.data?.messages?.unexpected
+          this.verificationMessage = verification?.data?.messages?.unexpected;
         } else if (verification?.data?.messages?.error) {
-          this.verificationMessage = verification?.data?.messages?.error
+          this.verificationMessage = verification?.data?.messages?.error;
         }
       } else {
-        this.viewType = 'change'
+        this.viewType = "change";
         this.verificationMessage =
-          "Please detail in the box below what changes you'd like to make and we'll accomodate as best we can"
+          "Please detail in the box below what changes you'd like to make and we'll accomodate as best we can";
       }
       /* */
-      this.isLoading = false
+      this.isLoading = false;
     } else {
-      window.location = 'https://www.cause-foundation.org.uk/'
+      window.location = "https://www.cause-foundation.org.uk/";
     }
   },
-}
+};
 </script>
 <style lang="scss">
 .form-check-label {

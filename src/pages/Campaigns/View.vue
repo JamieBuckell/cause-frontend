@@ -45,6 +45,7 @@
                 type="datetimerange"
                 placeholder="Datetime picker here"
                 :picker-options="pickerOptions1"
+                @change="updateCampaignData"
               >
               </el-date-picker>
             </fg-input>
@@ -57,6 +58,7 @@
                 type="datetimerange"
                 placeholder="Datetime picker here"
                 :picker-options="pickerOptions1"
+                @change="updateNominationData"
               >
               </el-date-picker>
             </fg-input>
@@ -69,6 +71,7 @@
                 type="datetimerange"
                 placeholder="Datetime picker here"
                 :picker-options="pickerOptions1"
+                @change="updateRegistrationnData"
               >
               </el-date-picker>
             </fg-input>
@@ -144,6 +147,18 @@ export default {
     },
   },
   methods: {
+    updateCampaignData(v) {
+      this.campaign.dates.campaign[0] = moment(v[0]).toISOString();
+      this.campaign.dates.campaign[1] = moment(v[1]).toISOString();
+    },
+    updateNominationData(v) {
+      this.campaign.dates.nominations[0] = moment(v[0]).toISOString();
+      this.campaign.dates.nominations[1] = moment(v[1]).toISOString();
+    },
+    updateRegistrationnData(v) {
+      this.campaign.dates.registration[0] = moment(v[0]).toISOString();
+      this.campaign.dates.registration[1] = moment(v[1]).toISOString();
+    },
     async initCampaign() {
       this.campaign = {
         name: "",
@@ -290,6 +305,7 @@ export default {
     if (!this.userInGroup("admin")) {
       this.$router.push("/");
     }
+    await this.initCampaign();
     await this.getCampaignData();
     this.isLoading = false;
   },

@@ -315,8 +315,10 @@ export default {
     },
   },
   watch: {
-    data(newVal) {
-      this.tableData = newVal;
+    async data() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
     },
     allNominators(newVal) {
       this.allNominatorsData = newVal;
@@ -897,6 +899,8 @@ export default {
         familyDetail: f?.familyDetail ?? "",
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
+        status: f?.status ?? "",
+        dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
       this.tableData = [...familyData];
 
@@ -1006,21 +1010,25 @@ export default {
     },
     async getFamilyData() {
       let familiesData = [];
-      if (this.organisation.requestId) {
-        familiesData = await this.platformFamilies.filter(
-          (f) =>
-            (this.userInGroup("admin") ||
-              this.userInGroup("teamlead") ||
-              f?.GSI3SK === this.currentNominator?.GSI2PK) &&
-            f?.GSI3PK === this.organisation.requestId &&
-            f?.type === "family"
-        );
+      if (this.data && typeof this.data === "object") {
+        familiesData = this.data;
+      } else {
+        if (this.organisation.requestId) {
+          familiesData = await this.platformFamilies.filter(
+            (f) =>
+              (this.userInGroup("admin") ||
+                this.userInGroup("teamlead") ||
+                f?.GSI3SK === this.currentNominator?.GSI2PK) &&
+              f?.GSI3PK === this.organisation.requestId &&
+              f?.type === "family"
+          );
 
-        this.familyMemberData = []; //Object.values(res?.data?.members);
-      } else if (this.userInGroup("admin")) {
-        familiesData = await this.platformFamilies.filter(
-          (n) => n?.type === "family"
-        );
+          this.familyMemberData = []; //Object.values(res?.data?.members);
+        } else if (this.userInGroup("admin")) {
+          familiesData = await this.platformFamilies.filter(
+            (n) => n?.type === "family"
+          );
+        }
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
@@ -1031,6 +1039,7 @@ export default {
         familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
+        status: f?.status ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
     },
@@ -1039,11 +1048,7 @@ export default {
     this.allNominatorsData = this.allNominators;
     this.currentNominator = this.nominator;
 
-    if (!this.data || typeof this.data != "object") {
-      await this.getFamilyData();
-    } else {
-      this.tableData = this.data;
-    }
+    await this.getFamilyData();
 
     this.$emit("resultData", "families", this.tableData);
     this.isLoading = false;

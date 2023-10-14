@@ -219,54 +219,46 @@
                           Allocate Families
                         </button>
                       </div>
-                      <div class="col-12" v-if="allocationMet(campaign)">
-                        <button
-                          @click.prevent="
-                            activeCampaignId = campaign.requestId;
-                            sendAllocationEmail();
-                          "
-                          class="btn btn-fill btn-info w-100"
-                        >
-                          Send Allocation Email
-                        </button>
-                      </div>
                     </div>
-                    <div class="row">
-                      <div class="col-6" v-if="allocationMet(campaign)">
-                        <drop-down class="btn-group w-100 download-dropdown">
-                          <button
-                            slot="title"
-                            href="#"
-                            type="button"
-                            class="btn btn-fill btn-secondary w-100 dropdown-toggle"
-                            data-toggle="dropdown"
-                          >
-                            Download Labels
-                            <span class="caret"></span>
-                          </button>
-                          <li class="pb-1 pt-2 px-3">
-                            <a href="#" @click.prevent="downloadPDF('full')"
-                              >Full PDF</a
-                            >
-                          </li>
-                          <li class="pt-1 pb-2 px-3">
-                            <a href="#" @click.prevent="downloadPDF('basic')"
-                              >Basic PDF</a
-                            >
-                          </li>
-                        </drop-down>
-                      </div>
-                      <!--
-                      <div class="col-6" v-if="allocationMet(campaign)">
-                        <button
-                          @click.prevent="downloadCSV('full')"
-                          class="btn btn-fill btn-secondary w-100"
+                  </div>
+                </div>
+
+                <div class="row" v-if="allocationMet(campaigns)">
+                  <div class="col-12">
+                    <button
+                      @click.prevent="
+                        activeCampaignId = campaign.requestId;
+                        sendAllocationEmail();
+                      "
+                      class="btn btn-fill btn-info w-100"
+                    >
+                      Send Allocation Email
+                    </button>
+                  </div>
+
+                  <div class="col-6">
+                    <drop-down class="btn-group w-100 download-dropdown">
+                      <button
+                        slot="title"
+                        href="#"
+                        type="button"
+                        class="btn btn-fill btn-secondary w-100 dropdown-toggle"
+                        data-toggle="dropdown"
+                      >
+                        Download Labels
+                        <span class="caret"></span>
+                      </button>
+                      <li class="pb-1 pt-2 px-3">
+                        <a href="#" @click.prevent="downloadPDF('full')"
+                          >Full PDF</a
                         >
-                          Download CSV
-                        </button>
-                      </div>
-                      -->
-                    </div>
+                      </li>
+                      <li class="pt-1 pb-2 px-3">
+                        <a href="#" @click.prevent="downloadPDF('basic')"
+                          >Basic PDF</a
+                        >
+                      </li>
+                    </drop-down>
                   </div>
                 </div>
 
@@ -558,6 +550,9 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
+    platformFamilies() {
+      return this.$store.getters.getPlatformFamilies;
+    },
   },
   methods: {
     isAllocated(campaign) {
@@ -590,11 +585,33 @@ export default {
         };
       };
 
+      const statusCheck = (hamperStatus, type) => {
+        switch (hamperStatus) {
+          case "allocated-sent":
+          case "allocated-unconfirmed":
+            return type === "allocated" ? true : false;
+          case "allocated-confirmed":
+            return type === "allocated-confirmed" || type === "allocated"
+              ? true
+              : false;
+          case "unallocated":
+          default:
+            return type === "unallocated" ? true : false;
+        }
+      };
+
       const allocations = campaign?.numberOfFamilies; // this.assignedFamilies.length
-      const c = this.assignedFamilies.filter(
-        filterCheck("allocated-confirmed")
-      ).length;
-      const a = this.assignedFamilies.filter(filterCheck("allocated")).length;
+      const c = campaign.allocation
+        ? campaign.allocation.filter((hamper) =>
+            this.platformFamilies.find(
+              (f) =>
+                f.SK === `REF#${hamper.hamperId}` &&
+                statusCheck(f.status, "allocated-confirmed")
+            )
+          ).length
+        : 0;
+
+      const a = campaign.allocation ? campaign.allocation.length : 0;
 
       const allocation =
         a === allocations
@@ -647,14 +664,16 @@ export default {
       });
 
       const allocateRes = await downloadFile({
+        campaign: this.$store.getters.getActiveCampaign,
         donorId: this.donor.GSI2PK,
         type: "pdf",
         version: type,
       });
+      Swal.close();
       if (allocateRes.status == 200) {
         const linkSource = `data:application/pdf;base64,${allocateRes.data}`;
         const downloadLink = document.createElement("a");
-        const fileName = `${this.donor.firstName.toLowerCase()}-${this.donor.lastName.toLowerCase()}-labels-${type.toLowerCase()}-pdf`;
+        const fileName = `${this.donor.donorDetails.firstName.toLowerCase()}-${this.donor.donorDetails.lastName.toLowerCase()}-labels-${type.toLowerCase()}-pdf`;
 
         downloadLink.href = linkSource;
         downloadLink.download = fileName;
@@ -677,20 +696,33 @@ export default {
     },
     async doAllocateFamily(i, f) {
       const allocateRes = await allocateFamily({
-        campaignRequestId: this.activeCampaignId,
-        familyId: f.requestId,
+        campaignId: this.$store.getters.getActiveCampaign,
+        requestId: this.activeCampaignId,
+        hamperId: f.reference,
         donorId: this.donor.GSI2PK,
       });
       if (allocateRes.status == 200) {
-        const assignedFamilies = this.assignedFamilies.filter(
-          (f) =>
-            !f?.campaignRequestId ||
-            f.campaignRequestId === this.campaign.requestId
+        const requestIndex = this.donor?.familyDetails?.request.findIndex(
+          (r) => r.requestId === this.activeCampaignId
         );
+        if (!this.donor?.familyDetails?.request[requestIndex]?.allocation) {
+          this.donor.familyDetails.request[requestIndex].allocation = [];
+        }
+
+        const allocatedFamily = this.platformFamilies.find(
+          (pf) => pf.SK === `REF#${f.reference}`
+        );
+        this.donor?.familyDetails?.request[requestIndex]?.allocation.push({
+          hamperId: f.reference,
+          members: allocatedFamily?.members,
+        });
+
+        this.campaigns = this.donor?.familyDetails?.request ?? [];
+        this.assignedFamilies.push(allocatedFamily);
 
         const allocationComplete =
-          assignedFamilies.length === this.campaign?.numberOfFamilies;
-        this.assignedFamilies.push(f);
+          this.assignedFamilies.length === this.campaign?.numberOfFamilies;
+
         Swal.fire({
           title: "Success",
           text: `Family allocated.${
@@ -718,21 +750,72 @@ export default {
       }
     },
     async doUnallocateFamily(i, f) {
-      await unallocateFamily({
-        familyId: f.requestId,
-        donorId: this.donor.GSI2PK,
-      });
-      Swal.fire({
-        title: "Success",
-        text: "Family unallocated.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      if (f.reference) {
+        const allocation = this.donor?.familyDetails?.request
+          ? this.donor.familyDetails.request.find((r) =>
+              r?.allocation
+                ? r.allocation.find((a) => f?.reference === a?.hamperId)
+                    ?.hamperId
+                : false
+            )
+          : {};
+
+        const unallocateRes = await unallocateFamily({
+          campaignId: this.$store.getters.getActiveCampaign,
+          requestId: allocation?.requestId ?? null,
+          hamperId: f.reference,
+          donorId: this.donor.GSI2PK,
+        });
+        if (unallocateRes.status == 200) {
+          const requestIndex = this.donor?.familyDetails?.request.findIndex(
+            (r) => r.requestId === (allocation?.requestId ?? null)
+          );
+          const allocationIndex = this.donor?.familyDetails?.request[
+            requestIndex
+          ]?.allocation.findIndex((a) => a.hamperId === f.reference);
+
+          this.donor?.familyDetails?.request[requestIndex]?.allocation.splice(
+            allocationIndex,
+            1
+          );
+
+          const assignedIndex = this.assignedFamilies.findIndex(
+            (pf) => pf.SK === `REF#${f.reference}`
+          );
+          this.assignedFamilies.splice(assignedIndex, 1);
+
+          const allocationComplete =
+            this.assignedFamilies.length === this.campaign?.numberOfFamilies;
+
+          Swal.fire({
+            title: "Success",
+            text: "Family unallocated.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          this.allocateFamily = allocationComplete;
+        } else {
+          if (unallocateRes?.data?.messages) {
+            Swal.fire({
+              title: "Error",
+              text: Object.keys(unallocateRes?.data?.messages)
+                .map((k) => unallocateRes?.data?.messages[k])
+                .join(),
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
+        }
+      } else {
+        this.messages = [{ error: "Error with family data" }];
+      }
     },
     async sendAllocationEmail(i, f) {
       await Swal.fire({
         title: "Are you sure?",
         text: `If you send this allocation, the process cannot be undone.`,
+        confirmButtonClass: "btn btn-success btn-fill",
+        cancelButtonClass: "btn btn-danger btn-fill",
         showCancelButton: true,
         confirmButtonText: "Yes",
         cancelButtonText: "No",
@@ -741,9 +824,7 @@ export default {
         if (d?.isConfirmed && !d?.isDismissed) {
           const updateRes = await emailFamilyAssignment({
             donorId: this.donor.GSI2PK,
-            campaignRequestId: this.activeCampaignId
-              ? this.activeCampaignId
-              : "",
+            campaignId: this.$store.getters.getActiveCampaign,
           });
           if (updateRes?.status != 200 && updateRes?.data?.messages) {
             this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
@@ -762,16 +843,21 @@ export default {
     },
 
     canAllocate(c) {
-      const assignedFamilies = this.assignedFamilies.filter(
-        (f) => !f?.campaignRequestId || f.campaignRequestId === c.requestId
+      return (
+        //this.isJamie() ||
+        !c?.allocation || c.allocation.length < c.numberOfFamilies
       );
-      return this.isJamie() || assignedFamilies.length < c.numberOfFamilies;
     },
     allocationMet(c) {
-      const assignedFamilies = this.assignedFamilies.filter(
-        (f) => !f?.campaignRequestId || f.campaignRequestId === c.requestId
-      );
-      return assignedFamilies.length >= c.numberOfFamilies;
+      let allocationMet = c.length > 0;
+      for (const [i, a] of c.entries()) {
+        if (!allocationMet) {
+          break;
+        }
+        allocationMet =
+          a?.allocation && a.allocation.length >= a.numberOfFamilies;
+      }
+      return allocationMet;
     },
     populateDefaults() {
       if (
@@ -990,8 +1076,16 @@ export default {
         );
         this.campaigns = this.donor?.familyDetails?.request ?? [];
 
-        this.assignedFamilies =
-          this.donor?.familyDetails?.allocation?.families ?? [];
+        this.assignedFamilies = this.platformFamilies.filter((f) =>
+          this.donor?.familyDetails?.request
+            ? this.donor.familyDetails.request.filter((r) =>
+                r?.allocation
+                  ? r.allocation.filter((a) => f.SK === `REF#${a?.hamperId}`)
+                      .length
+                  : false
+              ).length
+            : false
+        );
       }
     },
   },
