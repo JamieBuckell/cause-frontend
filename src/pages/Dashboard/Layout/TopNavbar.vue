@@ -83,41 +83,45 @@
       </div>
 
       <!-- -->
+
       <div
-        class="justify-content-end campaign-selector"
+        class="justify-content-end campaign-selector container-fluid"
         v-if="isAdmin || activeCampaigns.length > 1"
       >
-        <div class="text-center">
-          <p class="text-info">
-            <strong>Campaign: </strong>
-            <el-select
-              class="select-default mb-3"
-              v-model="activeCampaignId"
-              placeholder="Choose Campaign"
-              style="width: 280px"
-            >
-              <el-option
-                class="select-default"
-                v-for="item in activeCampaigns"
-                :key="item.campaignId"
-                :label="item.name"
-                :value="item.campaignId"
+        <div class="row">
+          <div class="col-10">
+            <div class="text-center">
+              <p class="text-info">
+                <strong>Campaign: </strong>
+                <el-select
+                  class="select-default mb-3 pl-2"
+                  v-model="activeCampaignId"
+                  placeholder="Choose Campaign"
+                  style="width: 280px"
+                >
+                  <el-option
+                    class="select-default"
+                    v-for="item in activeCampaigns"
+                    :key="item.campaignId"
+                    :label="item.name"
+                    :value="item.campaignId"
+                  >
+                  </el-option>
+                </el-select>
+              </p>
+            </div>
+          </div>
+          <div class="col-2">
+            <div class="refresh-campaign">
+              <button
+                class="btn btn-outline btn-fill btn-round btn-icon d-block ml-3"
+                @click="refreshData"
               >
-              </el-option>
-            </el-select>
-          </p>
+                <i class="fa fa-refresh"></i>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div
-        class="justify-content-end refresh-campaign"
-        v-if="isAdmin || activeCampaigns.length > 1"
-      >
-        <button
-          class="btn btn-outline btn-fill btn-round btn-icon d-none d-lg-block ml-3"
-          @click="refreshData"
-        >
-          <i class="fa fa-refresh"></i>
-        </button>
       </div>
       <!-- -->
     </div>
@@ -185,6 +189,17 @@ export default {
 </script>
 <style lang="scss">
 .campaign-selector {
+  .refresh-campaign {
+    > .btn {
+      margin: 0 !important;
+    }
+  }
+  .text-info {
+    margin: 0 auto;
+    > * {
+      display: table-cell;
+    }
+  }
   p {
     margin-top: 1rem;
     margin-bottom: 0;
