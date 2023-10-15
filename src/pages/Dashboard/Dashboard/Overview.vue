@@ -116,7 +116,7 @@ export default {
           class: "order-4 order-xl-6",
           title: "Allocated Families",
           value: "0",
-          subvalue: "0 confirmed",
+          // subvalue: "0 confirmed",
           active: true,
         },
         nominators: {
@@ -220,7 +220,9 @@ export default {
         this.dashdata.allocated.value = donors.reduce((accumulator, d) => {
           return (
             accumulator +
-            parseInt(d?.familyDetails?.allocation?.numberOfFamilies ?? 0)
+            d?.familyDetails?.request.reduce((a2, r) => {
+              return a2 + r?.allocation ? parseInt(r.allocation.length) : 0;
+            }, 0)
           );
         }, 0);
       }

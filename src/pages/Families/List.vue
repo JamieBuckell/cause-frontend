@@ -735,12 +735,13 @@ export default {
         if (this.options.showDonor) {
           donorDetail = "Not Allocated";
           if (f.allocatedTo) {
-            const familyDonor = this.allDonorsData.find(
-              (d) => d.requestId == f.allocatedTo
-            );
-            if (familyDonor?.requestId) {
-              donorDetail = `${familyDonor.firstName} ${familyDonor.lastName}`;
-              donorEmail = `${familyDonor.email ? familyDonor.email : ""}`;
+            const familyDonor = this?.platformData?.donors
+              ? this.platformData.donors.find((n) => n.GSI2PK === f.allocatedTo)
+              : {};
+
+            if (familyDonor?.GSI2PK) {
+              donorDetail = `${familyDonor.donorDetails.firstName} ${familyDonor.donorDetails.lastName}`;
+              donorEmail = `${familyDonor.GSI3PK ? familyDonor.GSI3PK : ""}`;
             }
           }
         }
@@ -967,6 +968,27 @@ export default {
         return `${value}`;
       }
     },
+    createDonorDetail(donorId) {
+      var rtnStr = "Not Allocated";
+      const donor = this?.platformData?.donors
+        ? this.platformData.donors.find((n) => n.GSI2PK === donorId)
+        : {};
+      if (donor?.PK) {
+        rtnStr = `<strong>${donor.donorDetails.firstName} ${donor.donorDetails.lastName}</strong>`;
+        if (donor.donorDetails.telephone) {
+          rtnStr += ` - <a href="tel:${donor.donorDetails.telephone}">${donor.donorDetails.telephone}</a>`;
+        }
+
+        if (donor.donorDetails.company) {
+          rtnStr += `<br />${donor.donorDetails.company}`;
+        }
+        if (donor.GSI3PK) {
+          rtnStr += `<br /><a href="tel:${donor.GSI3PK}">${donor.GSI3PK}</a>`;
+        }
+        rtnStr += `<br /><a href="/donors/view/${donor.GSI2PK}" class="btn btn-info btn-fill btn-wd">Manage Donor</a>`;
+      }
+      return rtnStr;
+    },
     createNominatorDetail(nominatorId) {
       var rtnStr = "";
       const nominator = this?.platformData?.nominators
@@ -1032,10 +1054,12 @@ export default {
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
+        allocatedTo: f?.allocatedTo ?? "",
         organisationId: f?.GSI3PK,
         nominatorId: f?.GSI3SK,
         reference: f?.SK ? f.SK.replace("REF#", "") : "",
         nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
+        donorDetail: this.createDonorDetail(f?.allocatedTo),
         familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
@@ -1068,38 +1092,6 @@ export default {
       } else {
         this.fallBackSubHeading = "No duplicates references found";
       }
-    }
-
-    if (this.options.showDonor && this.userInGroup("admin")) {
-      const donorsRequest = {}; // await getDonors();
-      this.allDonorsData = Object.values(donorsRequest?.data ?? []);
-
-      this.tableData.map((o) => {
-        if (this.options.showDonor) {
-          let donorDetail = "Not Allocated";
-          if (o.allocatedTo) {
-            const familyDonor = this.allDonorsData.find(
-              (d) => d.requestId == o.allocatedTo
-            );
-            if (familyDonor?.requestId) {
-              donorDetail = `
-                <strong>${familyDonor.firstName} ${
-                familyDonor.lastName
-              }</strong>${
-                familyDonor.telephone ? " - " + familyDonor.telephone : ""
-              }<br />
-                ${familyDonor.company ? familyDonor.company + "<br />" : ""}
-                ${familyDonor.email ? familyDonor.email + "<br />" : ""}
-                <a href="/donors/view/${
-                  familyDonor.requestId
-                }" class="btn btn-info btn-fill btn-wd">Manage Donor</a>
-              `;
-            }
-          }
-          o.donorDetail = donorDetail;
-        }
-        return true;
-      });
     }
 
     EventBus.$on("$EventBusEvent", this.handleEventBusEvent);

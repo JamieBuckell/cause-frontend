@@ -839,19 +839,25 @@ export default {
           let donorDetail = "Not Allocated";
           if (o.allocatedTo) {
             const familyDonor = allDonors.find(
-              (d) => d.requestId == o.allocatedTo
+              (d) => d.GSI2PK == o.allocatedTo
             );
-            if (familyDonor?.requestId) {
+            if (familyDonor?.GSI2PK) {
               donorDetail = `
-                <strong>${familyDonor.firstName} ${
-                familyDonor.lastName
+                <strong>${familyDonor.donorDetail.firstName} ${
+                familyDonor.donorDetail.lastName
               }</strong>${
-                familyDonor.telephone ? " - " + familyDonor.telephone : ""
+                familyDonor.donorDetail.telephone
+                  ? " - " + familyDonor.donorDetail.telephone
+                  : ""
               }<br />
-                ${familyDonor.company ? familyDonor.company + "<br />" : ""}
-                ${familyDonor.email ? familyDonor.email + "<br />" : ""}
+                ${
+                  familyDonor.donorDetail.company
+                    ? familyDonor.donorDetail.company + "<br />"
+                    : ""
+                }
+                ${familyDonor.GSI3PK ? familyDonor.GSI3PK + "<br />" : ""}
                 <a href="/donors/view/${
-                  familyDonor.requestId
+                  familyDonor.GSI2PK
                 }" class="btn btn-info btn-fill btn-wd">Manage Donor</a>
               `;
             }
