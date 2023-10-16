@@ -35,6 +35,7 @@ export const store = new Vuex.Store({
         // 'authenticate.tokens',
         // 'authenticate.currentUser',
         // 'authenticate.authChecked',
+        "campaigns.platformData",
         "campaigns.allCampaigns",
         "campaigns.activeCampaign",
         "campaigns.genericData",
