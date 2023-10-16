@@ -19,6 +19,7 @@
     "@fullcalendar/interaction": "5.10.1",
     "@fullcalendar/timegrid": "5.10.1",
     "@fullcalendar/vue": "5.10.1",
+    "@sentry/cli": "^2.21.2",
     "@sentry/vue": "^7.73.0",
     "amazon-cognito-identity-js": "^5.2.8",
     "aws-sdk": "^2.1096.0",
