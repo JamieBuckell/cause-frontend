@@ -844,7 +844,10 @@ export default {
         case "resetReferences":
           /* */
           if (r.nominatorId) {
-            const res = await fixReferences({ nominatorId: r.nominatorId });
+            const res = await fixReferences({
+              nominatorId: r.nominatorId,
+              campaign: this.$store.getters.getActiveCampaign,
+            });
             if (res.status == 200) {
               this.$router.go();
             } else {
