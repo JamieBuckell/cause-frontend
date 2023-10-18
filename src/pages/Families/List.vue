@@ -218,6 +218,7 @@ import {
   deleteFamily,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
+import { getPlatformData } from "@/services/campaignData";
 
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import FamilyAdd from "@/components/Modals/FamilyAdd.vue";
@@ -849,6 +850,7 @@ export default {
               campaign: this.$store.getters.getActiveCampaign,
             });
             if (res.status == 200) {
+              await getPlatformData(true);
               this.$router.go();
             } else {
               if (res?.data?.messages) {
