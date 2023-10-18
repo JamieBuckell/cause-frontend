@@ -217,7 +217,7 @@ export default {
         update: true,
         delete: true,
         download: true,
-        resetReferences: this.isJamie(),
+        resetReferences: true,
         splitFamily: true,
       },
       nominatorListOptions: {
