@@ -281,7 +281,7 @@ export default {
         }
         const nomRef = fNom.nominatorDetails.reference;
 
-        return !f.SK.includes(`REF#${orgRef}${nomRef}`);
+        return !f.GSI2SK.includes(`SK#${orgRef}${nomRef}`);
       });
       if (errorFamilies.length) {
         const nominatorIDs = errorFamilies.reduce((a, { GSI3SK }) => {
@@ -297,7 +297,7 @@ export default {
           allocatedTo: f?.allocatedTo ?? "",
           organisationId: f?.GSI3PK,
           nominatorId: f?.GSI3SK,
-          reference: f?.SK ? f.SK.replace("REF#", "") : "",
+          reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
           nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
           donorDetail: this.createDonorDetail(f?.allocatedTo),
           familyDetail: this.createFamilyDetail(f?.members),

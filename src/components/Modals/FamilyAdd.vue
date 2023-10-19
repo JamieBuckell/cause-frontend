@@ -413,7 +413,7 @@ export default {
       );
       this.editFamilyData = {
         requestId: familyData?.GSI2PK,
-        reference: familyData?.SK.replace("REF#", ""),
+        reference: familyData?.GSI2SK.replace("SK#", ""),
         nominatorId: familyData?.GSI3PK,
       };
       this.editFamilyMembers = familyData.members;

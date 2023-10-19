@@ -605,7 +605,7 @@ export default {
         ? campaign.allocation.filter((hamper) =>
             this.platformFamilies.find(
               (f) =>
-                f.SK === `REF#${hamper.hamperId}` &&
+                f.GSI2SK === `SK#${hamper.hamperId}` &&
                 statusCheck(f.status, "allocated-confirmed")
             )
           ).length
@@ -710,7 +710,7 @@ export default {
         }
 
         const allocatedFamily = this.platformFamilies.find(
-          (pf) => pf.SK === `REF#${f.reference}`
+          (pf) => pf.GSI2SK === `SK#${f.reference}`
         );
         this.donor?.familyDetails?.request[requestIndex]?.allocation.push({
           hamperId: f.reference,
@@ -780,7 +780,7 @@ export default {
           );
 
           const assignedIndex = this.assignedFamilies.findIndex(
-            (pf) => pf.SK === `REF#${f.reference}`
+            (pf) => pf.GSI2SK === `SK#${f.reference}`
           );
           this.assignedFamilies.splice(assignedIndex, 1);
 
@@ -1080,7 +1080,7 @@ export default {
           this.donor?.familyDetails?.request
             ? this.donor.familyDetails.request.filter((r) =>
                 r?.allocation
-                  ? r.allocation.filter((a) => f.SK === `REF#${a?.hamperId}`)
+                  ? r.allocation.filter((a) => f.GSI2SK === `SK#${a?.hamperId}`)
                       .length
                   : false
               ).length
