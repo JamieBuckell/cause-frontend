@@ -279,11 +279,6 @@ export default {
         }
         const nomRef = fNom.nominatorDetails.reference;
 
-        console.log(
-          f.SK,
-          `REF#${orgRef}${nomRef}`,
-          f.SK.includes(`REF#${orgRef}${nomRef}`)
-        );
         return !f.SK.includes(`REF#${orgRef}${nomRef}`);
       });
       if (errorFamilies.length) {
@@ -294,7 +289,6 @@ export default {
         familiesData = familiesData.filter((f) =>
           nominatorIDs.includes(f.GSI3SK)
         );
-        console.log(familiesData);
         // GSI3SK
         this.tableData = familiesData.map((f) => ({
           requestId: f?.GSI2PK ?? "",
@@ -310,7 +304,6 @@ export default {
           status: f?.status ?? "",
           dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
         }));
-        console.log("this.tableData", this.tableData);
       } else {
         this.tableData = [];
       }
