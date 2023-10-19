@@ -112,7 +112,20 @@ const CommunicationsSentList = () =>
   import("src/pages/Communications/SentList.vue");
 const EmailTemplatesList = () =>
   import("src/pages/Communications/EmailTemplatesList.vue");
+const HamperRefsCheck = () => import("src/pages/DataFix/HamperRefsCheck.vue");
 
+let dataMenu = {
+  path: "/data",
+  component: DashboardLayout,
+  redirect: "/data/hamper-refs-chec",
+  children: [
+    {
+      path: "hamper-refs-check",
+      name: "HamperRefsCheck",
+      component: HamperRefsCheck,
+    },
+  ],
+};
 let componentsMenu = {
   path: "/components",
   component: DashboardLayout,
@@ -692,6 +705,7 @@ const routes = [
   subscriberUnsubscribeMenu,
   donorConfirmPledgeMenu,
   communicationsCreateMenu,
+  dataMenu,
   componentsMenu,
   formsMenu,
   tablesMenu,

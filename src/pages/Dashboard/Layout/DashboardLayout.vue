@@ -198,7 +198,19 @@
         -->
 
         <sidebar-item
-          v-if="checkRole('jamie')"
+          v-if="isJamie()"
+          :link="{ name: 'Data Stuff', icon: 'nc-icon nc-app' }"
+        >
+          <sidebar-item
+            :link="{
+              name: 'Invalid Hamper IDs',
+              path: '/data/hamper-refs-check',
+            }"
+          ></sidebar-item>
+        </sidebar-item>
+
+        <sidebar-item
+          v-if="isJamie()"
           :link="{ name: 'Template Stuff', icon: 'nc-icon nc-app' }"
         >
           <sidebar-item :link="{ name: 'Components', icon: 'nc-icon nc-app' }">
