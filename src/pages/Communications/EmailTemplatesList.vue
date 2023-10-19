@@ -10,17 +10,7 @@
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
       >
-        <template v-slot:header>
-          All Sent Emails
-
-          <button
-            type="submit"
-            class="btn btn-info btn-fill btn-wd pull-right"
-            @click.prevent="handleCreate"
-          >
-            Send Email
-          </button>
-        </template>
+        <template v-slot:header> All Emails Templates </template>
       </ListingsPage>
 
       <el-dialog center :visible.sync="showPreview" width="80%">
@@ -192,9 +182,6 @@ export default {
     },
   },
   methods: {
-    async handleCreate(i, r) {
-      this.$router.push(`/communications/create`);
-    },
     async handleEdit(i, r) {
       this.showPreview = true;
 
