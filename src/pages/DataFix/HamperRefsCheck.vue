@@ -23,6 +23,7 @@
   </div>
 </template>
 <script>
+/* eslint-disable no-console */
 import Vue from "vue";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
@@ -557,69 +558,10 @@ export default {
 
     await this.getFamilyData();
 
-    /* *
-    const donorsData = []; //await getDonors()
-    const donorsCampaignData = [];
-    let errors = 0;
-    let donorCount = 0;
-    for (
-      var index = 0;
-      index < Object.values(donorsData.data).length;
-      index++
-    ) {
-      const donor = Object.values(donorsData.data)[index];
-
-      if (donor?.bounced) {
-        continue;
-      }
-
-      if (
-        donor?.dateSubscribed &&
-        donor.dateSubscribed.indexOf("2022-08-27") >= 0 &&
-        !donor?.dateAdded
-      ) {
-        continue;
-      }
-
-      const donorsOnly = Object.values(donorsCampaignData.data).filter(
-        (dc) => dc.donorId === donor.requestId
-      );
-
-      if (donorsOnly && donorsOnly.length > 0) {
-        donorCount++;
-      } else {
-        errors++;
-        this.output += `<a href="/donors/view/${donor.requestId}">${donor.email}</a><br />${donor.dateVerified} - ${donor.verified}<br /><br />`;
-        this.output += `
-        {
-          "requestId": {
-            "S": "${uuid.v4()}"
-          },
-          "additionalInfo": {
-            "S": ""
-          },
-          "allocatedFamilies": {
-            "N": "0"
-          },
-          "campaignId": {
-            "S": "6fd91723-9316-4502-99cb-0fc6399aed86"
-          },
-          "donorId": {
-            "S": "${donor.requestId}"
-          },
-          "familyDetail": {
-            "S": "[\\"any\\"]"
-          },
-          "numberOfFamilies": {
-            "N": "1"
-          }
-        }<br /><br />`;
-      }
-    }
-    /* */
     this.loading = false;
   },
 };
+/* eslint-enable no-console */
 </script>
 <style lang="scss">
 .donors-list {
