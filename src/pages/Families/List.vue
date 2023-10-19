@@ -637,7 +637,10 @@ export default {
     },
     getCustomActions() {
       const propCustomActions = this.customActions;
-      if (!this.organisationId) {
+      if (
+        !this.organisationId &&
+        !propCustomActions.find((ca) => ca.emit === "viewOrganisation")?.emit
+      ) {
         propCustomActions.push({
           emit: "viewOrganisation",
           type: "icon",
@@ -647,7 +650,10 @@ export default {
         });
       }
       if (this.userInGroup("admin")) {
-        if (this.options.resetReferences) {
+        if (
+          this.options.resetReferences &&
+          !propCustomActions.find((ca) => ca.emit === "resetReferences")?.emit
+        ) {
           propCustomActions.push({
             emit: "resetReferences",
             type: "icon",
@@ -656,7 +662,10 @@ export default {
             text: "Reset References",
           });
         }
-        if (this.options.splitFamily) {
+        if (
+          this.options.splitFamily &&
+          !propCustomActions.find((ca) => ca.emit === "splitFamily")?.emit
+        ) {
           propCustomActions.push({
             emit: "splitFamily",
             type: "icon",
@@ -844,26 +853,31 @@ export default {
           break;
         case "resetReferences":
           /* */
+          this.isLoading = true;
           if (r.nominatorId) {
             const res = await fixReferences({
               nominatorId: r.nominatorId,
               campaign: this.$store.getters.getActiveCampaign,
             });
+            if (res?.data?.messages) {
+              this.messages = Object.keys(res?.data?.messages).map((k) => ({
+                error: res?.data?.messages[k],
+              }));
+            }
             if (res.status == 200) {
-              await getPlatformData(true);
-              this.$router.go();
-            } else {
-              if (res?.data?.messages) {
-                this.messages = Object.keys(res?.data?.messages).map((k) => ({
-                  error: res?.data?.messages[k],
-                }));
-              }
+              Swal.fire({
+                title: "Success",
+                text: "Reference fix request recieved. Please wait 5 minutes and refresh the data to confirm.",
+                timer: 3000,
+                showConfirmButton: false,
+              });
             }
           } else {
             this.messages.push({
               error: "An unexpected error has occurred.",
             });
           }
+          this.isLoading = true;
           /* */
           break;
         default:
