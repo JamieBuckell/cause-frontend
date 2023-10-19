@@ -136,6 +136,9 @@
           <sidebar-item
             :link="{ name: 'Previous Emails', path: '/communications/sent' }"
           ></sidebar-item>
+          <sidebar-item
+            :link="{ name: 'Email Templates', path: '/communications/emails' }"
+          ></sidebar-item>
         </sidebar-item>
 
         <!----

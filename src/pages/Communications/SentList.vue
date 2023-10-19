@@ -6,7 +6,6 @@
         :listingsData="sentEmailsData"
         :options="options"
         listingsType="emails"
-        @editItem="handleEdit"
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
       >
@@ -135,7 +134,7 @@ export default {
         ],
         searchKeys: ["subject", "title", "content"],
         delete: false,
-        edit: true,
+        edit: false,
       },
     };
   },
@@ -164,6 +163,14 @@ export default {
           text: "Resend Email",
         });
       }
+
+      propCustomActions.push({
+        emit: "previewEmail",
+        type: "icon",
+        icon: "nc-icon nc-paper-2",
+        class: "btn-success",
+        text: "Preview Email",
+      });
       return propCustomActions;
     },
   },
@@ -171,18 +178,18 @@ export default {
     async handleCreate(i, r) {
       this.$router.push(`/communications/create`);
     },
-    async handleEdit(i, r) {
-      this.showPreview = true;
-
-      this.previewData.subject = r.subject;
-      this.previewData.title = r.title;
-      this.previewData.content = r.content;
-      this.previewData.dateAdded = r.dateAdded;
-      this.previewData.recipientCount = r.recipientCount;
-      this.previewData.options = r?.options ? JSON.parse(r.options) : "";
-    },
     async handleCustomAction(i, k, r) {
       switch (k) {
+        case "previewEmail":
+          this.showPreview = true;
+
+          this.previewData.subject = r.subject;
+          this.previewData.title = r.title;
+          this.previewData.content = r.content;
+          this.previewData.dateAdded = r.dateAdded;
+          this.previewData.recipientCount = r.recipientCount;
+          this.previewData.options = r?.options ? JSON.parse(r.options) : "";
+          break;
         case "resendComms":
           await Swal.fire({
             title: "Are you sure?",

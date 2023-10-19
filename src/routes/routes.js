@@ -110,6 +110,8 @@ const CommunicationsCreate = () =>
   import("src/pages/Communications/Create.vue");
 const CommunicationsSentList = () =>
   import("src/pages/Communications/SentList.vue");
+const EmailTemplatesList = () =>
+  import("src/pages/Communications/EmailTemplatesList.vue");
 
 let componentsMenu = {
   path: "/components",
@@ -556,6 +558,11 @@ let communicationsCreateMenu = {
       path: "sent",
       name: "Sent Communication",
       component: CommunicationsSentList,
+    },
+    {
+      path: "emails",
+      name: "Email Templates",
+      component: EmailTemplatesList,
     },
   ],
 };
