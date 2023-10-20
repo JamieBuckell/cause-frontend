@@ -339,31 +339,31 @@ export default {
         }
         if (this.filters.allocated && this.filters.allocated != "All") {
           result = result.filter((d) => {
-            const numberofFamilies = d?.familyDetails?.request
+            const numberOfFamilies = d?.familyDetails?.request
               ? d.familyDetails.request.reduce(
                   (a, b) => a + b.numberOfFamilies,
                   0
                 )
               : 0;
+            const allocationOfFamilies = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + (b?.allocation ? b.allocation.length : 0),
+                  0
+                )
+              : 0;
             switch (this.filters.allocated.toLowerCase()) {
               case "not allocated":
-                return (
-                  !d?.familyDetails?.allocation?.numberOfFamilies ||
-                  d.familyDetails?.allocation?.numberOfFamilies === 0
-                );
+                return numberOfFamilies > 0 && allocationOfFamilies === 0;
               case "part allocated":
                 return (
-                  d?.familyDetails?.allocation?.numberOfFamilies &&
-                  d.familyDetails?.allocation?.numberOfFamilies > 0 &&
-                  d.familyDetails?.allocation?.numberOfFamilies <
-                    numberofFamilies
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies > 0 &&
+                  allocationOfFamilies < numberOfFamilies
                 );
               case "fully allocated":
                 return (
-                  d?.familyDetails?.allocation?.numberOfFamilies &&
-                  d.familyDetails?.allocation?.numberOfFamilies > 0 &&
-                  d.familyDetails?.allocation?.numberOfFamilies ===
-                    numberofFamilies
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies === numberOfFamilies
                 );
               default:
                 return true;
