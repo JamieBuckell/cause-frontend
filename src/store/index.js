@@ -35,7 +35,8 @@ export const store = new Vuex.Store({
         // 'authenticate.tokens',
         // 'authenticate.currentUser',
         // 'authenticate.authChecked',
-        "campaigns.platformData",
+        //"campaigns.platformData",
+        "campaigns.platformCampaignId",
         "campaigns.allCampaigns",
         "campaigns.activeCampaign",
         "campaigns.genericData",
@@ -46,6 +47,42 @@ export const store = new Vuex.Store({
         "authenticate.tokens.accessToken",
         "authenticate.tokens.refreshToken",
       ],
+    }),
+    createPersistedState({
+      key: "CFDLS",
+      storage: {
+        getItem: (key) => ls.get(key),
+        setItem: (key, value) => ls.set(key, value),
+        removeItem: (key) => ls.remove(key),
+      },
+      paths: ["campaigns.platformDonors"],
+    }),
+    createPersistedState({
+      key: "CFNLS",
+      storage: {
+        getItem: (key) => ls.get(key),
+        setItem: (key, value) => ls.set(key, value),
+        removeItem: (key) => ls.remove(key),
+      },
+      paths: ["campaigns.platformNominators"],
+    }),
+    createPersistedState({
+      key: "CFOLS",
+      storage: {
+        getItem: (key) => ls.get(key),
+        setItem: (key, value) => ls.set(key, value),
+        removeItem: (key) => ls.remove(key),
+      },
+      paths: ["campaigns.platformOrganisations"],
+    }),
+    createPersistedState({
+      key: "CFSLS",
+      storage: {
+        getItem: (key) => ls.get(key),
+        setItem: (key, value) => ls.set(key, value),
+        removeItem: (key) => ls.remove(key),
+      },
+      paths: ["campaigns.platformSubscribers"],
     }),
     createPersistedState({
       key: "CFFLS",
