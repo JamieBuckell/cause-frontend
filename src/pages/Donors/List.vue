@@ -575,7 +575,9 @@ export default {
         for (const familyRequest of donor.familyDetails.request) {
           try {
             const familyDetail = familyRequest?.familyDetail
-              ? JSON.parse(familyRequest.familyDetail)
+              ? typeof familyRequest?.familyDetail === "string"
+                ? JSON.parse(familyRequest.familyDetail)
+                : familyRequest.familyDetail
               : [];
             for (const preference of familyDetail) {
               donorDetail += `

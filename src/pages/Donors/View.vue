@@ -709,9 +709,18 @@ export default {
           this.donor.familyDetails.request[requestIndex].allocation = [];
         }
 
-        const allocatedFamily = this.platformFamilies.find(
+        const pFamilyData = this.platformFamilies;
+        const pFamilyIndex = pFamilyData.findIndex(
           (pf) => pf.GSI2SK === `SK#${f.reference}`
         );
+        if (pFamilyData[pFamilyIndex]) {
+          pFamilyData[pFamilyIndex].allocatedTo = this.donor.GSI2PK;
+          pFamilyData[pFamilyIndex].status = "allocated-unconfirmed";
+
+          await this.$store.dispatch("setPlatformFamilyData", [...pFamilyData]);
+        }
+
+        const allocatedFamily = pFamilyData[pFamilyIndex];
         this.donor?.familyDetails?.request[requestIndex]?.allocation.push({
           hamperId: f.reference,
           members: allocatedFamily?.members,
@@ -786,6 +795,19 @@ export default {
 
           const allocationComplete =
             this.assignedFamilies.length === this.campaign?.numberOfFamilies;
+
+          const pFamilyData = this.platformFamilies;
+          const pFamilyIndex = pFamilyData.findIndex(
+            (pf) => pf.GSI2SK === `SK#${f.reference}`
+          );
+          if (pFamilyData[pFamilyIndex]) {
+            pFamilyData[pFamilyIndex].allocatedTo = "unallocated";
+            pFamilyData[pFamilyIndex].status = "unallocated";
+
+            await this.$store.dispatch("setPlatformFamilyData", [
+              ...pFamilyData,
+            ]);
+          }
 
           Swal.fire({
             title: "Success",
@@ -1097,6 +1119,9 @@ export default {
   },
   watch: {
     async platformData() {
+      await this.getDonorData();
+    },
+    async platformFamilies() {
       await this.getDonorData();
     },
   },
