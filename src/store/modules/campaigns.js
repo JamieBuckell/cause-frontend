@@ -7,7 +7,7 @@ const getDefaultState = () => {
     platformNominators: [],
     platformOrganisations: [],
     platformSubscribers: [],
-    platformFamilies: JSON.stringify([]),
+    platformFamilies: [],
     genericData: {
       example: "any data",
     },
@@ -33,7 +33,7 @@ const getters = {
     state.platformFamilies
       ? typeof state.platformFamilies === "object"
         ? state.platformFamilies
-        : JSON.parse(state.platformFamilies)
+        : state.platformFamilies
       : [],
   getLastUpdated: (state) => state.lastUpdated,
 };
@@ -61,9 +61,7 @@ const mutations = {
   },
   setPlatformData(state, data) {
     if (data.families) {
-      state.platformFamilies = data.families.length
-        ? JSON.stringify(data.families)
-        : [];
+      state.platformFamilies = data.families.length ? data.families : [];
       delete data.families;
     }
     if (data?.donors) {
@@ -82,7 +80,7 @@ const mutations = {
     state.lastUpdated = new Date().getTime() / 1000;
   },
   setPlatformFamilyData(state, data) {
-    state.platformFamilies = JSON.stringify(data);
+    state.platformFamilies = data;
     state.lastUpdated = new Date().getTime() / 1000;
   },
 };
