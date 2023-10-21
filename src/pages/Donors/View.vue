@@ -739,11 +739,18 @@ export default {
         this.campaigns = this.donor?.familyDetails?.request ?? [];
         this.assignedFamilies.push(allocatedFamily);
 
+        const numberOfFamilies = this.donor?.familyDetails?.request
+          ? this.donor.familyDetails.request.reduce(
+              (a, b) => a + b.numberOfFamilies,
+              0
+            )
+          : 0;
+
         const allocationComplete =
-          this.assignedFamilies.length === this.campaign?.numberOfFamilies;
+          this.assignedFamilies.length === numberOfFamilies;
 
         this.allocationLoading = false;
-        await store.commit("setIsLoading", false);
+        this.$store.commit("setIsLoading", false);
 
         Swal.fire({
           title: "Success",
@@ -777,6 +784,7 @@ export default {
       if (f.reference) {
         this.allocationLoading = true;
         this.$store.commit("setIsLoading", true);
+
         const allocation = this.donor?.familyDetails?.request
           ? this.donor.familyDetails.request.find((r) =>
               r?.allocation
