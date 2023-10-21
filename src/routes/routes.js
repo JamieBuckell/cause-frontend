@@ -32,6 +32,7 @@ const SweetAlert = () =>
 import Notifications from "src/pages/Dashboard/Components/Notifications.vue";
 import Icons from "src/pages/Dashboard/Components/Icons.vue";
 import Typography from "src/pages/Dashboard/Components/Typography.vue";
+import ResetCache from "src/pages/DataFix/ResetCache.vue";
 
 // Forms pages
 const RegularForms = () => import("src/pages/Dashboard/Forms/RegularForms.vue");
@@ -760,6 +761,11 @@ const routes = [
     meta: {
       requiresAuth: true,
     },
+  },
+
+  {
+    path: "/reset-cache",
+    component: ResetCache,
   },
   {
     path: "/register",

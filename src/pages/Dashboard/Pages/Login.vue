@@ -131,6 +131,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.commit("clearCache");
     this.$store.dispatch("resetAuthState");
     if (this.$route.query.error) {
       this.errmsg = this.$route.query.error;

@@ -7,15 +7,15 @@ import Cookies from "js-cookie";
 import SecureLS from "secure-ls";
 let ls = new SecureLS({
   encodingType: "aes",
-  isCompression: false,
   encryptionSecret: '[8IL$Kc"5JK#9PPcs9R6"|8@@}&-=4',
 });
 /* */
 Vue.use(Vuex);
 
 let secure = process.env.NODE_ENV === "production";
+/* eslint-enable no-console */
 
-const getStorageData = (key) => {
+const getStorageData = (key, dataKey) => {
   const totalChunks = ls.get(`${key}-totalChunks`);
   if (totalChunks > 0) {
     let chunkedData = [];
@@ -25,22 +25,23 @@ const getStorageData = (key) => {
         chunkedData = [...chunkedData, ...JSON.parse(chunk)];
       }
     }
-    return JSON.stringify({
-      campaigns: { platformFamilies: chunkedData },
-    });
+    const returnObj = { campaigns: {} };
+    returnObj.campaigns[dataKey] = chunkedData;
+    return JSON.stringify(returnObj);
   } else {
     return ls.get(key);
   }
 };
 
-const setStorageData = (key, value) => {
+const setStorageData = (key, value, dataKey) => {
   const data = JSON.parse(value);
-  const chunkSize = 500;
+  const chunkSize = 250;
   if (
-    data?.campaigns?.platformFamilies &&
-    data.campaigns.platformFamilies.length > chunkSize
+    data?.campaigns &&
+    data.campaigns[dataKey] &&
+    data.campaigns[dataKey].length > chunkSize
   ) {
-    const families = [...data.campaigns.platformFamilies];
+    const families = [...data.campaigns[dataKey]];
     var totalChunks = 0;
     for (let i = 0; i < families.length; i += chunkSize) {
       totalChunks++;
@@ -64,6 +65,7 @@ const removeStorageData = (key) => {
     return ls.remove(key);
   }
 };
+/* eslint-disable no-console */
 
 export const store = new Vuex.Store({
   modules: {
@@ -101,8 +103,8 @@ export const store = new Vuex.Store({
     createPersistedState({
       key: "CFDLS",
       storage: {
-        getItem: (key) => getStorageData(key),
-        setItem: (key, value) => setStorageData(key, value),
+        getItem: (key) => getStorageData(key, "platformDonors"),
+        setItem: (key, value) => setStorageData(key, value, "platformDonors"),
         removeItem: (key) => removeStorageData(key),
       },
       paths: ["campaigns.platformDonors"],
@@ -110,8 +112,9 @@ export const store = new Vuex.Store({
     createPersistedState({
       key: "CFNLS",
       storage: {
-        getItem: (key) => getStorageData(key),
-        setItem: (key, value) => setStorageData(key, value),
+        getItem: (key) => getStorageData(key, "platformNominators"),
+        setItem: (key, value) =>
+          setStorageData(key, value, "platformNominators"),
         removeItem: (key) => removeStorageData(key),
       },
       paths: ["campaigns.platformNominators"],
@@ -119,8 +122,9 @@ export const store = new Vuex.Store({
     createPersistedState({
       key: "CFOLS",
       storage: {
-        getItem: (key) => getStorageData(key),
-        setItem: (key, value) => setStorageData(key, value),
+        getItem: (key) => getStorageData(key, "platformOrganisations"),
+        setItem: (key, value) =>
+          setStorageData(key, value, "platformOrganisations"),
         removeItem: (key) => removeStorageData(key),
       },
       paths: ["campaigns.platformOrganisations"],
@@ -128,8 +132,9 @@ export const store = new Vuex.Store({
     createPersistedState({
       key: "CFSLS",
       storage: {
-        getItem: (key) => getStorageData(key),
-        setItem: (key, value) => setStorageData(key, value),
+        getItem: (key) => getStorageData(key, "platformSubscribers"),
+        setItem: (key, value) =>
+          setStorageData(key, value, "platformSubscribers"),
         removeItem: (key) => removeStorageData(key),
       },
       paths: ["campaigns.platformSubscribers"],
@@ -137,8 +142,8 @@ export const store = new Vuex.Store({
     createPersistedState({
       key: "CFFLS",
       storage: {
-        getItem: (key) => getStorageData(key),
-        setItem: (key, value) => setStorageData(key, value),
+        getItem: (key) => getStorageData(key, "platformFamilies"),
+        setItem: (key, value) => setStorageData(key, value, "platformFamilies"),
         removeItem: (key) => removeStorageData(key),
       },
       paths: ["campaigns.platformFamilies"],
@@ -157,4 +162,9 @@ export const store = new Vuex.Store({
       paths: ["authenticate.currentUser"],
     }),
   ],
+  mutations: {
+    clearCache() {
+      ls.removeAll();
+    },
+  },
 });
