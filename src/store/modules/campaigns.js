@@ -13,12 +13,14 @@ const getDefaultState = () => {
     },
     lastUpdated: "",
     forceRefresh: false,
+    isLoading: false,
   };
 };
 const state = getDefaultState();
 
 const getters = {
   getAllCampaigns: (state) => state.allCampaigns,
+  getIsLoading: (state) => state.isLoading,
   getForceRefresh: (state) => state.forceRefresh,
   getActiveCampaign: (state) => state.activeCampaign,
   getGenericData: (state) => (key) => state.genericData[key],
@@ -47,6 +49,9 @@ const mutations = {
   },
   setForceRefresh(state, forceRefresh) {
     state.forceRefresh = forceRefresh;
+  },
+  setIsLoading(state, isLoading) {
+    state.isLoading = isLoading;
   },
   setGenData(state, { key, data }) {
     state.genericData[key] = data;

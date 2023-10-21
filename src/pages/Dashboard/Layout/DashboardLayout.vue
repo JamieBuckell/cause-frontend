@@ -374,6 +374,9 @@ export default {
     forceRefresh() {
       return this.$store.getters.getForceRefresh;
     },
+    globalLoading() {
+      return this.$store.getters.isLoading;
+    },
   },
   methods: {
     checkRole(role) {
@@ -435,6 +438,9 @@ export default {
         await getPlatformData(true);
         this.isLoading = false;
       }
+    },
+    async globalLoading(isLoading) {
+      this.isLoading = isLoading;
     },
   },
 };

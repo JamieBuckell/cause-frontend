@@ -401,6 +401,13 @@
           width="80%"
           z-index="1050"
         >
+          <div class="global-loading" v-if="allocationLoading">
+            <div class="center">
+              <div class="spinner-border text-muted" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
           <FamiliesList
             heading="Families"
             :subHeading="grabAdditionalInfo"
@@ -465,6 +472,7 @@ export default {
   },
   data() {
     return {
+      allocationLoading: false,
       activeCampaign: {},
       downloadPending: false,
       familyListOptions: {
@@ -695,6 +703,8 @@ export default {
       Swal.close();
     },
     async doAllocateFamily(i, f) {
+      this.allocationLoading = true;
+      this.$store.commit("setIsLoading", true);
       const allocateRes = await allocateFamily({
         campaignId: this.$store.getters.getActiveCampaign,
         requestId: this.activeCampaignId,
@@ -732,6 +742,9 @@ export default {
         const allocationComplete =
           this.assignedFamilies.length === this.campaign?.numberOfFamilies;
 
+        this.allocationLoading = false;
+        await store.commit("setIsLoading", false);
+
         Swal.fire({
           title: "Success",
           text: `Family allocated.${
@@ -746,6 +759,8 @@ export default {
           this.allocateFamily = false;
         }
       } else {
+        this.allocationLoading = false;
+        this.$store.commit("setIsLoading", false);
         if (allocateRes?.data?.messages) {
           Swal.fire({
             title: "Error",
@@ -760,6 +775,8 @@ export default {
     },
     async doUnallocateFamily(i, f) {
       if (f.reference) {
+        this.allocationLoading = true;
+        this.$store.commit("setIsLoading", true);
         const allocation = this.donor?.familyDetails?.request
           ? this.donor.familyDetails.request.find((r) =>
               r?.allocation
@@ -809,6 +826,8 @@ export default {
             ]);
           }
 
+          this.allocationLoading = false;
+          this.$store.commit("setIsLoading", false);
           Swal.fire({
             title: "Success",
             text: "Family unallocated.",
@@ -817,6 +836,8 @@ export default {
           });
           this.allocateFamily = allocationComplete;
         } else {
+          this.allocationLoading = false;
+          this.$store.commit("setIsLoading", false);
           if (unallocateRes?.data?.messages) {
             Swal.fire({
               title: "Error",
@@ -1127,6 +1148,33 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.global-loading {
+  padding: 30px 15px;
+  min-height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  max-width: -webkit-fill-available;
+  z-index: 1000;
+  padding-top: 90px;
+  text-align: center;
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .spinner-border {
+      z-index: 1001;
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.5em;
+    }
+  }
+}
+</style>
 <style lang="scss">
 .download-dropdown {
   .nav-link {

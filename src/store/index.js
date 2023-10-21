@@ -16,6 +16,8 @@ let secure = process.env.NODE_ENV === "production";
 /* eslint-enable no-console */
 
 const getStorageData = (key, dataKey) => {
+  return ls.get(key);
+  /* *
   const totalChunks = ls.get(`${key}-totalChunks`);
   if (totalChunks > 0) {
     let chunkedData = [];
@@ -31,9 +33,12 @@ const getStorageData = (key, dataKey) => {
   } else {
     return ls.get(key);
   }
+  /* */
 };
 
 const setStorageData = (key, value, dataKey) => {
+  return ls.set(key, value);
+  /* *
   const data = JSON.parse(value);
   const chunkSize = 250;
   if (
@@ -52,9 +57,12 @@ const setStorageData = (key, value, dataKey) => {
   } else {
     return ls.set(key, value);
   }
+  /* */
 };
 
 const removeStorageData = (key) => {
+  return ls.remove(key);
+  /* *
   const totalChunks = ls.get(`${key}-totalChunks`);
   if (totalChunks > 0) {
     for (let i = 0; i <= totalChunks; i++) {
@@ -64,6 +72,7 @@ const removeStorageData = (key) => {
   } else {
     return ls.remove(key);
   }
+  /* */
 };
 /* eslint-disable no-console */
 
