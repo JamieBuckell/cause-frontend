@@ -245,7 +245,7 @@ export default {
       try {
         this.isLoading = true
         const response = await volunteerFeedback({
-          hamperId: this.$route.params?.hamperId,
+          campaignId: this.$route.params?.campaignId,
           hamperHash: this.$route.params?.hamperHash,
           fullName: this.fullName,
           positives: this.positives,

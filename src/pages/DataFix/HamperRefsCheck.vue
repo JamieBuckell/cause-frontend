@@ -49,9 +49,44 @@ export default {
   props: {},
   computed: {
     listingsData() {
-      let result = this?.tableData ? this.tableData : [];
+      let result = [];
 
       const pData = this.$store.getters.getPlatformData;
+      const pFamilyData = this.$store.getters.getPlatformFamilies;
+
+      pData.donors.filter((d) => {
+        if (d.familyDetails.request.length) {
+          d.familyDetails.request.filter((r) => {
+            
+            r.allocation && r.allocation.length && r.allocation.filter((a) => {
+              /* */
+              const hamper = pFamilyData.find((f) =>
+                f.GSI2SK === `SK#${a.hamperId}`);
+                /* */
+                console.log(a.hamperId, hamper ? hamper.allocatedTo : 'UNKNOWN', d.GSI2PK);
+                if (!hamper) {
+                  console.log('allocation', a);
+                  result.push({
+                    "reference": a.hamperId,
+                    "GSI2PK": hamper.GSI2PK ?? "unknown",
+                    "allocatedTo": hamper?.allocatedTo?? 'unknown',
+                    "donorId": d.GSI2PK
+                  });
+
+                } else if (hamper.allocatedTo !== d.GSI2PK) {
+                  console.log('hamper', hamper);
+                  result.push({
+                    "reference": hamper?.GSI2SK ?? a.hamperId,
+                    "GSI2PK": hamper.GSI2PK,
+                    "allocatedTo": hamper?.allocatedTo?? 'unknown',
+                    "donorId": d.GSI2PK
+                  });
+              }
+            })
+          })
+        }
+      })
+      /* *
       result.map((f) => {
         f.authorised = pData?.nominators
           ? pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)
@@ -157,6 +192,7 @@ export default {
           );
         }
       }
+      /* */
 
       return result;
     },
@@ -298,6 +334,7 @@ export default {
           organisationId: f?.GSI3PK,
           nominatorId: f?.GSI3SK,
           reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
+          GSI2PK: f?.GSI2PK ?? "",
           nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
           donorDetail: this.createDonorDetail(f?.allocatedTo),
           familyDetail: this.createFamilyDetail(f?.members),
@@ -400,7 +437,7 @@ export default {
     },
   },
   data() {
-    const searchKeys = ["reference", "familyDetail", "nominatorDetail"];
+    const searchKeys = ["reference", "GSI2PK", "familyDetail", "nominatorDetail"];
 
     const options = {
       create: false,
@@ -424,38 +461,23 @@ export default {
         minWidth: 125,
       },
       {
-        prop: "nominatorDetail",
-        label: "Worker Details",
+        prop: "GSI2PK",
+        label: "GSI2PK ID",
+        minWidth: 125,
+      },
+      {
+        prop: "allocatedTo",
+        label: "Allocated To ID",
         html: true,
         minWidth: 250,
       },
       {
-        prop: "familyDetail",
-        label: "Family Detail",
+        prop: "donorId",
+        label: "Donor ID",
         html: true,
-        minWidth: 150,
-      },
-      {
-        prop: "totalUnit",
-        label: "Family Unit",
-        minWidth: 60,
+        minWidth: 250,
       },
     ];
-    if (this.userInGroup("admin")) {
-      tableColumns.push({
-        prop: "bagsReceived",
-        label: "Bags",
-        minWidth: 50,
-      });
-    }
-    if (options.showDonor && this.userInGroup("admin")) {
-      tableColumns.push({
-        prop: "donorDetail",
-        label: "Donor Detail",
-        html: true,
-        minWidth: 250,
-      });
-    }
     const savedFilters = this.$store.getters.getGenericData(
       `familiesFilters${this.listKey}`
     );

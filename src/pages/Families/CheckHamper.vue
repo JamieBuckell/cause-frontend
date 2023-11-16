@@ -78,6 +78,7 @@
                         {{ hamperDetails.bagsReceived }}
                       </div>
                     </div>
+                    <!--
                     <div class="row">
                       <div class="col col-12 text-center">
                         <button
@@ -89,6 +90,7 @@
                         </button>
                       </div>
                     </div>
+                    -->
                   </div>
                 </div>
                 <!--
@@ -169,7 +171,7 @@ export default {
     async downloadFeedbackPDF() {
       this.messages = []
       this.hamperDetails.offset = 1000
-      const res = await getHamperFeedbackLabels(this.hamperDetails)
+      const res = await getHamperFeedbackLabels({...this.hamperDetails, campaignId: this.$store.getters.getActiveCampaign})
       if (res.status == 200) {
         const linkSource = `data:application/pdf;base64,${res.data}`
         const downloadLink = document.createElement('a')

@@ -8,7 +8,7 @@ export const getPlatformData = async (force = false) => {
   const lastUpdated = store.getters.getLastUpdated;
   const currentTime = new Date().getTime() / 1000;
 
-  const refreshMinutes = 1;
+  const refreshMinutes = 3;
   const refreshCampaignMinutes = 10;
 
   if (

@@ -42,7 +42,7 @@ export const getHamperOverview = async (hamperId) =>
   await httpClient.get(`/hampers/get-overview/${hamperId}`);
 
 export const getHamperFeedbackLabels = async (body) =>
-  httpClient.post(`/hampers/feedback/generate`, body);
+  httpClient.post(`/feedback/hampers/generate`, body);
 
 export const getUndelivered = async () =>
   await httpClient.get(`/hampers/undelivered`);

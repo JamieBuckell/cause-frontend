@@ -9,8 +9,8 @@ export const hamperFeedback = async (body) =>
 export const hamperFeedbackCheck = async (body) =>
   httpClient.post(`/feedback/hampers/check`, body);
 
-export const getHamperFeedback = async () =>
-  await httpClient.get(`/feedback/hampers/list`);
+export const getHamperFeedback = async (campaignId) =>
+  await httpClient.get(`/feedback/hampers/list/${campaignId}`);
 
-export const getVolunteerFeedback = async () =>
-  await httpClient.get(`/feedback/volunteers/list`);
+export const getVolunteerFeedback = async (campaignId) =>
+  await httpClient.get(`/feedback/volunteers/list/${campaignId}`);

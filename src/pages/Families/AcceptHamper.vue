@@ -169,7 +169,7 @@ export default {
       this.numberOfBags = ''
       this.hamperId = this.hamperId.toUpperCase()
       this.messages = []
-      const res = await checkHamper({ hamperId: this.hamperId })
+      const res = await checkHamper({ hamperId: this.hamperId, campaignId: this.$store.getters.getActiveCampaign })
 
       if (!res.data.success) {
         if (res?.data?.messages) {
@@ -197,7 +197,13 @@ export default {
       const res = await recieveHamper({
         hamperId: this.hamperId,
         noBags: this.numberOfBags,
+        campaignId: this.$store.getters.getActiveCampaign,
       })
+      if (res?.data?.messages) {
+        this.messages = Object.keys(res?.data?.messages).map((k) => ({
+          error: res?.data?.messages[k],
+        }))
+      }
       if (res.data.success) {
         this.submitting = false
         this.hamperId = ''
@@ -209,12 +215,6 @@ export default {
           timer: 2000,
           showConfirmButton: false,
         })
-      } else {
-        if (res?.data?.messages) {
-          this.messages = Object.keys(res?.data?.messages).map((k) => ({
-            error: res?.data?.messages[k],
-          }))
-        }
       }
     },
     async onInit(promise) {

@@ -20,6 +20,7 @@ import Lock from "src/pages/Dashboard/Pages/Lock.vue";
 
 import HartlepoolTest from "src/pages/DataFix/HartlepoolTest.vue";
 import AllocatedCounts from "src/pages/DataFix/AllocatedCounts.vue";
+import AllocatedMismatch from "src/pages/DataFix/AllocatedMismatch.vue";
 import MissingDonors from "src/pages/DataFix/MissingDonors.vue";
 import DonorVerificationFix from "src/pages/DataFix/DonorVerificationFix.vue";
 
@@ -117,7 +118,7 @@ const HamperRefsCheck = () => import("src/pages/DataFix/HamperRefsCheck.vue");
 let dataMenu = {
   path: "/data",
   component: DashboardLayout,
-  redirect: "/data/hamper-refs-chec",
+  redirect: "/data/hamper-refs-check",
   children: [
     {
       path: "hamper-refs-check",
@@ -516,22 +517,12 @@ let feedbackHamperMenu = {
   component: EmptyLayout,
   children: [
     {
-      path: "hamper",
-      name: "Generic Hamper Feedback",
+      path: "hamper/:campaignId",
+      name: "Campaign Hamper Feedback",
       component: FeedbackHamper,
     },
     {
-      path: "hamper/:hamperId",
-      name: "Hamper Feedback",
-      component: FeedbackHamper,
-    },
-    {
-      path: "hamper/:hamperId/:hamperHash",
-      name: "Hamper Feedback w/ Hash",
-      component: FeedbackHamper,
-    },
-    {
-      path: "volunteer",
+      path: "volunteer/:campaignId",
       name: "Volunteer Hamper Feedback",
       component: FeedbackVolunteer,
     },
@@ -645,6 +636,12 @@ let allocatedCountsPage = {
   component: AllocatedCounts,
 };
 
+let allocatedMismatchPage = {
+  path: "/fix/allocated-mismatch",
+  name: "AllocatedMismatchFix",
+  component: AllocatedMismatch,
+};
+
 let missingDonorsPage = {
   path: "/fix/missing-donations",
   name: "MissingDonorsFix",
@@ -714,6 +711,7 @@ const routes = [
   loginPage,
   hartlepoolTestPage,
   allocatedCountsPage,
+  allocatedMismatchPage,
   missingDonorsPage,
   donorVerificationIssue,
   logoutPage,

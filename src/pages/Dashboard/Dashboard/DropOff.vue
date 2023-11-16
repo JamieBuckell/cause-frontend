@@ -22,9 +22,10 @@
   </div>
 </template>
 <script>
+import { defineComponent } from "vue";
 import { getHamperScreen } from '@/api/dashboard.api'
 
-export default {
+export default defineComponent({
   components: {},
   computed: {
     cssVars() {
@@ -36,7 +37,7 @@ export default {
           (this.pending * 100) / (this.pending + this.droppped)
         ).toFixed(2),
       }
-    },
+    }
   },
   data() {
     return {
@@ -46,8 +47,8 @@ export default {
     }
   },
   methods: {
-    updateStats: async () => {
-      const dashData = await getHamperScreen()
+    updateStats: async (campaignId) => {
+      const dashData = await getHamperScreen(campaignId)
       const droppped = (dashData.data.hampersDropped ?? 0).toString()
       const dropppedBags = (dashData.data.bagsDropped ?? 0).toString()
       const pending = (
@@ -66,8 +67,7 @@ export default {
 
     const infiniteStats = async () => {
       ;[this.droppped, this.dropppedBags, this.pending] =
-        await this.updateStats()
-
+        await this.updateStats(this.$store.getters.getActiveCampaign)
       setTimeout(async () => {
         await infiniteStats()
       }, '120000')
@@ -75,7 +75,7 @@ export default {
     infiniteStats()
     //}
   },
-}
+});
 </script>
 <style scoped>
 html,

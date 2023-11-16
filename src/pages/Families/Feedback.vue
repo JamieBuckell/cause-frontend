@@ -127,8 +127,7 @@ export default {
       try {
         this.isLoading = true
         const response = await hamperFeedback({
-          hamperId: this.$route.params?.hamperId,
-          hamperHash: this.$route.params?.hamperHash,
+          campaignId: this.$route.params?.campaignId,
           feedback: this.hamperFeedback,
         })
         if (response.status == 400) {

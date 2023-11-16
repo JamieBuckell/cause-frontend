@@ -615,7 +615,7 @@ export default {
 
     let res = {};
     if (!this.data || typeof this.data != "object") {
-      res = await getHamperFeedback();
+      res = await getHamperFeedback(this.$store.getters.getActiveCampaign);
       this.tableData = Object.values(res?.data);
     } else {
       this.tableData = this.data;

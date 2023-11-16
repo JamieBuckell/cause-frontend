@@ -277,6 +277,7 @@ export default {
           "Not Allocated",
           "Part Allocated",
           "Fully Allocated",
+          "Over Allocated",
         ],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
@@ -363,7 +364,12 @@ export default {
               case "fully allocated":
                 return (
                   numberOfFamilies > 0 &&
-                  allocationOfFamilies === numberOfFamilies
+                  allocationOfFamilies >= numberOfFamilies
+                );
+              case "over allocated":
+                return (
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies > numberOfFamilies
                 );
               default:
                 return true;

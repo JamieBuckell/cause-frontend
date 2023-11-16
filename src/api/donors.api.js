@@ -18,8 +18,17 @@ export const confirmPledge = async (emailAddress, hash, campaignRequestId) =>
     `/donors/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
   );
 
-export const confirmPledgeManual = async (emailAddress, hash) =>
-  await httpClient.post(`/donors/confirm-pledge/${emailAddress}?v=${hash}`);
+export const confirmPledgeManual = async (
+  emailAddress,
+  hash,
+  campaignRequestId
+) =>
+  await httpClient.post(
+    `/donors/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
+  );
+
+export const getHash = async (donorId) =>
+  await httpClient.post(`/donors/get-hash/`, { donorId });
 
 export const changePledge = async (
   emailAddress,
@@ -51,3 +60,6 @@ export const donorEmailUpdate = async (body) =>
 
 export const donorPledgeUpdate = async (body) =>
   httpClient.post(`/donors/update-pledge`, body);
+
+export const addHamper = async (body) =>
+  await httpClient.post(`/donors/update`, body);

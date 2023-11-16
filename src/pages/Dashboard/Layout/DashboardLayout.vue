@@ -26,7 +26,6 @@
             :link="{ name: 'Add New', path: '/campaigns/add' }"
           ></sidebar-item>
         </sidebar-item>
-        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'QR Scanner', icon: 'nc-icon nc-mobile' }"
@@ -40,7 +39,6 @@
             }"
           ></sidebar-item>
         </sidebar-item>
-        -->
 
         <sidebar-item
           v-if="checkRole('admin')"
@@ -101,7 +99,6 @@
           ></sidebar-item>
         </sidebar-item>
 
-        <!---->
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Subscribers', icon: 'nc-icon nc-email-85' }"
@@ -110,9 +107,7 @@
             :link="{ name: 'View All', path: '/subscribers' }"
           ></sidebar-item>
         </sidebar-item>
-        <!---->
 
-        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Feedback', icon: 'nc-icon nc-quote' }"
@@ -124,7 +119,6 @@
             :link="{ name: 'Volunteers', path: '/feedback/volunteers' }"
           ></sidebar-item>
         </sidebar-item>
-        -->
 
         <sidebar-item
           v-if="checkRole('admin')"
@@ -161,7 +155,6 @@
         </sidebar-item>
         -->
 
-        <!---->
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{ name: 'Admin Users', icon: 'nc-icon nc-badge' }"
@@ -174,7 +167,6 @@
             :link="{ name: 'Add New', path: '/admin/users/add' }"
           ></sidebar-item>
         </sidebar-item>
-        <!---->
 
         <!----
         <sidebar-item

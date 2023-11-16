@@ -255,27 +255,27 @@ export default {
       },
       {
         prop: "improvements",
-        label: "Volunteers Name",
+        label: "Improvements",
         minWidth: 100,
       },
       {
         prop: "positives",
-        label: "Volunteers Name",
+        label: "Positives",
         minWidth: 100,
       },
       {
         prop: "negatives",
-        label: "Volunteers Name",
+        label: "Negatives",
         minWidth: 100,
       },
       {
         prop: "skills",
-        label: "Volunteers Name",
+        label: "Skills",
         minWidth: 100,
       },
       {
         prop: "otherComments",
-        label: "Volunteers Name",
+        label: "Other Comments",
         minWidth: 100,
       },
       {
@@ -640,7 +640,7 @@ export default {
 
     let res = {};
     if (!this.data || typeof this.data != "object") {
-      res = await getVolunteerFeedback();
+      res = await getVolunteerFeedback(this.$store.getters.getActiveCampaign);
       this.tableData = Object.values(res?.data);
     } else {
       this.tableData = this.data;

@@ -125,7 +125,7 @@
             </div>
             <div class="col col-12">
               <label>Email address verified</label><br />
-              <p>{{ donor.verified ? "Yes" : "No" }}</p>
+              <p>{{ donor.emailVerification.verified ? "Yes" : "No" }}</p>
             </div>
           </div>
         </card>
@@ -190,7 +190,7 @@
                         {{ formatStatus(campaign) }}<br />
                         <button
                           v-if="isAllocated(campaign)"
-                          @click.prevent="doConfirmAllocation(donor)"
+                          @click.prevent="doConfirmAllocation(donor, campaign)"
                           class="btn btn-fill btn-secondary"
                         >
                           Manually Confirm
@@ -445,6 +445,7 @@
 <script>
 import Vue from "vue";
 import {
+  getHash,
   downloadFile,
   donorEmailUpdate,
   donorPledgeUpdate,
@@ -647,13 +648,37 @@ export default {
         allocation === "Unallocated" ? "" : " - " + confirmation
       }`;
     },
-    async doConfirmAllocation(donor) {
-      const verification = await confirmPledgeManual(donor.GSI3PK, "v");
-
+    async doConfirmAllocation(donor, hamperId) {
+      /* */
+      const verification = await confirmPledgeManual(
+        donor.GSI3PK,
+        "v",
+        this.$store.getters.getActiveCampaign
+      );
       const verifyResponse = {
         title: "Error",
         message: "",
       };
+      if (verification.status == 200) {
+        const requestIndex = this.donor?.familyDetails?.request.findIndex(
+          (r) => r.requestId === hamperId.requestId
+        );
+        if (this.donor?.familyDetails?.request[requestIndex]?.allocation) {
+          const pFamilyData = this.platformFamilies;
+          for (const [i, a] of this.donor?.familyDetails?.request[
+            requestIndex
+          ]?.allocation.entries()) {
+            const pFamilyIndex = pFamilyData.findIndex(
+              (pf) => pf.allocatedTo === this.donor.GSI2PK
+            );
+
+            if (pFamilyData[pFamilyIndex]) {
+              pFamilyData[pFamilyIndex].status = "allocated-confirmed";
+            }
+          }
+          await this.$store.dispatch("setPlatformFamilyData", [...pFamilyData]);
+        }
+      }
       if (verification?.data?.messages?.success) {
         verifyResponse.title = "Success";
         verifyResponse.message =
@@ -670,6 +695,7 @@ export default {
         timer: 2000,
         showConfirmButton: false,
       });
+      /* */
     },
     async downloadPDF(type) {
       Swal.fire({
@@ -1123,6 +1149,13 @@ export default {
         if (!this.donor) {
           this.$router.push("/donors");
         }
+
+        if (pData?.subscribers) {
+          const subscriber = pData.subscribers.find((s) => s.PK === this.donor?.GSI3PK);
+          console.log(subscriber);
+          this.donor.subscribed = subscriber?.subscribed;
+        }
+        
         this.updatedEmail = this.donor?.GSI3PK;
 
         this.activeCampaign = this.$store.getters.getAllCampaigns.find(
