@@ -235,10 +235,6 @@ export default {
       type: String,
       default: "",
     },
-    nominatorRef: {
-      type: String,
-      default: "",
-    },
     nominatorId: {
       type: String,
       default: "",
@@ -354,16 +350,19 @@ export default {
       return validHamperId;
     },
     nominatorsReference() {
-      let returnRef = this.nominatorRef;
+      let returnRef = "";
 
-      if (!returnRef && this.chosenNominator.userReference) {
-        returnRef = this.chosenNominator.userReference;
+      if (!returnRef && this.chosenNominator?.nominatorDetails?.reference) {
+        returnRef = this.chosenNominator.nominatorDetails.reference;
       }
 
       return returnRef;
     },
     getHamperReference() {
       return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`;
+    },
+    platformData() {
+      return this.$store.getters?.getPlatformData ?? {};
     },
     platformFamilies() {
       return this.$store.getters.getPlatformFamilies;
@@ -374,6 +373,8 @@ export default {
       if (newVal?.requestId) {
         this.nominations = [];
         await this.updateFamilyData(newVal.requestId);
+
+        await this.changeNominator();
         this.addFamily();
       }
     },
@@ -386,7 +387,6 @@ export default {
     if (this.saveType != "create" && this.familyData?.requestId) {
       await this.updateFamilyData(this.familyData.requestId);
     }
-    this.addFamily();
 
     const storedNominator = this.$store.getters.getGenericData(
       "SplitFamilyChosenNominator"
@@ -405,6 +405,7 @@ export default {
     if (this.saveType === "create") {
       this.changeNominator();
     }
+    this.addFamily();
   },
   methods: {
     async updateFamilyData(requestId) {
@@ -426,26 +427,31 @@ export default {
       );
     },
     setChosenNominator(nominator) {
-      this.chosenNominator = nominator;
       this.chosenNominatorId = nominator.requestId;
+      this.chosenNominator = this.platformData.nominators.find(
+        (n) =>
+          n.GSI2PK === this.chosenNominatorId &&
+          (n.type === "nominator" || n.type === "team-lead")
+      );
 
       this.$store.dispatch("setGenericData", {
         key: "AddFamilyChosenNominator",
         data: nominator,
       });
     },
-    changeNominator() {
+    async changeNominator() {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
       );
       if (
         this?.chosenNominatorId &&
         nominator?.requestId &&
-        this?.chosenNominatorId !== nominator?.requestId &&
-        1 === 1
+        this?.chosenNominatorId !== this.chosenNominator?.requestId
       ) {
         this.setChosenNominator(nominator);
-        this.nominations[0].hamperId = this.getHamperReference;
+        if (this.nominations[0]) {
+          this.nominations[0].hamperId = this.getHamperReference;
+        }
       }
     },
     async resetWindow() {
@@ -480,6 +486,7 @@ export default {
         this.nominations = [];
       }
       this.submittingFamily = false;
+      /* */
     },
     async updateFamilies() {
       this.submittingFamily = true;

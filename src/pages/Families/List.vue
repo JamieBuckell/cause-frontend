@@ -55,11 +55,11 @@
       >
         <FamilySplit
           :key="createKey"
-          :orgRef="`${hamperRef}`"
+          :orgRef="`${orgRef}`"
+          :nominatorRef="`${nominatorRef}`"
           :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
-          :nominatorsFamilies="nominatorsFamilies"
-          :allFamilies="tableData"
+          :allFamilies="listingsData"
           :allNominators="allNominators"
           :familyData="familyData"
           @splitFamilies="doSplitFamilies"
@@ -302,7 +302,7 @@ export default {
         download: true,
         authorise: false,
         resetReferences: false,
-        splitFamily: false,
+        splitFamily: true,
         showDonor: true,
         highlight: {
           unauthorised: false,
@@ -842,14 +842,15 @@ export default {
           this.$router.push(`/organisations/view/${r.organisationId}`);
           break;
         case "splitFamily":
-          this.currentNominator = this.allNominators.find(
-            (n) => n.requestId === r.nominatorId
+          this.currentNominator = this.platformData.nominators.find(
+            (n) => n.GSI2PK === r.nominatorId
           );
-          this.familyData = r;
-          this.familyData.members = this.familyMemberData.filter(
-            (m) => m.familyId === this.familyData.requestId
-          );
-          this.openModal("split");
+          if (this.currentNominator) {
+            this.familyData = this.platformFamilies.find(
+              (f) => f.GSI2PK === r.requestId
+            );
+            this.openModal("split");
+          }
           break;
         case "resetReferences":
           /* */
@@ -895,10 +896,7 @@ export default {
         // this.approveNom(nominator);
       }
     },
-    doSplitFamilies(families) {
-      this.tableData = [...this.tableData, ...families];
-      this.createKey = !this.createKey;
-
+    async doSplitFamilies() {
       Swal.fire({
         title: "Success",
         text: "This family was split successfully.",
@@ -906,7 +904,8 @@ export default {
         showConfirmButton: false,
       });
 
-      this.orgFamiliesTotal += families.lenght;
+      await this.$store.commit("setForceRefresh", true);
+
       this.closeModal("split");
     },
     async saveFamilies(families) {

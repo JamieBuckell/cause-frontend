@@ -8,7 +8,7 @@
       </div>
     </div>
     <form>
-      <div v-for="(nomination, nomIndex) in nominations" :key="nomIndex">
+      <div>
         <div class="row">
           <div class="col-md-12">
             <card class="mb-3">
@@ -16,8 +16,8 @@
                 <h4 class="card-title">Family Members</h4>
                 <p class="card-category">
                   Family Total:
-                  {{ nomination.adults + nomination.children }} (Adults:
-                  {{ nomination.adults }} Children: {{ nomination.children }})
+                  {{ hamperData.adults + hamperData.children }} (Adults:
+                  {{ hamperData.adults }} Children: {{ hamperData.children }})
                 </p>
               </template>
               <div class="row d-none d-md-flex">
@@ -32,21 +32,24 @@
               </div>
               <div
                 class="row"
-                v-for="(member, memberIndex) in nomination.members"
+                v-for="(member, memberIndex) in hamperData.members"
                 :key="memberIndex"
               >
                 <div class="col-md-2">
                   <el-select
                     class="select-default mb-0 w-100"
+                    autocomplete="off"
                     v-model="member.familyNumber"
-                    placeholder="Who"
+                    placeholder="Group"
                     filterable
                     default-first-option
-                    @change="assignNewHamperID(member, nomIndex)"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    @change="assignNewHamperID(member)"
                   >
                     <el-option
                       class="select-default"
-                      v-for="(mem, familyNumber) in nomination.members"
+                      v-for="(mem, familyNumber) in hamperData.members"
                       :key="familyNumber + 1"
                       :label="familyNumber + 1"
                       :value="familyNumber + 1"
@@ -129,10 +132,6 @@ export default {
     LAlert,
   },
   props: {
-    orgRef: {
-      type: String,
-      default: "",
-    },
     nominatorId: {
       type: String,
       default: "",
@@ -145,29 +144,29 @@ export default {
       type: Array,
       default: () => [],
     },
-    allFamilies: {
-      type: Array,
-      default: () => [],
-    },
     familyData: {
       type: Object,
       default: () => {},
     },
   },
   watch: {
-    familyData(newVal) {
+    async familyData() {
       this.resetWindow();
-      this.updatedData = newVal;
+      this.chosenNominatorId = this.nominatorId;
+      this.addFamily();
     },
   },
   data() {
     return {
       splittingFamily: false,
       activePanel: 0,
-      nominations: [],
+      hamperData: {},
+      familyMembers: [],
       chosenNominatorId: "",
+      nominatorRef: "",
+      orgRef: "",
       chosenNominator: {},
-      updatedData: [],
+      usedReferences: {},
       splitData: [],
       selectionOptions: {
         adult: ["mum", "dad"],
@@ -178,39 +177,61 @@ export default {
   },
   computed: {
     nominatorsFamilies() {
-      return this.allFamilies.filter(
-        (f) => f.nominatorId == this.chosenNominatorId
+      return this.platformFamilies.filter(
+        (f) => f?.GSI3SK == this.chosenNominatorId
       );
     },
     breakpoints: () => breakpoints.screen,
-    ageList() {
-      return Array.from(Array(115).keys());
-    },
-    ageTypes() {
-      return ["Years", "Months"];
-    },
-    whoList() {
-      return [
-        "Mam",
-        "Dad",
-        "Boy",
-        "Girl",
-        "Grandma",
-        "Grandad",
-        "Male",
-        "Female",
-        "Other",
-      ];
-    },
     familyCount() {
+      console.log("FamilyCount", this.nominatorsFamilies.length);
       return this.nominatorsFamilies.length;
     },
-    nextHamperId() {
-      const totalNewNominations = this?.nominations
-        ? this.nominations.length + this.splitData.length
-        : 0;
+    nominatorsReference() {
+      let returnRef = this.nominatorRef;
 
-      let validHamperId = (this.familyCount + totalNewNominations)
+      if (!returnRef && this.chosenNominator.userReference) {
+        returnRef = this.chosenNominator.userReference;
+      }
+
+      return returnRef;
+    },
+    platformData() {
+      return this.$store.getters.getPlatformData;
+    },
+    platformFamilies() {
+      return this.$store.getters.getPlatformFamilies;
+    },
+  },
+  async mounted() {
+    this.resetWindow();
+    this.chosenNominatorId = this.nominatorId;
+    this.addFamily();
+  },
+  methods: {
+    getHamperReference() {
+      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId()}`;
+    },
+    async updateFamilyData(requestId) {
+      const familyData = this.platformFamilies.find(
+        (f) => f.GSI2PK === requestId
+      );
+      this.editFamilyData = {
+        requestId: familyData?.GSI2PK,
+        reference: familyData?.GSI2SK.replace("SK#", ""),
+        nominatorId: familyData?.GSI3PK,
+      };
+      this.editFamilyMembers = familyData.members;
+    },
+    nextHamperId() {
+      // Todo: check all hampers for this user
+      // hamperData
+      const totalNewNominations = 0;
+
+      let validHamperId = (
+        this.familyCount +
+        Object.entries(this.usedReferences).length +
+        1
+      )
         .toString()
         .padStart(3, "0");
 
@@ -231,9 +252,7 @@ export default {
           hamperIncrement++;
           let checkIncrement = hamperIncrement.toString().padStart(3, "0");
           const existingRefCheck = this.nominatorsFamilies.find(
-            (f) =>
-              f.reference ===
-              `${this.orgRef}${this.nominatorsReference}-${checkIncrement}`
+            (f) => f.reference === this.getHamperReference()
           );
           isUnique = existingRefCheck === undefined;
 
@@ -246,83 +265,36 @@ export default {
 
       return validHamperId;
     },
-    nominatorsReference() {
-      let returnRef = this.nominatorRef;
-
-      if (!returnRef && this.chosenNominator.userReference) {
-        returnRef = this.chosenNominator.userReference;
-      }
-
-      return returnRef;
-    },
-    getHamperReference() {
-      return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId}`;
-    },
-  },
-  async mounted() {
-    this.resetWindow();
-
-    this.chosenNominatorId = this.nominatorId;
-
-    /* *
-    const storedNominator = this.$store.getters.getGenericData("SplitFamilyChosenNominator");
-    console.log("storedNominator", storedNominator, this.allNominators);
-    if (this.allNominators.length) {
-      const storedNomExists = storedNominator && storedNominator.requestId ? this.allNominators.find(n => n.requestId === storedNominator.requestId) : false;
-      this.chosenNominatorId = storedNomExists ? storedNomExists.requestId : this.allNominators[0].requestId;
-    }
-    /* */
-    this.changeNominator();
-  },
-  methods: {
     manualHamperId(member) {
-      const memberIndex = this.updatedData.members.findIndex(
+      const memberIndex = this.hamperData.members.findIndex(
         (fm) => fm.requestId === member.requestId
       );
-      this.updatedData.members[memberIndex].hamperId = member.hamperId;
+      this.hamperData.members[memberIndex].hamperId = member.hamperId;
     },
-    assignNewHamperID(member, nomIndex) {
-      if (member.familyNumber === 1) {
-        /* *
-        if (member.hamperId !== this.familyData.reference) {
-          this.splitData.splice(this.splitData.findIndex(fm => fm.hamperId === member.hamperId), 1);
-        }
-        /* */
-        member.hamperId = this.familyData.reference;
-      } else {
-        const existing = this.nominations[nomIndex].members.filter(
-          (m) =>
-            m.familyNumber === member.familyNumber &&
-            m.requestId != member.requestId
-        );
-        if (
-          existing &&
-          existing[0] &&
-          existing[0].hamperId &&
-          existing[0].hamperId !== this.familyData.reference
-        ) {
-          member.hamperId = `${existing[0].hamperId}`;
+    assignNewHamperID(member) {
+      console.log("member.familyNumber", member.familyNumber);
+      if (member.familyNumber > 1) {
+        if (this.usedReferences[member.familyNumber]) {
+          member.hamperId = this.usedReferences[member.familyNumber];
         } else {
-          member.hamperId = `${this.orgRef}-${this.nextHamperId}`;
-        }
-        if (member.hamperId !== this.familyData.reference) {
-          const refCheck = this.splitData.find(
-            (f) => f.hamperId === member.hamperId
-          );
-          if (!refCheck) {
-            this.splitData.push({ hamperId: member.hamperId });
+          console.log("familyNumber", member.familyNumber);
+          member.hamperId = this.getHamperReference();
+          console.log("hamperId", member.hamperId);
+          this.usedReferences[member.familyNumber] = member.hamperId;
+
+          if (member.hamperId !== this.hamperData.reference) {
+            const refCheck = this.splitData.find(
+              (f) => f.hamperId === member.hamperId
+            );
+            if (!refCheck) {
+              this.splitData.push({ hamperId: member.hamperId });
+            }
           }
         }
+        /* */
       }
 
-      const memberIndex = this.updatedData.members.findIndex(
-        (fm) => fm.requestId === member.requestId
-      );
-      if (memberIndex >= 0) {
-        this.updatedData.members[memberIndex].hamperId = member.hamperId;
-        this.updatedData.members[memberIndex].familyNumber =
-          member.familyNumber;
-      }
+      console.log("assignNewHamperID", member.requestId);
     },
     setChosenNominator(nominator) {
       this.chosenNominator = nominator;
@@ -333,48 +305,27 @@ export default {
         data: nominator,
       });
     },
-    changeNominator() {
+    changeNominator(nominatorId) {
       const nominator = this.allNominators.find(
         (n) => n.requestId === this.chosenNominatorId
       );
       if (nominator) {
         this.setChosenNominator(nominator);
-        this.nominations[0].hamperId = this.getHamperReference;
+        // this.hamperData.hamperId = this.getHamperReference();
       }
     },
     async resetWindow() {
       this.activePanel = 0;
-
-      const familyDetail = {
-        hamperId: `${this.familyData.reference}`,
-        adults: 0,
-        children: 0,
-        members: [],
-      };
-
-      for (const [key, member] of Object.entries(this.familyData.members)) {
-        familyDetail.members.push({
-          requestId: member.requestId,
-          familyNumber: 1,
-          hamperId: `${this.familyData.reference}`,
-          age: member.age,
-          ageType: member.ageType,
-          who: member.who,
-          additionalInfo: member.additionalInfo,
-        });
-      }
-      this.updatedData = { ...this.familyData };
-
-      this.nominations = [familyDetail];
+      this.hamperData = {};
     },
     async splitFamilies() {
-      this.splittingFamily = true;
+      //this.splittingFamily = true;
       /* */
-      const res = await splitFamily(this.updatedData);
+      const res = await splitFamily(this.hamperData);
       if (res.status == 200) {
         const familyData = res?.data?.families;
         this.$emit("splitFamilies", familyData);
-        this.nominations = [];
+        this.hamperData = {};
       } else {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
@@ -386,33 +337,62 @@ export default {
       this.splittingFamily = false;
     },
     addFamily() {
-      this.nominations.unshift({
-        hamperId: this.getHamperReference,
+      const nom = this.platformData.nominators.find(
+        (n) => n.GSI2PK === this.familyData?.GSI3SK
+      );
+      const org = this.platformData.organisations.find(
+        (o) => o.GSI2PK === nom.GSI3PK
+      );
+      this.orgRef = org.SK;
+      this.nominatorRef = nom.nominatorDetails.reference;
+
+      console.log("addFamily", this.familyData);
+      this.hamperData = {
+        campaign: this.$store.getters.getActiveCampaign,
+        familyId: this.familyData?.GSI2PK,
+        nominatorId: this.familyData?.GSI3SK,
+        hamperId: this.familyData?.GSI2SK
+          ? this.familyData?.GSI2SK.replace("SK#", "")
+          : this.getHamperReference(),
         adults: 0,
         children: 0,
-        members: [
-          {
-            age: "",
-            ageType: "Years",
-            who: "",
-            additionalInfo: "",
-          },
-        ],
-      });
+        members: [],
+      };
+      if (this.familyData.members.length) {
+        for (const [k, member] of this.familyData.members.entries()) {
+          this.hamperData.members.push({
+            memberId: member.requestId,
+            age: member.age,
+            ageType: member.ageType,
+            who: member.who,
+            whoOther: member.whoOther,
+            additionalInfo: member.additionalInfo,
+            familyNumber: 1,
+            hamperId: this.hamperData.hamperId,
+          });
+        }
+      } else {
+        this.hamperData.members.push({
+          age: "",
+          ageType: "Years",
+          who: "",
+          additionalInfo: "",
+        });
+      }
+
+      this.calculateAges(this.hamperData.members.length - 1);
     },
     calculateAges(index) {
-      this.nominations[index].adults = this.nominations[index].members.reduce(
-        function (a, b) {
-          return a + (b["age"] === "" || b["age"] < 18 ? 0 : 1);
-        },
-        0
-      );
-      this.nominations[index].children = this.nominations[index].members.reduce(
-        function (a, b) {
-          return a + (b["age"] !== "" && b["age"] < 18 ? 1 : 0);
-        },
-        0
-      );
+      this.hamperData.adults = this.hamperData.members.reduce(function (a, b) {
+        return a + (b["age"] === "" || b["age"] < 18 ? 0 : 1);
+      }, 0);
+      this.hamperData.children = this.hamperData.members.reduce(function (
+        a,
+        b
+      ) {
+        return a + (b["age"] !== "" && b["age"] < 18 ? 1 : 0);
+      },
+      0);
     },
 
     collapseTitle: (member, i) => {
@@ -443,17 +423,21 @@ export default {
 .family-actions {
   text-align: center;
   display: flex;
+
   .cell {
     align-self: center;
     margin: 0 auto;
+
     .btn-link {
       color: #fb404b;
     }
   }
 }
+
 .v-modal {
   z-index: 1040 !important;
 }
+
 .el-dialog__wrapper {
   z-index: 1050 !important;
 }

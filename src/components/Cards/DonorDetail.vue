@@ -30,15 +30,27 @@
       </div>
     </div>
     <div class="row always-show" v-if="!rowData.emailVerification.verified">
-      <div class="col-12">
+      <div class="col-6">
         <button
           type="submit"
           class="btn btn-info btn-fill pull-right w-100 mt-3"
           @click="sendVerification"
           v-if="!verificationPending"
-        >
+          >
           Resend Verification Email
         </button>
+      </div>
+      <div class="col-6">
+        <button
+          type="submit"
+          class="btn btn-warning btn-fill pull-right w-100 mt-3"
+          @click="manualVerification"
+          v-if="!verificationPending"
+        >
+          Manually Verify
+        </button>
+      </div>
+      <div class="col-12">
 
         <div class="text-center w-100">
           <div
@@ -54,7 +66,7 @@
   </div>
 </template>
 <script>
-import { resendVerification } from "@/api/donors.api";
+import { resendVerification, verifySubscription } from "@/api/donors.api";
 import Swal from "sweetalert2";
 export default {
   name: "DonorDetail",
@@ -74,6 +86,27 @@ export default {
     };
   },
   methods: {
+    async manualVerification() {
+      if (this.rowData.GSI2PK) {
+        this.verificationPending = true;
+
+        const verification = await verifySubscription(
+          this.rowData.GSI3PK,
+          "",
+          this.$store.getters.getActiveCampaign
+        );
+      
+        if (verification.status === 200) {
+          Swal.fire({
+            title: "Success",
+            text: "Email successfully Verified.",
+            timer: 3000,
+            showConfirmButton: false,
+          });
+        }
+        this.verificationPending = false;
+      }
+    },
     async sendVerification() {
       if (this.rowData.GSI2PK) {
         this.verificationPending = true;
