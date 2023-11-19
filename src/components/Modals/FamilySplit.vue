@@ -1,5 +1,12 @@
 <template>
   <div class="container">
+    <div class="split-loading" v-if="splittingFamily">
+      <div class="center">
+        <div class="spinner-border text-muted" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+    </div>
     <div class="row" v-if="messages.length">
       <div class="col-12">
         <l-alert type="danger" v-for="(m, i) in messages" :key="i">
@@ -314,8 +321,7 @@ export default {
       this.hamperData = {};
     },
     async splitFamilies() {
-      //this.splittingFamily = true;
-      /* */
+      this.splittingFamily = true;
       const res = await splitFamily(this.hamperData);
       if (res.status == 200) {
         const familyData = res?.data?.families;
@@ -328,7 +334,6 @@ export default {
           }));
         }
       }
-      /* */
       this.splittingFamily = false;
     },
     addFamily() {
@@ -414,6 +419,32 @@ export default {
 };
 </script>
 <style lang="scss">
+.container {
+  position: relative;
+}
+.split-loading {
+  padding: 30px 15px;
+  min-height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  z-index: 1000;
+  padding-top: 90px;
+  text-align: center;
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .spinner-border {
+      z-index: 1001;
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.5em;
+    }
+  }
+}
 .family-actions {
   text-align: center;
   display: flex;

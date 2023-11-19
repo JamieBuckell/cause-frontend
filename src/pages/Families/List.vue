@@ -861,6 +861,16 @@ export default {
                 timer: 3000,
                 showConfirmButton: false,
               });
+            } else if (
+              !this.familyData.members ||
+              this.familyData.members.length <= 1
+            ) {
+              Swal.fire({
+                title: "Error",
+                text: "There must be at least 2 members in the family to split",
+                timer: 3000,
+                showConfirmButton: false,
+              });
             } else {
               this.openModal("split");
             }
