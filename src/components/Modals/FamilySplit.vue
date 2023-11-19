@@ -152,7 +152,10 @@ export default {
   },
   watch: {
     async familyData() {
-      if (this.familyData.allocatedTo) {
+      if (
+        this.familyData.allocatedTo &&
+        this.familyData.allocatedTo != "unallocated"
+      ) {
         this.$emit("close");
 
         Swal.fire({

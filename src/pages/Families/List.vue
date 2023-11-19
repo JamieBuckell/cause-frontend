@@ -851,7 +851,11 @@ export default {
               (f) => f.GSI2PK === r.requestId
             );
 
-            if (this.familyData.allocatedTo) {
+            if (
+              this.familyData.allocatedTo &&
+              this.familyData.allocatedTo != "unallocated"
+            ) {
+              console.log(this.familyData.allocatedTo);
               Swal.fire({
                 title: "Error",
                 text: "This family has already been allocated and cannot be split",
