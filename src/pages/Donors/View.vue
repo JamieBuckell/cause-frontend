@@ -1151,11 +1151,12 @@ export default {
         }
 
         if (pData?.subscribers) {
-          const subscriber = pData.subscribers.find((s) => s.PK === this.donor?.GSI3PK);
-          console.log(subscriber);
+          const subscriber = pData.subscribers.find(
+            (s) => s.PK === this.donor?.GSI3PK
+          );
           this.donor.subscribed = subscriber?.subscribed;
         }
-        
+
         this.updatedEmail = this.donor?.GSI3PK;
 
         this.activeCampaign = this.$store.getters.getAllCampaigns.find(

@@ -63,6 +63,7 @@
           :allNominators="allNominators"
           :familyData="familyData"
           @splitFamilies="doSplitFamilies"
+          @close="modals.split = false"
           z-index="1050"
         />
       </el-dialog>
@@ -849,7 +850,17 @@ export default {
             this.familyData = this.platformFamilies.find(
               (f) => f.GSI2PK === r.requestId
             );
-            this.openModal("split");
+
+            if (this.familyData.allocatedTo) {
+              Swal.fire({
+                title: "Error",
+                text: "This family has already been allocated and cannot be split",
+                timer: 3000,
+                showConfirmButton: false,
+              });
+            } else {
+              this.openModal("split");
+            }
           }
           break;
         case "resetReferences":

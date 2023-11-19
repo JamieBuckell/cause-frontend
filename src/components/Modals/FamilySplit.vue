@@ -120,6 +120,7 @@ import {
 import breakpoints from "@/util/breakpoints";
 import { splitFamily } from "@/api/families.api";
 import LAlert from "src/components/Alert";
+import Swal from "sweetalert2";
 
 export default {
   components: {
@@ -151,9 +152,20 @@ export default {
   },
   watch: {
     async familyData() {
-      this.resetWindow();
-      this.chosenNominatorId = this.nominatorId;
-      this.addFamily();
+      if (this.familyData.allocatedTo) {
+        this.$emit("close");
+
+        Swal.fire({
+          title: "Error",
+          text: "This family has already been allocated and cannot be split",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } else {
+        this.resetWindow();
+        this.chosenNominatorId = this.nominatorId;
+        this.addFamily();
+      }
     },
   },
   data() {
@@ -183,7 +195,6 @@ export default {
     },
     breakpoints: () => breakpoints.screen,
     familyCount() {
-      console.log("FamilyCount", this.nominatorsFamilies.length);
       return this.nominatorsFamilies.length;
     },
     nominatorsReference() {
@@ -203,9 +214,20 @@ export default {
     },
   },
   async mounted() {
-    this.resetWindow();
-    this.chosenNominatorId = this.nominatorId;
-    this.addFamily();
+    if (this.familyData.allocatedTo) {
+      this.$emit("close");
+
+      Swal.fire({
+        title: "Error",
+        text: "This family has already been allocated and cannot be split",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } else {
+      this.resetWindow();
+      this.chosenNominatorId = this.nominatorId;
+      this.addFamily();
+    }
   },
   methods: {
     getHamperReference() {
@@ -272,14 +294,11 @@ export default {
       this.hamperData.members[memberIndex].hamperId = member.hamperId;
     },
     assignNewHamperID(member) {
-      console.log("member.familyNumber", member.familyNumber);
       if (member.familyNumber > 1) {
         if (this.usedReferences[member.familyNumber]) {
           member.hamperId = this.usedReferences[member.familyNumber];
         } else {
-          console.log("familyNumber", member.familyNumber);
           member.hamperId = this.getHamperReference();
-          console.log("hamperId", member.hamperId);
           this.usedReferences[member.familyNumber] = member.hamperId;
 
           if (member.hamperId !== this.hamperData.reference) {
@@ -293,8 +312,6 @@ export default {
         }
         /* */
       }
-
-      console.log("assignNewHamperID", member.requestId);
     },
     setChosenNominator(nominator) {
       this.chosenNominator = nominator;
@@ -346,7 +363,6 @@ export default {
       this.orgRef = org.SK;
       this.nominatorRef = nom.nominatorDetails.reference;
 
-      console.log("addFamily", this.familyData);
       this.hamperData = {
         campaign: this.$store.getters.getActiveCampaign,
         familyId: this.familyData?.GSI2PK,
