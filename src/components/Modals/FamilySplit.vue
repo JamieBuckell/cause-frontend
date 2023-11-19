@@ -152,23 +152,9 @@ export default {
   },
   watch: {
     async familyData() {
-      if (
-        this.familyData.allocatedTo &&
-        this.familyData.allocatedTo != "unallocated"
-      ) {
-        this.$emit("close");
-
-        Swal.fire({
-          title: "Error",
-          text: "This family has already been allocated and cannot be split",
-          timer: 3000,
-          showConfirmButton: false,
-        });
-      } else {
-        this.resetWindow();
-        this.chosenNominatorId = this.nominatorId;
-        this.addFamily();
-      }
+      this.resetWindow();
+      this.chosenNominatorId = this.nominatorId;
+      this.addFamily();
     },
   },
   data() {
@@ -217,20 +203,9 @@ export default {
     },
   },
   async mounted() {
-    if (this.familyData.allocatedTo) {
-      this.$emit("close");
-
-      Swal.fire({
-        title: "Error",
-        text: "This family has already been allocated and cannot be split",
-        timer: 3000,
-        showConfirmButton: false,
-      });
-    } else {
-      this.resetWindow();
-      this.chosenNominatorId = this.nominatorId;
-      this.addFamily();
-    }
+    this.resetWindow();
+    this.chosenNominatorId = this.nominatorId;
+    this.addFamily();
   },
   methods: {
     getHamperReference() {
