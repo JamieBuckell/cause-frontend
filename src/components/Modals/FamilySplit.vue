@@ -283,7 +283,9 @@ export default {
         if (this.usedReferences[member.familyNumber]) {
           member.hamperId = this.usedReferences[member.familyNumber];
         } else {
-          member.hamperId = this.getHamperReference();
+          member.hamperId = `${member.hamperId}${(member.familyNumber + 9)
+            .toString(36)
+            .toUpperCase()}`; // this.getHamperReference();
           this.usedReferences[member.familyNumber] = member.hamperId;
 
           if (member.hamperId !== this.hamperData.reference) {
