@@ -6,6 +6,9 @@ export const createCampaign = async (body) =>
 export const getAllCampaigns = async () =>
   await httpClient.get(`/campaigns/list`);
 
+export const activeCampaigns = async () =>
+  await httpClient.get(`/campaigns/verify`);
+
 export const getByCampaign = async (campaignId) =>
   await httpClient.get(`/campaigns/get-by-id/${campaignId}`);
 

@@ -9,287 +9,297 @@
 
     <div class="row d-flex justify-content-center">
       <div class="col-lg-8 col-md-8 col-sm-10">
-        <fade-render-transition v-if="isOpen">
+        <fade-render-transition>
           <card>
             <div slot="header" class="text-center">
               <img :src="logo" :alt="logoAlt" class="site-logo" />
               <h3 class="card-title text-center">Donor Registration</h3>
             </div>
-            <ValidationObserver v-slot="{ handleSubmit }" v-if="!submitSuccess">
-              <!--You can specify transitions on initial render. The `card-hidden` class will be present initially and then it will be removed-->
-              <form @submit.prevent="handleSubmit(handleRegisterSubmit)">
-                <div>
-                  <div class="row" v-if="messages.length">
-                    <div class="col-12">
-                      <l-alert type="danger" v-for="m in messages" :key="m">
-                        <span> {{ m }}</span>
-                      </l-alert>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12 col-md-6">
-                      <ValidationProvider
-                        name="firstname"
-                        rules="required"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          placeholder="Your First name"
-                          :error="
-                            failed ? 'The First name field is required' : null
-                          "
-                          :hasSuccess="passed"
-                          label="First name"
-                          name="firstname"
-                          v-model="donorData.firstname"
-                        ></fg-input>
-                      </ValidationProvider>
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <ValidationProvider
-                        name="lastname"
-                        rules="required"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          placeholder="Your Last name"
-                          :error="
-                            failed ? 'The Last name field is required' : null
-                          "
-                          :hasSuccess="passed"
-                          label="Last name"
-                          name="lastname"
-                          v-model="donorData.lastname"
-                        ></fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-6">
-                      <ValidationProvider
-                        name="email"
-                        rules="required|email"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          type="email"
-                          placeholder="Your Email address"
-                          :error="failed ? 'The Email field is required' : null"
-                          :hasSuccess="passed"
-                          label="Email address"
-                          name="email"
-                          v-model="donorData.email"
-                          @change="
-                            donorData.email = $event.target.value.toLowerCase()
-                          "
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                    <div class="col-6">
-                      <ValidationProvider
-                        name="email_confirm"
-                        rules="required|email|confirmed:email"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          type="email"
-                          placeholder="Your Email address"
-                          :error="
-                            failed ? 'The Email fields do not match' : null
-                          "
-                          :hasSuccess="passed"
-                          label="Confirm Email address"
-                          name="email_confirm"
-                          v-model="donorData.email_confirm"
-                          @change="
-                            donorData.email_confirm =
-                              $event.target.value.toLowerCase()
-                          "
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider name="telephone" v-slot="{ passed }">
-                        <fg-input
-                          type="text"
-                          placeholder="Your Telephone Number"
-                          :hasSuccess="passed"
-                          label="Telephone Number"
-                          name="telephone"
-                          v-model="donorData.telephone"
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider name="company" v-slot="{ passed }">
-                        <fg-input
-                          type="text"
-                          placeholder="Company"
-                          :hasSuccess="passed"
-                          label="Company (If Applicable)"
-                          name="company"
-                          v-model="donorData.company"
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider name="howHeard" v-slot="{ passed }">
-                        <fg-input
-                          label="How did you heard about us?"
-                          class="mb-0"
-                        >
-                          <el-select
-                            class="select-default mb-3 w-100"
-                            :name="`howHeard`"
-                            :hasSuccess="passed"
-                            style="width: 200px"
-                            placeholder="Please choose an option"
-                            v-model="donorData.howHeard"
-                            @change="updatedHowHeard()"
-                          >
-                            <el-option
-                              class="select-default"
-                              v-for="item in howHeardOptions"
-                              :key="item.value"
-                              :label="item.label"
-                              :value="item.value"
-                            >
-                            </el-option>
-                          </el-select>
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row" v-if="donorData.howHeard === 'other'">
-                    <div class="col-12">
-                      <ValidationProvider
-                        name="howHeardOther"
-                        v-slot="{ passed }"
-                      >
-                        <fg-input label="Please Specify">
-                          <textarea
-                            class="form-control"
-                            placeholder="Please specify"
-                            rows="2"
-                            :hasSuccess="passed"
-                            name="howHeardOther"
-                            v-model="donorData.howHeardOther"
-                          ></textarea>
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider
-                        name="families"
-                        rules="required|min_value:1|max_value:300"
-                        v-slot="{ passed, failed }"
-                      >
-                        <fg-input
-                          type="number"
-                          placeholder="families"
-                          :hasSuccess="passed"
-                          label="How many families would you like to provide for?"
-                          name="families"
-                          v-model="donorData.families"
-                          :error="
-                            failed
-                              ? 'Number of families must be between 1 and 300'
-                              : null
-                          "
-                          :min="1"
-                          :max="300"
-                          @input="populateDefaults()"
-                        >
-                        </fg-input>
-                      </ValidationProvider>
-                    </div>
-                  </div>
-
-                  <div v-if="donorData.families <= maxFamilyDetail">
-                    <div
-                      class="row"
-                      v-for="index in parseInt(
-                        donorData.families ? donorData.families : 0
-                      )"
-                      :key="index"
-                    >
-                      <div class="col-12 col-md-3">
-                        <label :for="`familyDetail[${index - 1}]`"
-                          >Family Preferences:</label
-                        >
+            <div v-if="isOpen">
+              <ValidationObserver
+                v-slot="{ handleSubmit }"
+                v-if="!submitSuccess"
+              >
+                <!--You can specify transitions on initial render. The `card-hidden` class will be present initially and then it will be removed-->
+                <form @submit.prevent="handleSubmit(handleRegisterSubmit)">
+                  <div>
+                    <div class="row" v-if="messages.length">
+                      <div class="col-12">
+                        <l-alert type="danger" v-for="m in messages" :key="m">
+                          <span> {{ m }}</span>
+                        </l-alert>
                       </div>
-                      <div class="col-12 col-md-9 mb-3">
+                    </div>
+                    <div class="row">
+                      <div class="col-12 col-md-6">
                         <ValidationProvider
-                          :name="`familyDetail[${index - 1}]`"
+                          name="firstname"
                           rules="required"
                           v-slot="{ passed, failed }"
                         >
-                          <el-select
-                            class="select-default w-100"
-                            :name="`familyDetail[${index - 1}]`"
+                          <fg-input
+                            placeholder="Your First name"
+                            :error="
+                              failed ? 'The First name field is required' : null
+                            "
                             :hasSuccess="passed"
-                            style="width: 200px"
-                            v-model="donorData.familyDetail[index - 1]"
-                            placeholder="Family Preferences"
-                          >
-                            <el-option
-                              class="select-default"
-                              v-for="item in familyOptions"
-                              :key="item.value"
-                              :label="item.label"
-                              :value="item.value"
-                            >
-                            </el-option>
-                          </el-select>
-                          <div
-                            v-if="failed"
-                            class="text-danger invalid-feedback"
-                            style="display: block"
-                          >
-                            Please specify your family preferences
-                          </div>
+                            label="First name"
+                            name="firstname"
+                            v-model="donorData.firstname"
+                          ></fg-input>
+                        </ValidationProvider>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <ValidationProvider
+                          name="lastname"
+                          rules="required"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            placeholder="Your Last name"
+                            :error="
+                              failed ? 'The Last name field is required' : null
+                            "
+                            :hasSuccess="passed"
+                            label="Last name"
+                            name="lastname"
+                            v-model="donorData.lastname"
+                          ></fg-input>
                         </ValidationProvider>
                       </div>
                     </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-12">
-                      <ValidationProvider
-                        name="additionalInformation"
-                        v-slot="{ passed }"
-                      >
-                        <fg-input label="Additional Information">
-                          <textarea
-                            class="form-control"
-                            placeholder="preference regarding age/gender of children."
-                            rows="5"
+                    <div class="row">
+                      <div class="col-6">
+                        <ValidationProvider
+                          name="email"
+                          rules="required|email"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            type="email"
+                            placeholder="Your Email address"
+                            :error="
+                              failed ? 'The Email field is required' : null
+                            "
                             :hasSuccess="passed"
-                            name="additionalInformation"
-                            v-model="donorData.additionalInformation"
-                          ></textarea>
-                        </fg-input>
-                      </ValidationProvider>
+                            label="Email address"
+                            name="email"
+                            v-model="donorData.email"
+                            @change="
+                              donorData.email =
+                                $event.target.value.toLowerCase()
+                            "
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                      <div class="col-6">
+                        <ValidationProvider
+                          name="email_confirm"
+                          rules="required|email|confirmed:email"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            type="email"
+                            placeholder="Your Email address"
+                            :error="
+                              failed ? 'The Email fields do not match' : null
+                            "
+                            :hasSuccess="passed"
+                            label="Confirm Email address"
+                            name="email_confirm"
+                            v-model="donorData.email_confirm"
+                            @change="
+                              donorData.email_confirm =
+                                $event.target.value.toLowerCase()
+                            "
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
                     </div>
-                  </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="telephone"
+                          v-slot="{ passed }"
+                        >
+                          <fg-input
+                            type="text"
+                            placeholder="Your Telephone Number"
+                            :hasSuccess="passed"
+                            label="Telephone Number"
+                            name="telephone"
+                            v-model="donorData.telephone"
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider name="company" v-slot="{ passed }">
+                          <fg-input
+                            type="text"
+                            placeholder="Company"
+                            :hasSuccess="passed"
+                            label="Company (If Applicable)"
+                            name="company"
+                            v-model="donorData.company"
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider name="howHeard" v-slot="{ passed }">
+                          <fg-input
+                            label="How did you heard about us?"
+                            class="mb-0"
+                          >
+                            <el-select
+                              class="select-default mb-3 w-100"
+                              :name="`howHeard`"
+                              :hasSuccess="passed"
+                              style="width: 200px"
+                              placeholder="Please choose an option"
+                              v-model="donorData.howHeard"
+                              @change="updatedHowHeard()"
+                            >
+                              <el-option
+                                class="select-default"
+                                v-for="item in howHeardOptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              >
+                              </el-option>
+                            </el-select>
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                    <div class="row" v-if="donorData.howHeard === 'other'">
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="howHeardOther"
+                          v-slot="{ passed }"
+                        >
+                          <fg-input label="Please Specify">
+                            <textarea
+                              class="form-control"
+                              placeholder="Please specify"
+                              rows="2"
+                              :hasSuccess="passed"
+                              name="howHeardOther"
+                              v-model="donorData.howHeardOther"
+                            ></textarea>
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="families"
+                          rules="required|min_value:1|max_value:300"
+                          v-slot="{ passed, failed }"
+                        >
+                          <fg-input
+                            type="number"
+                            placeholder="families"
+                            :hasSuccess="passed"
+                            label="How many families would you like to provide for?"
+                            name="families"
+                            v-model="donorData.families"
+                            :error="
+                              failed
+                                ? 'Number of families must be between 1 and 300'
+                                : null
+                            "
+                            :min="1"
+                            :max="300"
+                            @input="populateDefaults()"
+                          >
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
 
-                  <div class="row">
-                    <div class="col-12">
-                      <checkbox name="marketing" v-model="donorData.marketing"
-                        >Yes, I would like CAUSE to contact me</checkbox
+                    <div v-if="donorData.families <= maxFamilyDetail">
+                      <div
+                        class="row"
+                        v-for="index in parseInt(
+                          donorData.families ? donorData.families : 0
+                        )"
+                        :key="index"
                       >
-                      <!--
+                        <div class="col-12 col-md-3">
+                          <label :for="`familyDetail[${index - 1}]`"
+                            >Family Preferences:</label
+                          >
+                        </div>
+                        <div class="col-12 col-md-9 mb-3">
+                          <ValidationProvider
+                            :name="`familyDetail[${index - 1}]`"
+                            rules="required"
+                            v-slot="{ passed, failed }"
+                          >
+                            <el-select
+                              class="select-default w-100"
+                              :name="`familyDetail[${index - 1}]`"
+                              :hasSuccess="passed"
+                              style="width: 200px"
+                              v-model="donorData.familyDetail[index - 1]"
+                              placeholder="Family Preferences"
+                            >
+                              <el-option
+                                class="select-default"
+                                v-for="item in familyOptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              >
+                              </el-option>
+                            </el-select>
+                            <div
+                              v-if="failed"
+                              class="text-danger invalid-feedback"
+                              style="display: block"
+                            >
+                              Please specify your family preferences
+                            </div>
+                          </ValidationProvider>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-12">
+                        <ValidationProvider
+                          name="additionalInformation"
+                          v-slot="{ passed }"
+                        >
+                          <fg-input label="Additional Information">
+                            <textarea
+                              class="form-control"
+                              placeholder="preference regarding age/gender of children."
+                              rows="5"
+                              :hasSuccess="passed"
+                              name="additionalInformation"
+                              v-model="donorData.additionalInformation"
+                            ></textarea>
+                          </fg-input>
+                        </ValidationProvider>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <checkbox name="marketing" v-model="donorData.marketing"
+                          >Yes, I would like CAUSE to contact me</checkbox
+                        >
+                        <!--
                       <el-collapse class="marketing-info">
                         <el-collapse-item
                           title="What can i expect to recieve?"
@@ -304,92 +314,97 @@
                           </div>
                         </el-collapse-item>
                       </el-collapse>
-                      -->
+                      --></div>
                     </div>
                   </div>
+                  <div class="text-center mt-5">
+                    <button
+                      type="submit"
+                      class="btn btn-fill btn-info btn-round btn-wd"
+                    >
+                      Register
+                    </button>
+                  </div>
+                </form>
+              </ValidationObserver>
+              <div v-else>
+                <div class="row">
+                  <div class="col-12 col-md-12 text-center">
+                    <p>
+                      Thank you for registering.<br />
+                      You will now recieve an email confirming your
+                      registration.
+                      <br /><br />
+                      You must confirm your donation before you can be assigned
+                      a family.
+                      <br /><br />
+                      Why not share your pledge with others?
+                    </p>
+                    <p>
+                      <ShareNetwork
+                        network="facebook"
+                        url="https://www.cause-foundation.org.uk/pledge"
+                        title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
+                        hashtags="charity,causechristmashampers"
+                        class="px-2"
+                      >
+                        <button
+                          class="btn btn-social btn-round btn-facebook btn-outline"
+                        >
+                          <i class="fa fa-facebook"></i>
+                        </button>
+                      </ShareNetwork>
+                      <ShareNetwork
+                        network="twitter"
+                        url="https://www.cause-foundation.org.uk/pledge"
+                        title="I've just pledged to donate a hamper to a vulnerable family this christmas with @CauseHampers."
+                        hashtags="charity,causechristmashampers"
+                        class="px-2"
+                      >
+                        <button
+                          class="btn btn-social btn-round btn-twitter btn-outline"
+                        >
+                          <i class="fa fa-twitter"></i>
+                        </button>
+                      </ShareNetwork>
+                      <ShareNetwork
+                        network="whatsapp"
+                        url="https://www.cause-foundation.org.uk/pledge"
+                        title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
+                        hashtags="charity,causechristmashampers"
+                        class="px-2"
+                      >
+                        <button
+                          class="btn btn-social btn-round btn-whatsapp btn-outline"
+                        >
+                          <i class="fa fa-whatsapp"></i>
+                        </button>
+                      </ShareNetwork>
+                      <ShareNetwork
+                        network="linkedin"
+                        url="https://www.cause-foundation.org.uk/pledge"
+                        title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
+                        hashtags="charity,causechristmashampers"
+                        class="px-2"
+                      >
+                        <button
+                          class="btn btn-social btn-round btn-linkedin btn-outline"
+                        >
+                          <i class="fa fa-linkedin"></i>
+                        </button>
+                      </ShareNetwork>
+                    </p>
+                  </div>
                 </div>
-                <div class="text-center mt-5">
-                  <button
-                    type="submit"
-                    class="btn btn-fill btn-info btn-round btn-wd"
-                  >
-                    Register
-                  </button>
-                </div>
-              </form>
-            </ValidationObserver>
-            <div v-else>
-              <div class="row">
-                <div class="col-12 col-md-12 text-center">
-                  <p>
-                    Thank you for registering.<br />
-                    You will now recieve an email confirming your registration.
-                    <br /><br />
-                    You must confirm your donation before you can be assigned a
-                    family.
-                    <br /><br />
-                    Why not share your pledge with others?
-                  </p>
-                  <p>
-                    <ShareNetwork
-                      network="facebook"
-                      url="https://www.cause-foundation.org.uk/pledge"
-                      title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
-                      hashtags="charity,causechristmashampers"
-                      class="px-2"
-                    >
-                      <button
-                        class="btn btn-social btn-round btn-facebook btn-outline"
-                      >
-                        <i class="fa fa-facebook"></i>
-                      </button>
-                    </ShareNetwork>
-                    <ShareNetwork
-                      network="twitter"
-                      url="https://www.cause-foundation.org.uk/pledge"
-                      title="I've just pledged to donate a hamper to a vulnerable family this christmas with @CauseHampers."
-                      hashtags="charity,causechristmashampers"
-                      class="px-2"
-                    >
-                      <button
-                        class="btn btn-social btn-round btn-twitter btn-outline"
-                      >
-                        <i class="fa fa-twitter"></i>
-                      </button>
-                    </ShareNetwork>
-                    <ShareNetwork
-                      network="whatsapp"
-                      url="https://www.cause-foundation.org.uk/pledge"
-                      title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
-                      hashtags="charity,causechristmashampers"
-                      class="px-2"
-                    >
-                      <button
-                        class="btn btn-social btn-round btn-whatsapp btn-outline"
-                      >
-                        <i class="fa fa-whatsapp"></i>
-                      </button>
-                    </ShareNetwork>
-                    <ShareNetwork
-                      network="linkedin"
-                      url="https://www.cause-foundation.org.uk/pledge"
-                      title="I've just pledged to donate a hamper to a vulnerable family this christmas with CAUSE Foundation."
-                      hashtags="charity,causechristmashampers"
-                      class="px-2"
-                    >
-                      <button
-                        class="btn btn-social btn-round btn-linkedin btn-outline"
-                      >
-                        <i class="fa fa-linkedin"></i>
-                      </button>
-                    </ShareNetwork>
-                  </p>
-                </div>
+              </div>
+            </div>
+            <div class="row" v-else>
+              <div class="col-12 col-md-12 text-center">
+                <p>Registrations have now closed.</p>
               </div>
             </div>
           </card>
         </fade-render-transition>
-        <p v-else>&nbsp;</p>
       </div>
     </div>
   </standalone-layout>
@@ -400,6 +415,7 @@ import { FadeRenderTransition, Checkbox } from "src/components/index";
 import { Collapse, CollapseItem, Select, Option } from "element-ui";
 import StandaloneLayout from "../Dashboard/Pages/StandaloneLayout.vue";
 import { donorRegister } from "@/api/donors.api";
+import { activeCampaigns } from "@/api/campaign.api";
 import { extend } from "vee-validate";
 import {
   required,
@@ -569,9 +585,17 @@ export default {
       }
     },
   },
-  mounted() {
+  async mounted() {
     if (this?.$route?.query?.c) {
       this.isLoading = false;
+    }
+
+    const response = await activeCampaigns();
+    if (response.status == 200) {
+      this.isOpen = response.data.campaignActive;
+      this.isLoading = false;
+    } else {
+      this.isOpen = false;
     }
     this.isLoading = false;
     this.populateDefaults();
