@@ -83,11 +83,9 @@
           <sidebar-item
             :link="{ name: 'View All', path: '/families/list' }"
           ></sidebar-item>
-          <!----
           <sidebar-item
             :link="{ name: 'Hampers', path: '/hampers/list' }"
           ></sidebar-item>
-        -->
         </sidebar-item>
 
         <sidebar-item
