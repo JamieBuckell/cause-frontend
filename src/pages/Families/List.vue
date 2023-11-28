@@ -595,7 +595,9 @@ export default {
               break;
           }
           result = result.filter((d) =>
-            allowedStatuses.includes(d.receiveStatus)
+            allowedStatuses.length
+              ? allowedStatuses.includes(d.receiveStatus)
+              : !d?.receiveStatus
           );
         }
       }

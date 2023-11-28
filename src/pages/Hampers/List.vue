@@ -175,6 +175,7 @@ import {
   markDirectHamper,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
+import { getPlatformData } from "@/services/campaignData";
 import { getDonors } from "@/api/donors.api";
 
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
@@ -269,11 +270,23 @@ export default {
     },
   },
   watch: {
-    data(newVal) {
-      this.tableData = newVal;
+    async data() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
     },
     allNominators(newVal) {
       this.allNominatorsData = newVal;
+    },
+    async platformData() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
+    },
+    async platformFamilies() {
+      this.isLoading = true;
+      await this.getFamilyData();
+      this.isLoading = false;
     },
   },
   data() {
@@ -364,7 +377,7 @@ export default {
         ],
         allocationStatus: savedFilters?.allocationStatus
           ? savedFilters.allocationStatus
-          : "Allocated - Confirmed",
+          : "All",
         allocationStatusOptions: [
           "All",
           "Allocated",
@@ -385,7 +398,12 @@ export default {
           "No Info",
         ],
         sort: savedFilters?.sort ? savedFilters.sort : "Reference A-Z",
-        sortOptions: ["Reference A-Z", "Reference Z-A"],
+        sortOptions: [
+          "Reference A-Z",
+          "Reference Z-A",
+          "Newest First",
+          "Oldest First",
+        ],
       },
       listingsOptions: {
         columns: tableColumns,
@@ -417,15 +435,15 @@ export default {
     },
     nominatorRef() {
       let nominatorReference = "";
-      if (this.currentNominator?.userReference) {
-        nominatorReference = this.currentNominator?.userReference;
+      if (this.currentNominator?.nominatorDetails?.reference) {
+        nominatorReference = this.currentNominator.nominatorDetails.reference;
       } else {
         if (this.allNominatorsData.length) {
           const nominator = this.allNominatorsData.find(
             (n) => n.requestId === this.familyData.nominatorId
           );
-          if (nominator?.userReference) {
-            nominatorReference = nominator.userReference;
+          if (nominator?.nominatorDetails?.reference) {
+            nominatorReference = nominator.nominatorDetails.reference;
           }
         }
       }
@@ -443,12 +461,12 @@ export default {
     },
     familyCount() {
       return this.tableData.filter(
-        (f) => f.nominatorId == this?.currentNominator?.requestId
+        (f) => f.nominatorId == this?.currentNominator?.GSI2PK
       ).length;
     },
     nominatorsFamilies() {
       return this.tableData.filter(
-        (f) => f.nominatorId == this?.currentNominator?.requestId
+        (f) => f.nominatorId == this?.currentNominator?.GSI2PK
       );
     },
     getSubHeading() {
@@ -460,12 +478,18 @@ export default {
     listingsData() {
       let result = this?.tableData ? this.tableData : [];
 
+      const pData = this.$store.getters.getPlatformData;
+      /* */
       result.map((f) => {
-        f.authorised = this.currentNominator.authorised;
+        f.authorised = pData?.nominators
+          ? pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)
+              ?.status === "Approved" ?? false
+          : false;
         return f;
       });
-
+      /* */
       if (result.length) {
+        /* */
         if (this.filters.familySize && this.filters.familySize != "All") {
           result = result.filter((d) =>
             this.filters.familySize != "10+"
@@ -517,6 +541,7 @@ export default {
           }
           result = result.filter((d) => allowedStatuses.includes(d.status));
         }
+        /* */
 
         if (this.filters.dropoffStatus && this.filters.dropoffStatus != "All") {
           let allowedStatuses = [];
@@ -529,38 +554,59 @@ export default {
               break;
             case "awaiting":
             default:
-              allowedStatuses = [];
+              allowedStatuses = [""];
               break;
           }
-          result = result.filter((d) =>
-            allowedStatuses.length
-              ? allowedStatuses.includes(d.receiveStatus)
-              : !d?.receiveStatus
-          );
+          result = result.filter((d) => {
+            return allowedStatuses.length
+              ? allowedStatuses.includes(d?.receiveStatus)
+              : false;
+          });
         }
       }
 
-      if (this.filters.sort && this.filters.sort === "Reference Z-A") {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
-      } else {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
-      }
+      if (this.filters.sort) {
+        if (this.filters.sort === "Reference A-Z") {
+          result.sort((a, b) =>
+            b.reference < a.reference ? 1 : a.reference < b.reference ? -1 : 0
+          );
+        }
 
-      if (this.filters.sort && this.filters.sort === "Reference Z-A") {
-        result.sort((a, b) =>
-          b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
-        );
+        if (this.filters.sort === "Reference Z-A") {
+          result.sort((a, b) =>
+            b.reference > a.reference ? 1 : a.reference > b.reference ? -1 : 0
+          );
+        }
+
+        if (this.filters.sort === "Newest First") {
+          result.sort((a, b) =>
+            a.dateAddedSort < b.dateAddedSort
+              ? 1
+              : b.dateAddedSort < a.dateAddedSort
+              ? -1
+              : 0
+          );
+        }
+
+        if (this.filters.sort === "Oldest First") {
+          result.sort((a, b) =>
+            a.dateAddedSort > b.dateAddedSort
+              ? 1
+              : b.dateAddedSort > a.dateAddedSort
+              ? -1
+              : 0
+          );
+        }
       }
 
       return result;
     },
     getCustomActions() {
       const propCustomActions = this.customActions;
-      if (!this.organisationId) {
+      if (
+        !this.organisationId &&
+        !propCustomActions.find((ca) => ca.emit === "viewOrganisation")?.emit
+      ) {
         propCustomActions.push({
           emit: "viewOrganisation",
           type: "icon",
@@ -570,7 +616,10 @@ export default {
         });
       }
       if (this.userInGroup("admin")) {
-        if (this.options.resetReferences) {
+        if (
+          this.options.resetReferences &&
+          !propCustomActions.find((ca) => ca.emit === "resetReferences")?.emit
+        ) {
           propCustomActions.push({
             emit: "resetReferences",
             type: "icon",
@@ -579,7 +628,10 @@ export default {
             text: "Reset References",
           });
         }
-        if (this.options.splitFamily) {
+        if (
+          this.options.splitFamily &&
+          !propCustomActions.find((ca) => ca.emit === "splitFamily")?.emit
+        ) {
           propCustomActions.push({
             emit: "splitFamily",
             type: "icon",
@@ -597,6 +649,12 @@ export default {
         });
       }
       return propCustomActions;
+    },
+    platformData() {
+      return this.$store.getters?.getPlatformData ?? {};
+    },
+    platformFamilies() {
+      return this.$store.getters?.getPlatformFamilies ?? [];
     },
   },
   methods: {
@@ -662,12 +720,13 @@ export default {
         if (this.options.showDonor) {
           donorDetail = "Not Allocated";
           if (f.allocatedTo) {
-            const familyDonor = this.allDonorsData.find(
-              (d) => d.requestId == f.allocatedTo
-            );
-            if (familyDonor?.requestId) {
-              donorDetail = `${familyDonor.firstName} ${familyDonor.lastName}`;
-              donorEmail = `${familyDonor.email ? familyDonor.email : ""}`;
+            const familyDonor = this?.platformData?.donors
+              ? this.platformData.donors.find((n) => n.GSI2PK === f.allocatedTo)
+              : {};
+
+            if (familyDonor?.GSI2PK) {
+              donorDetail = `${familyDonor.donorDetails.firstName} ${familyDonor.donorDetails.lastName}`;
+              donorEmail = `${familyDonor.GSI3PK ? familyDonor.GSI3PK : ""}`;
             }
           }
         }
@@ -731,6 +790,9 @@ export default {
       /* */
     },
     async handleEdit(i, r) {
+      this.currentNominator = this.platformData.nominators.find(
+        (n) => n.GSI2PK === r.nominatorId
+      );
       this.editFamilyData = r;
       this.openModal("update");
       // this.$router.push(`/donors/view/${r.requestId}`);
@@ -786,36 +848,73 @@ export default {
           }
           break;
         case "splitFamily":
-          this.currentNominator = this.allNominators.find(
-            (n) => n.requestId === r.nominatorId
+        case "splitFamily":
+          this.currentNominator = this.platformData.nominators.find(
+            (n) => n.GSI2PK === r.nominatorId
           );
-          this.familyData = r;
-          this.familyData.members = this.familyMemberData.filter(
-            (m) => m.familyId === this.familyData.requestId
-          );
-          this.openModal("split");
+          if (this.currentNominator) {
+            this.familyData = this.platformFamilies.find(
+              (f) => f.GSI2PK === r.requestId
+            );
+
+            if (
+              this.familyData.allocatedTo &&
+              this.familyData.allocatedTo != "unallocated"
+            ) {
+              Swal.fire({
+                title: "Error",
+                text: "This family has already been allocated and cannot be split",
+                timer: 3000,
+                showConfirmButton: false,
+              });
+            } else if (
+              !this.familyData.members ||
+              this.familyData.members.length <= 1
+            ) {
+              Swal.fire({
+                title: "Error",
+                text: "There must be at least 2 members in the family to split",
+                timer: 3000,
+                showConfirmButton: false,
+              });
+            } else {
+              this.openModal("split");
+            }
+          }
           break;
         case "resetReferences":
           /* */
+          this.isLoading = true;
           if (r.nominatorId) {
-            const res = await fixReferences({ nominatorId: r.nominatorId });
+            const res = await fixReferences({
+              nominatorId: r.nominatorId,
+              campaign: this.$store.getters.getActiveCampaign,
+            });
+            if (res?.data?.messages) {
+              this.messages = Object.keys(res?.data?.messages).map((k) => ({
+                error: res?.data?.messages[k],
+              }));
+            }
             if (res.status == 200) {
-              this.$router.go();
-            } else {
-              if (res?.data?.messages) {
-                this.messages = Object.keys(res?.data?.messages).map((k) => ({
-                  error: res?.data?.messages[k],
-                }));
-              }
+              Swal.fire({
+                title: "Success",
+                text: "Reference fix request recieved. Please wait 5 minutes and refresh the data to confirm.",
+                timer: 3000,
+                showConfirmButton: false,
+              });
             }
           } else {
             this.messages.push({
               error: "An unexpected error has occurred.",
             });
           }
+          this.isLoading = true;
           /* */
           break;
         default:
+          this.currentNominator = this.allNominators.find(
+            (n) => n.requestId === r.nominatorId
+          );
           this.$emit(k, i, r);
           break;
       }
@@ -827,10 +926,7 @@ export default {
         // this.approveNom(nominator);
       }
     },
-    doSplitFamilies(families) {
-      this.tableData = [...this.tableData, ...families];
-      this.createKey = !this.createKey;
-
+    async doSplitFamilies() {
       Swal.fire({
         title: "Success",
         text: "This family was split successfully.",
@@ -838,11 +934,54 @@ export default {
         showConfirmButton: false,
       });
 
-      this.orgFamiliesTotal += families.lenght;
+      await this.$store.commit("setForceRefresh", true);
+
       this.closeModal("split");
     },
-    saveFamilies(families) {
-      this.tableData = [...this.tableData, ...families];
+    async saveFamilies(families) {
+      const familyData = families.map((f) => ({
+        requestId: f?.GSI2PK ?? "",
+        organisationId: f?.GSI3PK,
+        nominatorId: f?.GSI3SK,
+        reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
+        nominatorDetail: f?.nominatorDetail ?? "",
+        familyDetail: f?.familyDetail ?? "",
+        totalUnit: f?.totalUnit ?? 0,
+        bagsReceived: f?.bagsReceived ?? 0,
+        status: f?.status ?? "",
+        receiveStatus: f?.receiveStatus ?? "",
+        dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
+      }));
+      this.tableData = [...familyData];
+
+      //Update platform data...
+      /* */
+      const nominatorSpecific = !(
+        this.userInGroup("admin") || this.userInGroup("teamlead")
+      );
+
+      const familiesToRemove = this.platformFamilies
+        ? this.platformFamilies.filter(
+            (f) =>
+              f?.GSI3PK === this.organisationId &&
+              (!nominatorSpecific ||
+                f?.GSI3SK === this.currentNominator?.GSI2PK)
+          )
+        : [];
+      for (const family of familiesToRemove) {
+        const indexToDelete = this.platformFamilies
+          ? this.platformFamilies.findIndex((f) => f?.GSI2PK === family?.GSI2PK)
+          : null;
+        if (indexToDelete >= 0) {
+          this.platformFamilies.splice(indexToDelete, 1);
+        }
+      }
+
+      await this.$store.dispatch("setPlatformFamilyData", [
+        ...this.platformFamilies,
+        ...families,
+      ]);
+
       this.createKey = !this.createKey;
 
       Swal.fire({
@@ -858,6 +997,7 @@ export default {
       }
     },
     updateFamilies({ families, update = false }) {
+      /* *
       if (update) {
         const newTableData = [...this.tableData];
         for (const [k, f] of families.entries()) {
@@ -881,6 +1021,7 @@ export default {
 
       this.orgFamiliesTotal++;
       this.closeModal("update");
+      /* */
     },
     splitFamilies(families) {
       this.tableData = [...this.tableData, ...families];
@@ -903,6 +1044,106 @@ export default {
         return `${value}`;
       }
     },
+    createDonorDetail(donorId) {
+      var rtnStr = "Not Allocated";
+      const donor = this?.platformData?.donors
+        ? this.platformData.donors.find((n) => n.GSI2PK === donorId)
+        : {};
+      if (donor?.PK) {
+        rtnStr = `<strong>${donor.donorDetails.firstName} ${donor.donorDetails.lastName}</strong>`;
+        if (donor.donorDetails.telephone) {
+          rtnStr += ` - <a href="tel:${donor.donorDetails.telephone}">${donor.donorDetails.telephone}</a>`;
+        }
+
+        if (donor.donorDetails.company) {
+          rtnStr += `<br />${donor.donorDetails.company}`;
+        }
+        if (donor.GSI3PK) {
+          rtnStr += `<br /><a href="tel:${donor.GSI3PK}">${donor.GSI3PK}</a>`;
+        }
+        rtnStr += `<br /><a href="/donors/view/${donor.GSI2PK}" class="btn btn-info btn-fill btn-wd">Manage Donor</a>`;
+      }
+      return rtnStr;
+    },
+    createNominatorDetail(nominatorId) {
+      var rtnStr = "";
+      const nominator = this?.platformData?.nominators
+        ? this.platformData.nominators.find((n) => n.GSI2PK === nominatorId)
+        : {};
+      if (nominator?.PK) {
+        rtnStr = `<strong>${nominator.nominatorDetails.firstName} ${nominator.nominatorDetails.lastName}</strong>`;
+        if (nominator.nominatorDetails.telephone) {
+          rtnStr += ` - <a href="tel:${nominator.nominatorDetails.telephone}">${nominator.nominatorDetails.telephone}</a>`;
+        }
+        if (nominator.nominatorDetails.email) {
+          rtnStr += `<br /><a href="tel:${nominator.nominatorDetails.email}">${nominator.nominatorDetails.email}</a>`;
+        }
+      }
+      return rtnStr;
+    },
+    createFamilyDetail(members) {
+      var rtnString = "";
+      if (members) {
+        /* */
+        for (const [key, m] of Object.entries(members)) {
+          rtnString += `
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>
+                            ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
+                            </strong>
+                            ${m.age} ${m.age ? m.ageType : ""}
+                            ${
+                              m.additionalInfo
+                                ? "<br />Info: " + m.additionalInfo
+                                : ""
+                            }
+                        </div>
+                    </div>
+                    `;
+        }
+        /* */
+      }
+      return rtnString;
+    },
+    async getFamilyData() {
+      let familiesData = [];
+      if (this.data && typeof this.data === "object") {
+        familiesData = this.data;
+      } else {
+        if (this.organisation.requestId) {
+          familiesData = await this.platformFamilies.filter(
+            (f) =>
+              (this.userInGroup("admin") ||
+                this.userInGroup("teamlead") ||
+                f?.GSI3SK === this.currentNominator?.GSI2PK) &&
+              f?.GSI3PK === this.organisation.requestId &&
+              f?.type === "family"
+          );
+
+          this.familyMemberData = []; //Object.values(res?.data?.members);
+        } else if (this.userInGroup("admin")) {
+          familiesData = await this.platformFamilies.filter(
+            (n) => n?.type === "family"
+          );
+        }
+      }
+      this.tableData = familiesData.map((f) => ({
+        requestId: f?.GSI2PK ?? "",
+        allocatedTo: f?.allocatedTo ?? "",
+        organisationId: f?.GSI3PK,
+        nominatorId: f?.GSI3SK,
+        reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
+        nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
+        donorDetail: this.createDonorDetail(f?.allocatedTo),
+        familyDetail: this.createFamilyDetail(f?.members),
+        totalUnit: f?.totalUnit ?? 0,
+        bagsReceived: f?.bagsReceived ?? 0,
+        status: f?.status ?? "",
+        receiveStatus: f?.receiveStatus ?? "",
+        dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
+      }));
+    },
   },
   async mounted() {
     if (!this.userInGroup("admin") && !this.userInGroup("teamlead")) {
@@ -912,19 +1153,7 @@ export default {
     this.allNominatorsData = this.allNominators;
     this.currentNominator = this.nominator;
 
-    let res = {};
-    if (!this.data || typeof this.data != "object") {
-      if (this.organisation.requestId) {
-        res = {}; // await getFamilyByOrganisation(this.organisation.requestId)
-        this.tableData = Object.values(res?.data?.families);
-        this.familyMemberData = Object.values(res?.data?.members);
-      } else if (this.userInGroup("admin")) {
-        res = {}; // await getFamilies()
-        this.tableData = Object.values(res?.data);
-      }
-    } else {
-      this.tableData = this.data;
-    }
+    await this.getFamilyData();
 
     this.$emit("resultData", "families", this.tableData);
     this.isLoading = false;
@@ -945,44 +1174,6 @@ export default {
         this.fallBackSubHeading = "No duplicates references found";
       }
     }
-
-    if (this.options.showDonor && this.userInGroup("admin")) {
-      const donorsRequest = await getDonors();
-      this.allDonorsData = Object.values(donorsRequest.data);
-
-      this.tableData.map((o) => {
-        if (this.options.showDonor) {
-          let donorDetail = "Not Allocated";
-          if (o.allocatedTo) {
-            const familyDonor = this.allDonorsData.find(
-              (d) => d.requestId == o.allocatedTo
-            );
-            if (familyDonor?.requestId) {
-              donorDetail = `
-                <strong>${familyDonor.firstName} ${
-                familyDonor.lastName
-              }</strong>${
-                familyDonor.telephone ? " - " + familyDonor.telephone : ""
-              }<br />
-                ${familyDonor.company ? familyDonor.company + "<br />" : ""}
-                ${familyDonor.email ? familyDonor.email + "<br />" : ""}
-                <a href="/donors/view/${
-                  familyDonor.requestId
-                }" class="btn btn-info btn-fill btn-wd">Manage Donor</a>
-              `;
-            }
-          }
-          o.donorDetail = donorDetail;
-        }
-        return true;
-      });
-    }
-
-    this.tableData.map((o) => {
-      o.fullName = `${o.firstName} ${o.lastName}`;
-      o.dateAddedSort = moment(o.dateAdded).format("YYYYMMDDHHmmss");
-      return true;
-    });
 
     EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },

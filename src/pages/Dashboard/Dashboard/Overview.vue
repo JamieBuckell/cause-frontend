@@ -194,6 +194,13 @@ export default {
             .reduce((a, b) => parseInt(a) + parseInt(b?.totalUnit ?? 0), 0)
             .toString() + " Individuals";
 
+        this.dashdata.hampersDropped.value = (
+          families.length
+            ? families.filter((f) => f?.receiveStatus === "hamper-received")
+                .length
+            : 0
+        ).toString();
+
         this.dashdata.organisations.value = (
           organisations.length ?? 0
         ).toString();
