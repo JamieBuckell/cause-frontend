@@ -23,40 +23,42 @@
 </template>
 <script>
 import { defineComponent } from "vue";
-import { getHamperScreen } from '@/api/dashboard.api'
+import { getHamperScreen } from "@/api/dashboard.api";
 
 export default defineComponent({
   components: {},
   computed: {
     cssVars() {
       return {
-        '--in-percentage': Math.round(
+        "--in-percentage": Math.round(
           (this.droppped * 100) / (this.pending + this.droppped)
         ).toFixed(2),
-        '--out-percentage': Math.round(
+        "--out-percentage": Math.round(
           (this.pending * 100) / (this.pending + this.droppped)
         ).toFixed(2),
-      }
-    }
+      };
+    },
   },
   data() {
     return {
       droppped: 0,
       dropppedBags: 0,
       pending: 0,
-    }
+    };
   },
   methods: {
     updateStats: async (campaignId) => {
-      const dashData = await getHamperScreen(campaignId)
-      const droppped = (dashData.data.hampersDropped ?? 0).toString()
-      const dropppedBags = (dashData.data.bagsDropped ?? 0).toString()
+      const dashData = await getHamperScreen(
+        campaignId && campaignId.length ? campaignId : "CH2"
+      );
+      const droppped = (dashData.data.hampersDropped ?? 0).toString();
+      const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
       const pending = (
         (dashData.data.allocatedConfirmed ?? 0) -
         (dashData.data.hampersDropped ?? 0)
-      ).toString()
+      ).toString();
 
-      return [droppped, dropppedBags, pending]
+      return [droppped, dropppedBags, pending];
     },
   },
   async mounted() {
@@ -66,13 +68,14 @@ export default defineComponent({
     //} else {
 
     const infiniteStats = async () => {
-      ;[this.droppped, this.dropppedBags, this.pending] =
-        await this.updateStats(this.$store.getters.getActiveCampaign)
+      [this.droppped, this.dropppedBags, this.pending] = await this.updateStats(
+        this.$store.getters.getActiveCampaign
+      );
       setTimeout(async () => {
-        await infiniteStats()
-      }, '120000')
-    }
-    infiniteStats()
+        await infiniteStats();
+      }, "120000");
+    };
+    infiniteStats();
     //}
   },
 });
@@ -151,7 +154,7 @@ div.widget-circle {
   }
 }
 div.widget-circle:after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;

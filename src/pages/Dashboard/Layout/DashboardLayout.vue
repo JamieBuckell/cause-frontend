@@ -166,7 +166,6 @@
           ></sidebar-item>
         </sidebar-item>
 
-        <!----
         <sidebar-item
           v-if="checkRole('admin')"
           :link="{
@@ -185,7 +184,6 @@
             }"
           ></sidebar-item>
         </sidebar-item>
-        -->
 
         <sidebar-item
           v-if="isJamie()"
