@@ -1,10 +1,17 @@
 <template>
-  <auth-layout pageClass="login-page">
+  <auth-layout pageClass="singular-page">
     <div class="row d-flex justify-content-center align-items-center">
       <div class="col-lg-4 col-md-6 col-sm-8">
         <ValidationObserver v-slot="{ handleSubmit }">
           <!--You can specify transitions on initial render. The `card-hidden` class will be present initially and then it will be removed-->
           <form @submit.prevent="handleSubmit(submit)">
+            <div class="accept-loading" v-if="loading">
+              <div class="center">
+                <div class="spinner-border text-muted" role="status">
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+            </div>
             <fade-render-transition>
               <card>
                 <div slot="header" class="text-center">
@@ -109,19 +116,19 @@
   </auth-layout>
 </template>
 <script>
-import Vue from 'vue'
-import { FadeRenderTransition } from 'src/components/index'
-import AuthLayout from 'src/pages/Dashboard/Pages/AuthLayout.vue'
-import { extend } from 'vee-validate'
-import { required, email, min } from 'vee-validate/dist/rules'
-import { checkHamper, recieveHamper } from '@/api/families.api'
-import { QrcodeStream, QrcodeDropZone, QrcodeCapture } from 'vue-qrcode-reader'
-import LAlert from 'src/components/Alert'
-import Swal from 'sweetalert2'
+import Vue from "vue";
+import { FadeRenderTransition } from "src/components/index";
+import AuthLayout from "src/pages/Dashboard/Pages/AuthLayout.vue";
+import { extend } from "vee-validate";
+import { required, email, min } from "vee-validate/dist/rules";
+import { checkHamper, recieveHamper } from "@/api/families.api";
+import { QrcodeStream, QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
+import LAlert from "src/components/Alert";
+import Swal from "sweetalert2";
 
-extend('email', email)
-extend('required', required)
-extend('min', min)
+extend("email", email);
+extend("required", required);
+extend("min", min);
 
 export default {
   components: {
@@ -134,133 +141,140 @@ export default {
     return {
       messages: [],
       submitting: false,
-      camera: 'auto',
+      camera: "auto",
       showScanConfirmation: false,
       maintenanceMode: false,
-      logo: '/static/img/cause-foundation-logo.png',
-      logoAlt: 'CAUSE Foundation Logo',
-      hamperId: '',
-      numberOfBags: '',
-      familyUnitTotal: '',
-      familyDynamic: '',
+      logo: "/static/img/cause-foundation-logo.png",
+      logoAlt: "CAUSE Foundation Logo",
+      hamperId: "",
+      numberOfBags: "",
+      familyUnitTotal: "",
+      familyDynamic: "",
       callback: false,
       showerr: false,
       resend: false,
       valid: false,
       emailrules: {
-        required: (value) => !!value || 'E-mail is required',
+        required: (value) => !!value || "E-mail is required",
         email: (value) => {
           const pattern =
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-          return pattern.test(value) || 'E-mail must be valid'
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          return pattern.test(value) || "E-mail must be valid";
         },
       },
       passRules: [
-        (v) => !!v || 'Password is required',
-        (v) => !v || v.length >= 8 || 'Password must be at least 8 characters',
+        (v) => !!v || "Password is required",
+        (v) => !v || v.length >= 8 || "Password must be at least 8 characters",
       ],
       hidepw: true,
       loader: false,
       loading: false,
-    }
+    };
   },
   methods: {
     async checkHamperId() {
-      this.numberOfBags = ''
-      this.hamperId = this.hamperId.toUpperCase()
-      this.messages = []
-      const res = await checkHamper({ hamperId: this.hamperId, campaignId: this.$store.getters.getActiveCampaign })
+      this.loading = true;
+      this.numberOfBags = "";
+      this.hamperId = this.hamperId.toUpperCase();
+      this.messages = [];
+      const activeCampaign = this.$store.getters?.getActiveCampaign; // HC04JA-047
+      const res = await checkHamper({
+        hamperId: this.hamperId,
+        campaignId:
+          activeCampaign && activeCampaign.length ? activeCampaign : "CH2",
+      });
 
+      this.loading = false;
       if (!res.data.success) {
         if (res?.data?.messages) {
           this.messages = Object.keys(res?.data?.messages).map((k) => ({
             error: res?.data?.messages[k],
-          }))
+          }));
         }
       }
 
       if (res?.data?.bagsReceived) {
-        this.numberOfBags = res.data.bagsReceived
+        this.numberOfBags = res.data.bagsReceived;
       }
       if (res?.data?.familyUnitTotal) {
-        this.familyUnitTotal = res.data.familyUnitTotal
+        this.familyUnitTotal = res.data.familyUnitTotal;
       }
       if (res?.data?.familyDynamic) {
-        this.familyDynamic = res.data.familyDynamic
+        this.familyDynamic = res.data.familyDynamic;
       }
 
-      this.showScanConfirmation = true
-      await this.timeout(2500)
-      this.showScanConfirmation = false
+      this.showScanConfirmation = true;
+      await this.timeout(2500);
+      this.showScanConfirmation = false;
     },
     async recieveHamper() {
       const res = await recieveHamper({
         hamperId: this.hamperId,
         noBags: this.numberOfBags,
         campaignId: this.$store.getters.getActiveCampaign,
-      })
+      });
       if (res?.data?.messages) {
         this.messages = Object.keys(res?.data?.messages).map((k) => ({
           error: res?.data?.messages[k],
-        }))
+        }));
       }
       if (res.data.success) {
-        this.submitting = false
-        this.hamperId = ''
-        this.numberOfBags = ''
-        this.familyUnitTotal = ''
+        this.submitting = false;
+        this.hamperId = "";
+        this.numberOfBags = "";
+        this.familyUnitTotal = "";
 
         Swal.fire({
-          title: 'Hamper successfully received',
+          title: "Hamper successfully received",
           timer: 2000,
           showConfirmButton: false,
-        })
+        });
       }
     },
     async onInit(promise) {
       try {
-        await promise
+        await promise;
       } catch (e) {
         // console.error(e)
       } finally {
-        this.showScanConfirmation = this.camera === 'off'
+        this.showScanConfirmation = this.camera === "off";
       }
     },
 
     async onDecode(content) {
-      this.hamperId = content
-      await this.checkHamperId()
+      this.hamperId = content;
+      await this.checkHamperId();
 
-      this.pause()
-      await this.timeout(500)
-      this.unpause()
+      this.pause();
+      await this.timeout(500);
+      this.unpause();
     },
 
     unpause() {
-      this.camera = 'auto'
+      this.camera = "auto";
     },
 
     pause() {
-      this.camera = 'off'
+      this.camera = "off";
     },
 
     timeout(ms) {
       return new Promise((resolve) => {
-        window.setTimeout(resolve, ms)
-      })
+        window.setTimeout(resolve, ms);
+      });
     },
     getErrorMessage(m) {
       for (const [key, value] of Object.entries(m)) {
-        return `${value}`
+        return `${value}`;
       }
     },
   },
   mounted() {
-    if (!this.userInGroup('admin')) {
+    if (!this.userInGroup("admin")) {
       // this.$router.push('/')
     }
   },
-}
+};
 </script>
 <style lang="scss">
 .scan-confirmation {
@@ -283,6 +297,35 @@ export default {
 
     &:hover {
       cursor: pointer;
+    }
+  }
+}
+
+.singular-page {
+  form {
+    position: relative;
+  }
+}
+
+.accept-loading {
+  padding: 0;
+  min-height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  z-index: 1000;
+  text-align: center;
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .spinner-border {
+      z-index: 1001;
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.5em;
     }
   }
 }
