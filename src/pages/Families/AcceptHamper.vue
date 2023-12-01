@@ -57,6 +57,8 @@
                       :error="failed ? 'The Hamper ID field is required' : null"
                       :hasSuccess="passed"
                       name="hamperId"
+                      pattern="[0-9]*"
+                      inputmode="numeric"
                       v-model="hamperId"
                     >
                       <a
