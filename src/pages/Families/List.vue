@@ -434,10 +434,6 @@ export default {
           "Allocated - Unconfirmed",
           "Unallocated",
         ],
-        dropoffStatus: savedFilters?.dropoffStatus
-          ? savedFilters.dropoffStatus
-          : "All",
-        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off"],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
           : "All",
@@ -581,24 +577,6 @@ export default {
               break;
           }
           result = result.filter((d) => allowedStatuses.includes(d.status));
-        }
-
-        if (this.filters.dropoffStatus && this.filters.dropoffStatus != "All") {
-          let allowedStatuses = [];
-          switch (this.filters.dropoffStatus.toLowerCase()) {
-            case "dropped off":
-              allowedStatuses = ["hamper-received"];
-              break;
-            case "awaiting":
-            default:
-              allowedStatuses = [""];
-              break;
-          }
-          result = result.filter((d) =>
-            allowedStatuses.length
-              ? allowedStatuses.includes(d.receiveStatus)
-              : !d?.receiveStatus
-          );
         }
       }
 
