@@ -228,17 +228,7 @@ export default {
           return (
             accumulator +
             d?.familyDetails?.request.reduce((a2, r) => {
-              // return a2 + r?.allocation ? parseInt(r.allocation.length) : 0;
-              return (
-                a2 +
-                ([
-                  "allocated-sent",
-                  "allocated-unconfirmed",
-                  "allocated-confirmed",
-                ].includes(d.status)
-                  ? parseInt(r.allocation.length)
-                  : 0)
-              );
+              return a2 + r?.allocation ? parseInt(r.allocation.length) : 0;
             }, 0)
           );
         }, 0);

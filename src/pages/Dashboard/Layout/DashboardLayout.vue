@@ -195,6 +195,12 @@
               path: '/data/hamper-refs-check',
             }"
           ></sidebar-item>
+          <sidebar-item
+            :link="{
+              name: 'Allocation Mismatch',
+              path: '/data/allocation-mismatch',
+            }"
+          ></sidebar-item>
         </sidebar-item>
 
         <sidebar-item

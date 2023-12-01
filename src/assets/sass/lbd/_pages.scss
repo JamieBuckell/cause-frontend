@@ -125,9 +125,11 @@
 .singular-page,
 .login-page,
 .register-page,
-.lock-page{
-  > .content{
-    padding-top: 12vh;
+.lock-page {
+  &:not(.no-padding) {
+    > .content{
+      padding-top: 12vh;
+    }
   }
 }
 

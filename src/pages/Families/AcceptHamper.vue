@@ -1,5 +1,5 @@
 <template>
-  <auth-layout pageClass="singular-page">
+  <auth-layout pageClass="singular-page no-padding">
     <div class="row d-flex justify-content-center align-items-center">
       <div class="col-lg-4 col-md-6 col-sm-8">
         <ValidationObserver v-slot="{ handleSubmit }">
@@ -223,6 +223,7 @@ export default {
         this.hamperId = "";
         this.numberOfBags = "";
         this.familyUnitTotal = "";
+        this.familyDynamic = "";
 
         Swal.fire({
           title: "Hamper successfully received",
@@ -277,6 +278,9 @@ export default {
 };
 </script>
 <style lang="scss">
+.qrcode-stream-camera {
+  height: 200px !important;
+}
 .scan-confirmation {
   position: absolute;
   width: 100%;

@@ -114,6 +114,8 @@ const CommunicationsSentList = () =>
 const EmailTemplatesList = () =>
   import("src/pages/Communications/EmailTemplatesList.vue");
 const HamperRefsCheck = () => import("src/pages/DataFix/HamperRefsCheck.vue");
+const AllocationMismatch = () =>
+  import("src/pages/DataFix/AllocationMismatch.vue");
 
 let dataMenu = {
   path: "/data",
@@ -126,7 +128,15 @@ let dataMenu = {
       component: HamperRefsCheck,
     },
   ],
+  children: [
+    {
+      path: "allocation-mismatch",
+      name: "AllocationMismatch",
+      component: AllocationMismatch,
+    },
+  ],
 };
+
 let componentsMenu = {
   path: "/components",
   component: DashboardLayout,
