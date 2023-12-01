@@ -479,7 +479,7 @@ export default {
       let result = this?.tableData ? this.tableData : [];
 
       const pData = this.$store.getters.getPlatformData;
-      /* */
+
       result.map((f) => {
         f.authorised = pData?.nominators
           ? pData.nominators.find((n) => n?.GSI2PK === f?.nominatorId)
@@ -487,61 +487,12 @@ export default {
           : false;
         return f;
       });
-      /* */
-      if (result.length) {
-        /* */
-        if (this.filters.familySize && this.filters.familySize != "All") {
-          result = result.filter((d) =>
-            this.filters.familySize != "10+"
-              ? d.totalUnit == this.filters.familySize
-              : d.totalUnit >= 10
-          );
-        }
-        if (this.filters.nominatorId && this.filters.nominatorId != "All") {
-          result = result.filter(
-            (d) => d.nominatorId === this.filters.nominatorId
-          );
-        }
 
+      if (result.length) {
         result.map((d) => {
           d.bagsReceived = d.bagsReceived ?? 0;
           return true;
         });
-
-        if (
-          this.filters.hasAdditionalInformation &&
-          this.filters.hasAdditionalInformation != "All"
-        ) {
-          result = result.filter((d) => d.familyDetail.indexOf("Info:") !== -1);
-        }
-
-        if (
-          this.filters.allocationStatus &&
-          this.filters.allocationStatus != "All"
-        ) {
-          let allowedStatuses = [];
-          switch (this.filters.allocationStatus.toLowerCase()) {
-            case "allocated":
-              allowedStatuses = [
-                "allocated-sent",
-                "allocated-unconfirmed",
-                "allocated-confirmed",
-              ];
-              break;
-            case "allocated - confirmed":
-              allowedStatuses = ["allocated-confirmed"];
-              break;
-            case "allocated - unconfirmed":
-              allowedStatuses = ["allocated-unconfirmed"];
-              break;
-            case "unallocated":
-            default:
-              allowedStatuses = ["", "unallocated"];
-              break;
-          }
-          result = result.filter((d) => allowedStatuses.includes(d.status));
-        }
-        /* */
 
         if (this.filters.dropoffStatus && this.filters.dropoffStatus != "All") {
           let allowedStatuses = [];
