@@ -666,6 +666,21 @@ export default {
         key: `familiesFilters${this.listKey}`,
         data: this.filters,
       });
+
+      switch (this.filters.dropoffStatus.toLowerCase()) {
+        case "direct":
+          this.fallBackSubHeading =
+            "All hampers sent directly to the organisation";
+          break;
+        case "dropped off":
+          this.fallBackSubHeading = "All hampers dropped off at the riverside";
+          break;
+        case "awaiting":
+        default:
+          this.fallBackSubHeading =
+            "All hampers awaiting drop off at the riverside";
+          break;
+      }
     },
     openModal(name) {
       this.modals[name] = true;
@@ -1167,13 +1182,6 @@ export default {
       }
       return false;
     });
-    if (this.isJamie()) {
-      if (this.duplicateReferences.length) {
-        this.fallBackSubHeading = `Duplicate references: ${this.duplicateReferences.join()}`;
-      } else {
-        this.fallBackSubHeading = "No duplicates references found";
-      }
-    }
 
     EventBus.$on("$EventBusEvent", this.handleEventBusEvent);
   },
