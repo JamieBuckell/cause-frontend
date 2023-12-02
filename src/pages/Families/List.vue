@@ -186,6 +186,29 @@
               </el-option>
             </el-select>
           </div>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2"
+              >Dropoff Status</span
+            >
+            <el-select
+              class="select-default w-100"
+              v-model="filters.dropoffStatus"
+              @change="filtersChanged()"
+              placeholder="allocationStatus"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.dropoffStatusOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
           <div class="col-12 col-md-3" v-if="allNominators.length > 1">
             <span class="text-muted small d-block py-1 px-2">Nominator</span>
             <el-select
@@ -441,6 +464,10 @@ export default {
           "Allocated - Unconfirmed",
           "Unallocated",
         ],
+        dropoffStatus: savedFilters?.dropoffStatus
+          ? savedFilters.dropoffStatus
+          : "All",
+        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off", "Direct"],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
           : "All",
@@ -584,6 +611,27 @@ export default {
               break;
           }
           result = result.filter((d) => allowedStatuses.includes(d.status));
+        }
+
+        if (this.filters.dropoffStatus && this.filters.dropoffStatus != "All") {
+          let allowedStatuses = [];
+          switch (this.filters.dropoffStatus.toLowerCase()) {
+            case "direct":
+              allowedStatuses = ["direct-hamper"];
+              break;
+            case "dropped off":
+              allowedStatuses = ["hamper-received"];
+              break;
+            case "awaiting":
+            default:
+              allowedStatuses = [""];
+              break;
+          }
+          result = result.filter((d) => {
+            return allowedStatuses.length
+              ? allowedStatuses.includes(d?.receiveStatus)
+              : false;
+          });
         }
       }
 
