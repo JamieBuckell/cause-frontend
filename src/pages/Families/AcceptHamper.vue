@@ -194,6 +194,10 @@ export default {
         }
       }
 
+      if (res?.data?.hamperId) {
+        this.hamperId = res.data.hamperId;
+      }
+
       if (res?.data?.bagsReceived) {
         this.numberOfBags = res.data.bagsReceived;
       }
