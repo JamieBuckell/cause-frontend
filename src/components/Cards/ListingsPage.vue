@@ -11,7 +11,7 @@
       </button>
 
       <drop-down
-        class="btn-group download-dropdown pull-right"
+        class="btn-group bulk-actions-dropdown pull-right"
         v-if="hasBulkActions"
       >
         <button
@@ -504,6 +504,17 @@ export default {
         cursor: pointer;
       }
     }
+  }
+}
+
+.bulk-actions-dropdown {
+  .nav-link {
+    width: 100%;
+    padding: 0 0 0 1rem;
+    margin: 0;
+  }
+  .dropdown-menu {
+    width: 100%;
   }
 }
 </style>
