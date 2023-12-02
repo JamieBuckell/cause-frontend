@@ -54,9 +54,9 @@ export default defineComponent({
       const droppped = (dashData.data.hampersDropped ?? 0).toString();
       const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
       const pending = (
-        (dashData.data.allocatedConfirmed ?? 0) -
-        (dashData.data.hampersDropped ?? 0) -
-        514
+        (dashData?.data?.allocatedConfirmed ?? 0) -
+        (dashData?.data?.hampersDropped ?? 0) -
+        (514 - (dashData?.data?.hampersDirect ?? 0))
       ).toString();
 
       return [droppped, dropppedBags, pending];

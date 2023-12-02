@@ -783,6 +783,7 @@ export default {
     async markDirectHamper(hamperReference) {
       const res = await markDirectHamper({
         hamperId: hamperReference,
+        campaignId: this.$store.getters.getActiveCampaign,
       });
       if (res.data.success) {
         this.submitting = false;
