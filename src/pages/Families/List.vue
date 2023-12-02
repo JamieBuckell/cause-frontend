@@ -614,22 +614,22 @@ export default {
         }
 
         if (this.filters.dropoffStatus && this.filters.dropoffStatus != "All") {
-          let allowedStatuses = [];
+          let allowedReceiveStatuses = [];
           switch (this.filters.dropoffStatus.toLowerCase()) {
             case "direct":
-              allowedStatuses = ["direct-hamper"];
+              allowedReceiveStatuses = ["direct-hamper"];
               break;
             case "dropped off":
-              allowedStatuses = ["hamper-received"];
+              allowedReceiveStatuses = ["hamper-received"];
               break;
             case "awaiting":
             default:
-              allowedStatuses = [""];
+              allowedReceiveStatuses = [""];
               break;
           }
           result = result.filter((d) => {
-            return allowedStatuses.length
-              ? allowedStatuses.includes(d?.receiveStatus)
+            return allowedReceiveStatuses.length
+              ? allowedReceiveStatuses.includes(d?.receiveStatus)
               : false;
           });
         }
@@ -998,6 +998,7 @@ export default {
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
       this.tableData = [...familyData];
@@ -1161,6 +1162,7 @@ export default {
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
     },
@@ -1180,6 +1182,9 @@ export default {
           timer: 2000,
           showConfirmButton: false,
         });
+
+        await this.$store.commit("setForceRefresh", true);
+
         return true;
       } else {
         if (res?.data?.messages) {
@@ -1213,7 +1218,7 @@ export default {
       if (this.duplicateReferences.length) {
         this.fallBackSubHeading = `Duplicate references: ${this.duplicateReferences.join()}`;
       } else {
-        this.fallBackSubHeading = "No duplicates references found";
+        this.fallBackSubHeading = "All families";
       }
     }
 
