@@ -38,6 +38,9 @@ export const recieveHamper = async (body) =>
 export const markDirectHamper = async (body) =>
   await httpClient.post(`/hampers/mark-direct`, body);
 
+export const markDirectHampersBulk = async (body) =>
+  await httpClient.post(`/hampers/mark-direct-bulk`, body);
+
 export const getHamperOverview = async (hamperId) =>
   await httpClient.get(`/hampers/get-overview/${hamperId}`);
 

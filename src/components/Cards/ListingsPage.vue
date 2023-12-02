@@ -9,6 +9,35 @@
       >
         Download CSV
       </button>
+
+      <drop-down
+        class="btn-group download-dropdown pull-right"
+        v-if="hasBulkActions"
+      >
+        <button
+          slot="title"
+          href="#"
+          type="button"
+          class="btn btn-fill btn-warning w-100 dropdown-toggle"
+          data-toggle="dropdown"
+        >
+          Bulk Actions
+          <span class="caret"></span>
+        </button>
+        <li
+          class="pb-1 pt-2 px-3"
+          v-for="(opt, i) in bulkActions"
+          :key="i"
+          :label="opt"
+          :value="opt"
+        >
+          <a
+            href="#"
+            @click.prevent="handleBulkAction(queriedData, opt.emit)"
+            >{{ opt.text }}</a
+          >
+        </li>
+      </drop-down>
       <h4 class="card-title">
         <slot name="header"></slot>
       </h4>
@@ -238,6 +267,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    bulkActions: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     const defaultPagination = {
@@ -319,6 +352,10 @@ export default {
         this.canDelete(null) || this.canEdit(null) || this.hasCustomActions()
       );
     },
+    hasBulkActions() {
+      let hasBulkActions = this.bulkActions.length;
+      return hasBulkActions;
+    },
   },
   mounted() {
     this.tableData = this.listingsData;
@@ -396,6 +433,9 @@ export default {
     hasCustomActions() {
       let hasCustomActions = this.customActions.length;
       return hasCustomActions;
+    },
+    handleBulkAction(i, k) {
+      this.$emit("handleBulkAction", i, k);
     },
     handleCustomAction(i, k, r, a) {
       this.$emit("handleCustomAction", i, k, r);

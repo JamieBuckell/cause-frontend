@@ -75,7 +75,9 @@
         @editItem="handleEdit"
         @deleteItem="handleDelete"
         :customActions="getCustomActions"
+        :bulkActions="getBulkActions"
         @handleCustomAction="handleCustomAction"
+        @handleBulkAction="handleBulkAction"
         @downloadCSV="downloadCSV"
         @updateSearch="updateSearch"
       >
@@ -216,6 +218,7 @@ import { Dialog, MessageBox, Select, Option } from "element-ui";
 import {
   getFamilyByOrganisation,
   getFamilies,
+  markDirectHampersBulk,
   deleteFamily,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
@@ -312,6 +315,10 @@ export default {
       }),
     },
     customActions: {
+      type: Array,
+      default: () => [],
+    },
+    bulkActions: {
       type: Array,
       default: () => [],
     },
@@ -658,6 +665,19 @@ export default {
       }
       return propCustomActions;
     },
+    getBulkActions() {
+      const propBulkActions = this.bulkActions;
+      if (
+        this.userInGroup("admin") &&
+        !propBulkActions.find((ca) => ca.emit === "markDirect")?.emit
+      ) {
+        propBulkActions.push({
+          emit: "markDirect",
+          text: "Mark Direct",
+        });
+      }
+      return propBulkActions;
+    },
     platformData() {
       return this.$store.getters?.getPlatformData ?? {};
     },
@@ -816,6 +836,13 @@ export default {
         }
       }
       /* */
+    },
+    async handleBulkAction(i, k) {
+      switch (k) {
+        case "markDirect":
+          this.doBulkMarkDirect(i);
+          break;
+      }
     },
     async handleCustomAction(i, k, r) {
       switch (k) {
@@ -1088,6 +1115,32 @@ export default {
         status: f?.status ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
+    },
+    async doBulkMarkDirect(families) {
+      const hamperIds = families.map((f) => f.reference);
+      const res = await markDirectHampersBulk({
+        hamperIds: hamperIds,
+        campaignId: this.$store.getters.getActiveCampaign,
+      });
+      if (res.data.success) {
+        this.submitting = false;
+
+        Swal.fire({
+          title: `Hamper${
+            hamperIds.length > 1 ? "s" : ""
+          } successfully received`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return true;
+      } else {
+        if (res?.data?.messages) {
+          this.messages = Object.keys(res?.data?.messages).map((k) => ({
+            error: res?.data?.messages[k],
+          }));
+        }
+        return false;
+      }
     },
   },
   async mounted() {

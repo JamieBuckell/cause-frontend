@@ -125,7 +125,7 @@
             </div>
             <div class="col col-12">
               <label>Email address verified</label><br />
-              <p>{{ donor.emailVerification.verified ? "Yes" : "No" }}</p>
+              <p>{{ donor?.emailVerification?.verified ? "Yes" : "No" }}</p>
             </div>
           </div>
         </card>
