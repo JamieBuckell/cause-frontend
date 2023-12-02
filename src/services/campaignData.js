@@ -29,6 +29,7 @@ export const getPlatformData = async (force = false) => {
         await store.commit("setActiveCampaign", activeCampaignId);
       }
 
+      /* */
       const platformData = await getByCampaign(activeCampaignId);
       if (platformData?.data) {
         await store.dispatch("setPlatformData", {
@@ -36,6 +37,7 @@ export const getPlatformData = async (force = false) => {
           campaignId: activeCampaignId,
         });
       }
+      /* */
     }
     if (force) {
       await store.commit("setForceRefresh", false);

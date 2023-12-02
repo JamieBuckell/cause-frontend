@@ -17,3 +17,6 @@ export const deleteCampaign = async (campaignId) =>
 
 export const updateCampaign = async (body) =>
   await httpClient.post(`/campaigns/update`, body);
+
+export const getDashboard = async (campaignId) =>
+  await httpClient.get(`/campaigns/dashboard/${campaignId}`);

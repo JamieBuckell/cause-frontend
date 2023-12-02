@@ -212,6 +212,7 @@ import breakpoints from "@/util/breakpoints";
 import {
   createFamily,
   getFamilyByRequest,
+  listFamilies,
   updateFamily,
 } from "@/api/families.api";
 import LAlert from "src/components/Alert";
@@ -364,12 +365,10 @@ export default {
     platformData() {
       return this.$store.getters?.getPlatformData ?? {};
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   watch: {
     async familyData(newVal) {
+      console.log("familyData", newVal);
       if (newVal?.requestId) {
         this.nominations = [];
         await this.updateFamilyData(newVal.requestId);
@@ -384,6 +383,7 @@ export default {
     this.resetWindow();
 
     this.chosenNominatorId = this.nominatorId;
+    console.log(this.saveType, this.familyData?.requestId);
     if (this.saveType != "create" && this.familyData?.requestId) {
       await this.updateFamilyData(this.familyData.requestId);
     }
@@ -409,13 +409,13 @@ export default {
   },
   methods: {
     async updateFamilyData(requestId) {
-      const familyData = this.platformFamilies.find(
-        (f) => f.GSI2PK === requestId
+      const familyData = this.allFamilies.find(
+        (f) => f.requestId === requestId
       );
       this.editFamilyData = {
-        requestId: familyData?.GSI2PK,
-        reference: familyData?.GSI2SK.replace("SK#", ""),
-        nominatorId: familyData?.GSI3PK,
+        requestId: familyData?.requestId,
+        reference: familyData?.reference,
+        nominatorId: familyData?.nominatorId,
       };
       this.editFamilyMembers = familyData.members;
     },

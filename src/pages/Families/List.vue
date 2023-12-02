@@ -59,7 +59,7 @@
           :nominatorRef="`${nominatorRef}`"
           :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
-          :allFamilies="listingsData"
+          :allFamilies="tableData"
           :allNominators="allNominators"
           :familyData="familyData"
           @splitFamilies="doSplitFamilies"
@@ -242,6 +242,7 @@ import {
   getFamilyByOrganisation,
   getFamilies,
   markDirectHampersBulk,
+  listFamilies,
   deleteFamily,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
@@ -902,8 +903,8 @@ export default {
             (n) => n.GSI2PK === r.nominatorId
           );
           if (this.currentNominator) {
-            this.familyData = this.platformFamilies.find(
-              (f) => f.GSI2PK === r.requestId
+            this.familyData = this.tableData.find(
+              (f) => f?.requestId === r?.requestId
             );
 
             if (
@@ -998,6 +999,7 @@ export default {
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        members: f?.members ?? [],
         receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
@@ -1008,28 +1010,6 @@ export default {
       const nominatorSpecific = !(
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
-
-      const familiesToRemove = this.platformFamilies
-        ? this.platformFamilies.filter(
-            (f) =>
-              f?.GSI3PK === this.organisationId &&
-              (!nominatorSpecific ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK)
-          )
-        : [];
-      for (const family of familiesToRemove) {
-        const indexToDelete = this.platformFamilies
-          ? this.platformFamilies.findIndex((f) => f?.GSI2PK === family?.GSI2PK)
-          : null;
-        if (indexToDelete >= 0) {
-          this.platformFamilies.splice(indexToDelete, 1);
-        }
-      }
-
-      await this.$store.dispatch("setPlatformFamilyData", [
-        ...this.platformFamilies,
-        ...families,
-      ]);
 
       this.createKey = !this.createKey;
 
@@ -1133,6 +1113,14 @@ export default {
       if (this.data && typeof this.data === "object") {
         familiesData = this.data;
       } else {
+        const familiesResult = await listFamilies(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (familiesResult?.data && familiesResult?.data.length) {
+          familiesData = familiesResult.data;
+        }
+        /* *
         if (this.organisation.requestId) {
           familiesData = await this.platformFamilies.filter(
             (f) =>
@@ -1142,13 +1130,14 @@ export default {
               f?.GSI3PK === this.organisation.requestId &&
               f?.type === "family"
           );
-
+          
           this.familyMemberData = []; //Object.values(res?.data?.members);
         } else if (this.userInGroup("admin")) {
           familiesData = await this.platformFamilies.filter(
             (n) => n?.type === "family"
           );
         }
+        /* */
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
@@ -1156,12 +1145,13 @@ export default {
         organisationId: f?.GSI3PK,
         nominatorId: f?.GSI3SK,
         reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
-        nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
-        donorDetail: this.createDonorDetail(f?.allocatedTo),
+        nominatorDetail: f?.nominatorDetail ?? "", // this.createNominatorDetail(f?.GSI3SK),
+        donorDetail: f?.donorDetail ?? "", // this.createDonorDetail(f?.allocatedTo),
         familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        members: f?.members ?? [],
         receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));

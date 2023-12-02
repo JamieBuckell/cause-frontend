@@ -8,6 +8,9 @@ export const getFamilyByRequest = async (requestId) =>
 export const getFamilyByOrganisation = async (organisationId) =>
   await httpClient.get(`/families/organisation/${organisationId}`);
 
+export const listFamilies = async (campaignId) =>
+  await httpClient.get(`/families/list/${campaignId}`);
+
 export const updateFamily = async (body) =>
   await httpClient.post(`/families/update`, body);
 
