@@ -212,7 +212,9 @@ export default {
       const res = await recieveHamper({
         hamperId: this.hamperId,
         noBags: this.numberOfBags,
-        campaignId: this.$store.getters.getActiveCampaign,
+        campaignId: this.$store.getters.getActiveCampaign.length
+          ? this.$store.getters.getActiveCampaign
+          : "CH2",
       });
       if (res?.data?.messages) {
         this.messages = Object.keys(res?.data?.messages).map((k) => ({
