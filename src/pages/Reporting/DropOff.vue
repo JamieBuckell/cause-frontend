@@ -181,17 +181,28 @@ export default {
 
       const dataDropOffs = {
         labels: [
-          "8am",
-          "9am",
-          "10am",
-          "11am",
-          "12noon",
-          "1pm",
-          "2pm",
-          "3pm",
-          "4pm",
-          "5pm",
-          "6pm",
+          "8:00",
+          "8:30",
+          "9:00",
+          "9:30",
+          "10:00",
+          "10:30",
+          "11:00",
+          "11:30",
+          "12:00",
+          "12:30",
+          "13:00",
+          "13:30",
+          "14:00",
+          "14:30",
+          "15:00",
+          "15:30",
+          "16:00",
+          "16:30",
+          "17:00",
+          "17:30",
+          "18:00",
+          "18:30",
         ],
         series: [],
       };
@@ -207,7 +218,7 @@ export default {
         }));
       }
       if (reportRes.status == 200) {
-        dataDropOffs.series = [[reportRes?.data?.timeData]];
+        dataDropOffs.series = [[...reportRes?.data?.timeData]];
       }
 
       this.$Chartist.Line("#chartDropOffs", dataDropOffs, optionsDropOffs);
