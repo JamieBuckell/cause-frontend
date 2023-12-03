@@ -49,6 +49,11 @@
 // pages
 @import "lbd/pages";
 
+.select-default.el-select.filter-active .el-input input {
+    border-color: #009643 !important;
+    border-width: 2px;
+}
+
 @media only screen and (max-width: 576px) {
     .el-select-dropdown__item, 
     .select-default.el-select .el-input input, 

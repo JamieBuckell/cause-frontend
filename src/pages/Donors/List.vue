@@ -18,6 +18,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.verified),
+                },
+              ]"
               v-model="filters.verified"
               @change="filtersChanged()"
               placeholder="Verified"
@@ -41,6 +46,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.pledged),
+                },
+              ]"
               v-model="filters.pledged"
               @change="filtersChanged()"
               placeholder="Pledged"
@@ -64,6 +74,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.allocated),
+                },
+              ]"
               v-model="filters.allocated"
               @change="filtersChanged()"
               placeholder="Allocated"
@@ -108,6 +123,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.bounced),
+                },
+              ]"
               v-model="filters.bounced"
               @change="filtersChanged()"
               placeholder="Bounced"
@@ -131,6 +151,13 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(
+                    filters.hasAdditionalInformation
+                  ),
+                },
+              ]"
               v-model="filters.hasAdditionalInformation"
               @change="filtersChanged()"
               placeholder="Has additional information"
@@ -154,6 +181,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.isSubscribed),
+                },
+              ]"
               v-model="filters.isSubscribed"
               @change="filtersChanged()"
               placeholder="Subscribed to Mailing List?"
@@ -436,6 +468,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     downloadCSV() {
       let rows = [
         [
@@ -669,3 +704,10 @@ export default {
   },
 };
 </script>
+<style lang="scss">
+.filter-active {
+  input {
+    border-color: #009643 !important;
+  }
+}
+</style>

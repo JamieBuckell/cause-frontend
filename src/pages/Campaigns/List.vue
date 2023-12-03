@@ -30,6 +30,11 @@
             <el-select
               class="select-default w-100"
               v-model="filters.active"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.active),
+                },
+              ]"
               @change="filtersChanged()"
               placeholder="Active"
               autocomplete="off"
@@ -355,6 +360,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     downloadCSV() {
       let rows = [["Campaign Name", "Campaign Data", "Date Added"]];
 

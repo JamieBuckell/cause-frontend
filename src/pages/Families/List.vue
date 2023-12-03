@@ -101,6 +101,11 @@
             <span class="text-muted small d-block py-1 px-2">Family Size</span>
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.familySize),
+                },
+              ]"
               v-model="filters.familySize"
               @change="filtersChanged()"
               placeholder="familySize"
@@ -124,6 +129,13 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(
+                    filters.hasAdditionalInformation
+                  ),
+                },
+              ]"
               v-model="filters.hasAdditionalInformation"
               @change="filtersChanged()"
               placeholder="hasAdditionalInformation"
@@ -169,6 +181,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.allocationStatus),
+                },
+              ]"
               v-model="filters.allocationStatus"
               @change="filtersChanged()"
               placeholder="allocationStatus"
@@ -192,6 +209,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.dropoffStatus),
+                },
+              ]"
               v-model="filters.dropoffStatus"
               @change="filtersChanged()"
               placeholder="allocationStatus"
@@ -213,6 +235,11 @@
             <span class="text-muted small d-block py-1 px-2">Nominator</span>
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.nominatorId),
+                },
+              ]"
               v-model="filters.nominatorId"
               @change="filtersChanged()"
               placeholder="Nominator"
@@ -734,6 +761,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     updateSearch(results) {
       this.searchResults = results;
     },
