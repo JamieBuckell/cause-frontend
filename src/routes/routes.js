@@ -9,6 +9,10 @@ import Overview from "src/pages/Dashboard/Dashboard/Overview.vue";
 import DropOff from "src/pages/Dashboard/Dashboard/DropOff.vue";
 import Stats from "src/pages/Dashboard/Dashboard/Stats.vue";
 
+// Reporting Pages
+
+import ReportsDropOff from "src/pages/Reporting/DropOff.vue";
+
 // Pages
 import User from "src/pages/Dashboard/Pages/UserProfile.vue";
 import TimeLine from "src/pages/Dashboard/Pages/TimeLinePage.vue";
@@ -728,6 +732,19 @@ const routes = [
   setPasswordPage,
   resetPasswordPage,
   lockPage,
+  {
+    path: "/reports",
+    alias: "/",
+    component: DashboardLayout,
+    redirect: "/reports/dropoff",
+    children: [
+      {
+        path: "dropoff",
+        name: "ReportsDropOff",
+        component: ReportsDropOff,
+      },
+    ],
+  },
   {
     path: "/admin",
     alias: "/",
