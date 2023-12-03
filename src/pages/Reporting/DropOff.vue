@@ -19,8 +19,19 @@
           >
           </el-option>
         </el-select>
-        <card title="Drop Off Times" subTitle="Peaks of Drop Off Times">
+        <card
+          title="Drop Off Times"
+          subTitle="Peaks of Drop Off Times by single day"
+        >
           <div id="chartDropOffs" class="ct-chart"></div>
+        </card>
+      </div>
+      <div class="col-lg-12">
+        <card
+          title="All Drop Off Times"
+          subTitle="Peaks of Drop Off Times Combined Days"
+        >
+          <div id="chartAllDropOffs" class="ct-chart"></div>
         </card>
       </div>
       <!--
@@ -43,7 +54,7 @@
   </div>
 </template>
 <script>
-import { getDropOffsReport } from "@/api/reports.api";
+import { getDropOffsReport, getAllDropOffsReport } from "@/api/reports.api";
 import { Select, Option } from "element-ui";
 export default {
   components: {
@@ -156,7 +167,7 @@ export default {
   },
   watch: {
     async dateChosen(newVal) {
-      await this.initCharts();
+      await this.initDropOffsChart();
     },
     activeCampaign(newQuestion, oldQuestion) {
       this.updateReportData();
@@ -164,45 +175,51 @@ export default {
   },
   methods: {
     async initDropOffsChart() {
-      const optionsDropOffs = {
-        showPoint: false,
-        lineSmooth: true,
-        axisX: {
-          showGrid: false,
-          showLabel: true,
-        },
-        axisY: {
-          offset: 40,
-        },
-        low: 0,
-        high: 16,
-        height: "250px",
-      };
-
       const dataDropOffs = {
         labels: [
-          "8:00",
-          "8:30",
-          "9:00",
-          "9:30",
-          "10:00",
-          "10:30",
-          "11:00",
-          "11:30",
-          "12:00",
-          "12:30",
-          "13:00",
-          "13:30",
-          "14:00",
-          "14:30",
-          "15:00",
-          "15:30",
-          "16:00",
-          "16:30",
-          "17:00",
-          "17:30",
-          "18:00",
-          "18:30",
+          "0800",
+          "",
+          "0830",
+          "",
+          "0900",
+          "",
+          "0930",
+          "",
+          "1000",
+          "",
+          "1030",
+          "",
+          "1100",
+          "",
+          "1130",
+          "",
+          "1200",
+          "",
+          "1230",
+          "",
+          "1300",
+          "",
+          "1330",
+          "",
+          "1400",
+          "",
+          "1430",
+          "",
+          "1500",
+          "",
+          "1530",
+          "",
+          "1600",
+          "",
+          "1630",
+          "",
+          "1700",
+          "",
+          "1730",
+          "",
+          "1800",
+          "",
+          "1830",
         ],
         series: [],
       };
@@ -218,132 +235,109 @@ export default {
         }));
       }
       if (reportRes.status == 200) {
-        dataDropOffs.series = [[...reportRes?.data?.timeData]];
+        dataDropOffs.series = [reportRes.data.timeData];
       }
+
+      const optionsDropOffs = {
+        height: "250px",
+        showPoint: false,
+        lineSmooth: true,
+        axisX: {
+          showGrid: true,
+          showLabel: true,
+        },
+        axisY: {
+          high: 45,
+        },
+      };
 
       this.$Chartist.Line("#chartDropOffs", dataDropOffs, optionsDropOffs);
     },
-    initActivityChart() {
-      const data = {
+    async initAllDropOffsChart() {
+      const dataAllDropOffs = {
         labels: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "Mai",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
+          "0800",
+          "",
+          "0830",
+          "",
+          "0900",
+          "",
+          "0930",
+          "",
+          "1000",
+          "",
+          "1030",
+          "",
+          "1100",
+          "",
+          "1130",
+          "",
+          "1200",
+          "",
+          "1230",
+          "",
+          "1300",
+          "",
+          "1330",
+          "",
+          "1400",
+          "",
+          "1430",
+          "",
+          "1500",
+          "",
+          "1530",
+          "",
+          "1600",
+          "",
+          "1630",
+          "",
+          "1700",
+          "",
+          "1730",
+          "",
+          "1800",
+          "",
+          "1830",
         ],
-        series: [
-          [542, 443, 320, 780, 553, 453, 326, 434, 568, 610, 756, 895],
-          [412, 243, 280, 580, 453, 353, 300, 364, 368, 410, 636, 695],
-        ],
+        series: [],
       };
 
-      const options = {
-        seriesBarDistance: 10,
-        axisX: {
-          showGrid: false,
-        },
+      const reportRes = await getAllDropOffsReport(
+        this.$store.getters.getActiveCampaign
+      );
+
+      if (reportRes.data?.messages) {
+        this.messages = Object.keys(reportRes?.data?.messages).map((k) => ({
+          error: reportRes?.data?.messages[k],
+        }));
+      }
+      if (reportRes.status == 200) {
+        dataAllDropOffs.series = reportRes.data.allDropOffsData;
+      }
+
+      const optionsAllDropOffs = {
         height: "250px",
-      };
-
-      const responsiveOptions = [
-        [
-          "screen and (max-width: 640px)",
-          {
-            seriesBarDistance: 5,
-            axisX: {
-              labelInterpolationFnc(value) {
-                return value[0];
-              },
-            },
-          },
-        ],
-      ];
-
-      this.$Chartist.Bar("#chartActivity", data, options, responsiveOptions);
-    },
-    initStockChart() {
-      const dataStock = {
-        labels: ["'07", "'08", "'09", "'10", "'11", "'12", "'13", "'14", "'15"],
-        series: [
-          [22.2, 34.9, 42.28, 51.93, 62.21, 80.23, 62.21, 82.12, 102.5, 107.23],
-        ],
-      };
-      const optionsStock = {
-        lineSmooth: false,
+        showPoint: false,
+        lineSmooth: true,
+        axisX: {
+          showGrid: true,
+          showLabel: true,
+        },
         axisY: {
-          offset: 40,
-          labelInterpolationFnc(value) {
-            return `$${value}`;
-          },
-        },
-        low: 10,
-        height: "250px",
-        high: 110,
-        classNames: {
-          point: "ct-point ct-green",
-          line: "ct-line ct-green",
+          high: 45,
         },
       };
-      this.$Chartist.Line("#chartStock", dataStock, optionsStock);
-    },
-    initViewsChart() {
-      const dataViews = {
-        labels: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "Mai",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ],
-        series: [[542, 443, 320, 780, 553, 453, 326, 434, 568, 610, 756, 895]],
-      };
-      const optionsViews = {
-        seriesBarDistance: 10,
-        classNames: {
-          bar: "ct-bar",
-        },
-        axisX: {
-          showGrid: false,
-        },
-        height: "250px",
-      };
-      const responsiveOptionsViews = [
-        [
-          "screen and (max-width: 640px)",
-          {
-            seriesBarDistance: 5,
-            axisX: {
-              labelInterpolationFnc(value) {
-                return value[0];
-              },
-            },
-          },
-        ],
-      ];
-      this.$Chartist.Bar(
-        "#chartViews",
-        dataViews,
-        optionsViews,
-        responsiveOptionsViews
+
+      this.$Chartist.Line(
+        "#chartAllDropOffs",
+        dataAllDropOffs,
+        optionsAllDropOffs
       );
     },
     async initCharts() {
       await this.initDropOffsChart();
+      await this.initAllDropOffsChart();
       // this.initStockChart();
       // this.initViewsChart();
       // this.initActivityChart();
