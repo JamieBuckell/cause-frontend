@@ -29,6 +29,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.hasNominated),
+                },
+              ]"
               v-model="filters.hasNominated"
               @change="filtersChanged()"
               placeholder="hasNominated"
@@ -52,6 +57,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.organisationType),
+                },
+              ]"
               v-model="filters.organisationType"
               @change="filtersChanged()"
               placeholder="organisationType"
@@ -290,6 +300,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     downloadCSV() {
       let rows = [["Ref", "Name", "Families"]];
 

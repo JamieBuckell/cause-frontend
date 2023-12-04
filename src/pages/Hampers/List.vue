@@ -29,6 +29,11 @@
             >
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.dropoffStatus),
+                },
+              ]"
               v-model="filters.dropoffStatus"
               @change="filtersChanged()"
               placeholder="allocationStatus"
@@ -143,6 +148,11 @@
             <span class="text-muted small d-block py-1 px-2">Nominator</span>
             <el-select
               class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.nominatorId),
+                },
+              ]"
               v-model="filters.nominatorId"
               @change="filtersChanged()"
               placeholder="Nominator"
@@ -609,6 +619,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     updateSearch(results) {
       this.searchResults = results;
     },

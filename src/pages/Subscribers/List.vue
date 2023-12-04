@@ -9,10 +9,15 @@
           <h4 class="card-title">
             All Subscribers
 
-            <button type="submit" class="btn btn-info btn-fill btn-wd pull-right" @click.prevent="
-              createKey = !createKey;
-            openModal('create');
-                            " v-if="!isLoading">
+            <button
+              type="submit"
+              class="btn btn-info btn-fill btn-wd pull-right"
+              @click.prevent="
+                createKey = !createKey;
+                openModal('create');
+              "
+              v-if="!isLoading"
+            >
               Add Subscriber
             </button>
           </h4>
@@ -21,39 +26,88 @@
           <span class="sr-only">Loading...</span>
         </div>
         <div v-if="!isLoading">
-          <div class="col-12 d-flex justify-content-center justify-content-sm-start flex-wrap">
+          <div
+            class="col-12 d-flex justify-content-center justify-content-sm-start flex-wrap"
+          >
             <div class="mb-3 mr-3">
               <span class="text-muted small d-block py-1 px-2">Per Page</span>
-              <el-select class="select-default" style="width: auto" v-model="pagination.perPage" placeholder="Per page">
-                <el-option class="select-default" v-for="item in pagination.perPageOptions" :key="item" :label="item"
-                  :value="item">
+              <el-select
+                class="select-default"
+                style="width: auto"
+                v-model="pagination.perPage"
+                placeholder="Per page"
+              >
+                <el-option
+                  class="select-default"
+                  v-for="item in pagination.perPageOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
                 </el-option>
               </el-select>
             </div>
             <div class="mb-3 mr-3">
               <span class="text-muted small d-block py-1 px-2">Verified?</span>
-              <el-select class="select-default" style="width: auto" v-model="pagination.verified" placeholder="Verified">
-                <el-option class="select-default" v-for="item in pagination.verifiedOptions" :key="item" :label="item"
-                  :value="item">
+              <el-select
+                class="select-default"
+                :class="[
+                  {
+                    'filter-active': isFilterActive(pagination.verified),
+                  },
+                ]"
+                style="width: auto"
+                v-model="pagination.verified"
+                placeholder="Verified"
+              >
+                <el-option
+                  class="select-default"
+                  v-for="item in pagination.verifiedOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
                 </el-option>
               </el-select>
             </div>
             <div class="mb-3 mr-3">
               <span class="text-muted small d-block py-1 px-2">Bounced?</span>
-              <el-select class="select-default" style="width: auto" v-model="pagination.bounced" placeholder="Bounced">
-                <el-option class="select-default" v-for="item in pagination.verifiedOptions" :key="item" :label="item"
-                  :value="item">
+              <el-select
+                class="select-default"
+                :class="[
+                  {
+                    'filter-active': isFilterActive(pagination.bounced),
+                  },
+                ]"
+                style="width: auto"
+                v-model="pagination.bounced"
+                placeholder="Bounced"
+              >
+                <el-option
+                  class="select-default"
+                  v-for="item in pagination.verifiedOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
                 </el-option>
               </el-select>
             </div>
           </div>
 
           <div class="col-sm-12 mb-3 ml-auto">
-            <el-input type="search" style="width: 100%" placeholder="Search records" v-model="searchQuery"
-              aria-controls="datatables" />
+            <el-input
+              type="search"
+              style="width: 100%"
+              placeholder="Search records"
+              v-model="searchQuery"
+              aria-controls="datatables"
+            />
           </div>
 
-          <div class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap">
+          <div
+            class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap"
+          >
             <div class="">
               <p class="card-category pb-2">
                 Showing {{ from + 1 }} to {{ to }} of {{ total }} entries
@@ -65,31 +119,57 @@
               <span> {{ getErrorMessage(m) }}</span>
             </l-alert>
             <el-table stripe style="width: 100%" :data="queriedData" border>
-              <el-table-column v-for="column in tableColumns" :key="column.label" :min-width="column.minWidth"
-                :prop="column.prop" :label="column.label" :formatter="cellValueRenderer">
+              <el-table-column
+                v-for="column in tableColumns"
+                :key="column.label"
+                :min-width="column.minWidth"
+                :prop="column.prop"
+                :label="column.label"
+                :formatter="cellValueRenderer"
+              >
               </el-table-column>
               <el-table-column :min-width="75" fixed="right" label="Actions">
                 <template slot-scope="props">
-                  <a v-tooltip.top-center="'donor'" class="btn-success btn-simple btn-link"
-                    :href="`/donors/view/${props.row.PK}`" target="_blank"><i class="fa fa-globe"></i></a>
-                  <a v-tooltip.top-center="'Edit'" class="btn-warning btn-simple btn-link"
-                    @click.stop="handleEdit(props.$index, props.row)"><i class="fa fa-edit"></i></a>
-                  <a v-tooltip.top-center="'Delete'" class="btn-danger btn-simple btn-link"
-                    @click.stop="handleDelete(props.$index, props.row)"><i class="fa fa-times"></i></a>
+                  <a
+                    v-tooltip.top-center="'donor'"
+                    class="btn-success btn-simple btn-link"
+                    :href="`/donors/view/${props.row.PK}`"
+                    target="_blank"
+                    ><i class="fa fa-globe"></i
+                  ></a>
+                  <a
+                    v-tooltip.top-center="'Edit'"
+                    class="btn-warning btn-simple btn-link"
+                    @click.stop="handleEdit(props.$index, props.row)"
+                    ><i class="fa fa-edit"></i
+                  ></a>
+                  <a
+                    v-tooltip.top-center="'Delete'"
+                    class="btn-danger btn-simple btn-link"
+                    @click.stop="handleDelete(props.$index, props.row)"
+                    ><i class="fa fa-times"></i
+                  ></a>
                 </template>
               </el-table-column>
             </el-table>
           </div>
         </div>
-        <div v-if="!isLoading" slot="footer"
-          class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap">
+        <div
+          v-if="!isLoading"
+          slot="footer"
+          class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap"
+        >
           <div class="">
             <p class="card-category">
               Showing {{ from + 1 }} to {{ to }} of {{ total }} entries
             </p>
           </div>
-          <l-pagination class="pagination-no-border" v-model="pagination.currentPage" :per-page="pagination.perPage"
-            :total="pagination.total">
+          <l-pagination
+            class="pagination-no-border"
+            v-model="pagination.currentPage"
+            :per-page="pagination.perPage"
+            :total="pagination.total"
+          >
           </l-pagination>
         </div>
       </card>
@@ -231,6 +311,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     openModal(name) {
       this.modals[name] = true;
     },
