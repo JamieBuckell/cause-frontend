@@ -452,6 +452,7 @@ import {
   confirmPledgeManual,
 } from "@/api/donors.api";
 import {
+  listFamilies,
   allocateFamily,
   unallocateFamily,
   emailFamilyAssignment,
@@ -568,9 +569,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   methods: {
     isAllocated(campaign) {
@@ -619,15 +617,16 @@ export default {
       };
 
       const allocations = campaign?.numberOfFamilies; // this.assignedFamilies.length
-      const c = campaign.allocation
-        ? campaign.allocation.filter((hamper) =>
-            this.platformFamilies.find(
-              (f) =>
-                f.GSI2SK === `SK#${hamper.hamperId}` &&
-                statusCheck(f.status, "allocated-confirmed")
-            )
-          ).length
-        : 0;
+      const c =
+        campaign.allocation && this.donor.families
+          ? campaign.allocation.filter((hamper) =>
+              this.donor.families.find(
+                (f) =>
+                  f.GSI2SK === `SK#${hamper.hamperId}` &&
+                  statusCheck(f.status, "allocated-confirmed")
+              )
+            ).length
+          : 0;
 
       const a = campaign.allocation ? campaign.allocation.length : 0;
 
@@ -664,19 +663,17 @@ export default {
           (r) => r.requestId === hamperId.requestId
         );
         if (this.donor?.familyDetails?.request[requestIndex]?.allocation) {
-          const pFamilyData = this.platformFamilies;
           for (const [i, a] of this.donor?.familyDetails?.request[
             requestIndex
           ]?.allocation.entries()) {
-            const pFamilyIndex = pFamilyData.findIndex(
+            const pFamilyIndex = this.donor.families.findIndex(
               (pf) => pf.allocatedTo === this.donor.GSI2PK
             );
 
-            if (pFamilyData[pFamilyIndex]) {
-              pFamilyData[pFamilyIndex].status = "allocated-confirmed";
+            if (this.donor.families[pFamilyIndex]) {
+              this.donor.families[pFamilyIndex].status = "allocated-confirmed";
             }
           }
-          await this.$store.dispatch("setPlatformFamilyData", [...pFamilyData]);
         }
       }
       if (verification?.data?.messages?.success) {
@@ -753,18 +750,8 @@ export default {
           this.donor.familyDetails.request[requestIndex].allocation = [];
         }
 
-        const pFamilyData = this.platformFamilies;
-        const pFamilyIndex = pFamilyData.findIndex(
-          (pf) => pf.GSI2SK === `SK#${f.reference}`
-        );
-        if (pFamilyData[pFamilyIndex]) {
-          pFamilyData[pFamilyIndex].allocatedTo = this.donor.GSI2PK;
-          pFamilyData[pFamilyIndex].status = "allocated-unconfirmed";
+        const allocatedFamily = allocateRes.data.family;
 
-          await this.$store.dispatch("setPlatformFamilyData", [...pFamilyData]);
-        }
-
-        const allocatedFamily = pFamilyData[pFamilyIndex];
         this.donor?.familyDetails?.request[requestIndex]?.allocation.push({
           hamperId: f.reference,
           members: allocatedFamily?.members,
@@ -852,17 +839,12 @@ export default {
           const allocationComplete =
             this.assignedFamilies.length === this.campaign?.numberOfFamilies;
 
-          const pFamilyData = this.platformFamilies;
-          const pFamilyIndex = pFamilyData.findIndex(
+          const pFamilyIndex = this.donor.families.findIndex(
             (pf) => pf.GSI2SK === `SK#${f.reference}`
           );
-          if (pFamilyData[pFamilyIndex]) {
-            pFamilyData[pFamilyIndex].allocatedTo = "unallocated";
-            pFamilyData[pFamilyIndex].status = "unallocated";
-
-            await this.$store.dispatch("setPlatformFamilyData", [
-              ...pFamilyData,
-            ]);
+          if (this.donor.families[pFamilyIndex]) {
+            this.donor.families[pFamilyIndex].allocatedTo = "unallocated";
+            this.donor.families[pFamilyIndex].status = "unallocated";
           }
 
           this.isLoading = false;
@@ -1157,6 +1139,12 @@ export default {
           this.donor.subscribed = subscriber?.subscribed;
         }
 
+        const donorFamiliesRes = await listFamilies(
+          this.$store.getters.getActiveCampaign,
+          { donorId: this.donor.GSI2PK }
+        );
+        this.donor.families = donorFamiliesRes?.data ?? [];
+
         this.updatedEmail = this.donor?.GSI3PK;
 
         this.activeCampaign = this.$store.getters.getAllCampaigns.find(
@@ -1164,16 +1152,7 @@ export default {
         );
         this.campaigns = this.donor?.familyDetails?.request ?? [];
 
-        this.assignedFamilies = this.platformFamilies.filter((f) =>
-          this.donor?.familyDetails?.request
-            ? this.donor.familyDetails.request.filter((r) =>
-                r?.allocation
-                  ? r.allocation.filter((a) => f.GSI2SK === `SK#${a?.hamperId}`)
-                      .length
-                  : false
-              ).length
-            : false
-        );
+        this.assignedFamilies = this.donor.families;
       }
     },
   },
@@ -1185,9 +1164,6 @@ export default {
   },
   watch: {
     async platformData() {
-      await this.getDonorData();
-    },
-    async platformFamilies() {
       await this.getDonorData();
     },
   },

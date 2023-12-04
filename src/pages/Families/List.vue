@@ -59,7 +59,7 @@
           :nominatorRef="`${nominatorRef}`"
           :nominatorId="currentNominator ? currentNominator.GSI2PK : ''"
           :hamperCount="familyCount"
-          :allFamilies="listingsData"
+          :allFamilies="tableData"
           :allNominators="allNominators"
           :familyData="familyData"
           @splitFamilies="doSplitFamilies"
@@ -266,9 +266,8 @@
 import Vue from "vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
 import {
-  getFamilyByOrganisation,
-  getFamilies,
   markDirectHampersBulk,
+  listFamilies,
   deleteFamily,
 } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
@@ -383,11 +382,6 @@ export default {
       this.allNominatorsData = newVal;
     },
     async platformData() {
-      this.isLoading = true;
-      await this.getFamilyData();
-      this.isLoading = false;
-    },
-    async platformFamilies() {
       this.isLoading = true;
       await this.getFamilyData();
       this.isLoading = false;
@@ -756,9 +750,6 @@ export default {
     platformData() {
       return this.$store.getters?.getPlatformData ?? {};
     },
-    platformFamilies() {
-      return this.$store.getters?.getPlatformFamilies ?? [];
-    },
   },
   methods: {
     isFilterActive(value) {
@@ -932,8 +923,8 @@ export default {
             (n) => n.GSI2PK === r.nominatorId
           );
           if (this.currentNominator) {
-            this.familyData = this.platformFamilies.find(
-              (f) => f.GSI2PK === r.requestId
+            this.familyData = this.tableData.find(
+              (f) => f?.requestId === r?.requestId
             );
 
             if (
@@ -1028,6 +1019,7 @@ export default {
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        members: f?.members ?? [],
         receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
@@ -1038,28 +1030,6 @@ export default {
       const nominatorSpecific = !(
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
-
-      const familiesToRemove = this.platformFamilies
-        ? this.platformFamilies.filter(
-            (f) =>
-              f?.GSI3PK === this.organisationId &&
-              (!nominatorSpecific ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK)
-          )
-        : [];
-      for (const family of familiesToRemove) {
-        const indexToDelete = this.platformFamilies
-          ? this.platformFamilies.findIndex((f) => f?.GSI2PK === family?.GSI2PK)
-          : null;
-        if (indexToDelete >= 0) {
-          this.platformFamilies.splice(indexToDelete, 1);
-        }
-      }
-
-      await this.$store.dispatch("setPlatformFamilyData", [
-        ...this.platformFamilies,
-        ...families,
-      ]);
 
       this.createKey = !this.createKey;
 
@@ -1096,43 +1066,6 @@ export default {
         return `${value}`;
       }
     },
-    createDonorDetail(donorId) {
-      var rtnStr = "Not Allocated";
-      const donor = this?.platformData?.donors
-        ? this.platformData.donors.find((n) => n.GSI2PK === donorId)
-        : {};
-      if (donor?.PK) {
-        rtnStr = `<strong>${donor.donorDetails.firstName} ${donor.donorDetails.lastName}</strong>`;
-        if (donor.donorDetails.telephone) {
-          rtnStr += ` - <a href="tel:${donor.donorDetails.telephone}">${donor.donorDetails.telephone}</a>`;
-        }
-
-        if (donor.donorDetails.company) {
-          rtnStr += `<br />${donor.donorDetails.company}`;
-        }
-        if (donor.GSI3PK) {
-          rtnStr += `<br /><a href="tel:${donor.GSI3PK}">${donor.GSI3PK}</a>`;
-        }
-        rtnStr += `<br /><a href="/donors/view/${donor.GSI2PK}" class="btn btn-info btn-fill btn-wd">Manage Donor</a>`;
-      }
-      return rtnStr;
-    },
-    createNominatorDetail(nominatorId) {
-      var rtnStr = "";
-      const nominator = this?.platformData?.nominators
-        ? this.platformData.nominators.find((n) => n.GSI2PK === nominatorId)
-        : {};
-      if (nominator?.PK) {
-        rtnStr = `<strong>${nominator.nominatorDetails.firstName} ${nominator.nominatorDetails.lastName}</strong>`;
-        if (nominator.nominatorDetails.telephone) {
-          rtnStr += ` - <a href="tel:${nominator.nominatorDetails.telephone}">${nominator.nominatorDetails.telephone}</a>`;
-        }
-        if (nominator.nominatorDetails.email) {
-          rtnStr += `<br /><a href="tel:${nominator.nominatorDetails.email}">${nominator.nominatorDetails.email}</a>`;
-        }
-      }
-      return rtnStr;
-    },
     createFamilyDetail(members) {
       var rtnString = "";
       if (members) {
@@ -1163,22 +1096,11 @@ export default {
       if (this.data && typeof this.data === "object") {
         familiesData = this.data;
       } else {
-        if (this.organisation.requestId) {
-          familiesData = await this.platformFamilies.filter(
-            (f) =>
-              (this.userInGroup("admin") ||
-                this.userInGroup("teamlead") ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK) &&
-              f?.GSI3PK === this.organisation.requestId &&
-              f?.type === "family"
-          );
+        const familiesResult = await listFamilies(
+          this.$store.getters.getActiveCampaign
+        );
 
-          this.familyMemberData = []; //Object.values(res?.data?.members);
-        } else if (this.userInGroup("admin")) {
-          familiesData = await this.platformFamilies.filter(
-            (n) => n?.type === "family"
-          );
-        }
+        familiesData = familiesResult?.data ?? [];
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
@@ -1186,12 +1108,13 @@ export default {
         organisationId: f?.GSI3PK,
         nominatorId: f?.GSI3SK,
         reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
-        nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
-        donorDetail: this.createDonorDetail(f?.allocatedTo),
+        nominatorDetail: f?.nominatorDetail ?? "",
+        donorDetail: f?.donorDetail ?? "",
         familyDetail: this.createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
+        members: f?.members ?? [],
         receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));

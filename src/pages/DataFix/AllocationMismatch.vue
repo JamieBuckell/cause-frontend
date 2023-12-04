@@ -37,6 +37,7 @@
 </template>
 <script>
 import Vue from "vue";
+import { listFamilies } from "@/api/families.api";
 import { addHamper } from "@/api/donors.api";
 import Swal from "sweetalert2";
 
@@ -76,7 +77,11 @@ export default {
   },
   async mounted() {
     const pData = this.$store.getters.getPlatformData;
-    const pFamilyData = this.$store.getters.getPlatformFamilies;
+
+    const familiesResult = await listFamilies(
+      this.$store.getters.getActiveCampaign
+    );
+    const pFamilyData = familiesResult?.data ?? [];
 
     let errors = 0;
     for (var index = 0; index < pFamilyData.length; index++) {

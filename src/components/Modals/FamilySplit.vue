@@ -152,6 +152,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    allFamilies: {
+      type: Array,
+      default: () => [],
+    },
     familyData: {
       type: Object,
       default: () => {},
@@ -185,8 +189,8 @@ export default {
   },
   computed: {
     nominatorsFamilies() {
-      return this.platformFamilies.filter(
-        (f) => f?.GSI3SK == this.chosenNominatorId
+      return this.allFamilies.filter(
+        (f) => f?.nominatorId == this.chosenNominatorId
       );
     },
     breakpoints: () => breakpoints.screen,
@@ -205,9 +209,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   async mounted() {
     this.resetWindow();
@@ -219,13 +220,13 @@ export default {
       return `${this.orgRef}${this.nominatorsReference}-${this.nextHamperId()}`;
     },
     async updateFamilyData(requestId) {
-      const familyData = this.platformFamilies.find(
-        (f) => f.GSI2PK === requestId
+      const familyData = this.allFamilies.find(
+        (f) => f.requestId === requestId
       );
       this.editFamilyData = {
-        requestId: familyData?.GSI2PK,
-        reference: familyData?.GSI2SK.replace("SK#", ""),
-        nominatorId: familyData?.GSI3PK,
+        requestId: familyData?.requestId,
+        reference: familyData?.reference,
+        nominatorId: familyData?.nominatorId,
       };
       this.editFamilyMembers = familyData.members;
     },
@@ -340,7 +341,7 @@ export default {
     },
     addFamily() {
       const nom = this.platformData.nominators.find(
-        (n) => n.GSI2PK === this.familyData?.GSI3SK
+        (n) => n.GSI2PK === this.familyData?.nominatorId
       );
       const org = this.platformData.organisations.find(
         (o) => o.GSI2PK === nom.GSI3PK

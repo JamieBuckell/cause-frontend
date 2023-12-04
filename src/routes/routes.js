@@ -131,8 +131,6 @@ let dataMenu = {
       name: "HamperRefsCheck",
       component: HamperRefsCheck,
     },
-  ],
-  children: [
     {
       path: "allocation-mismatch",
       name: "AllocationMismatch",

@@ -295,9 +295,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   methods: {
     isFilterActive(value) {
@@ -375,7 +372,7 @@ export default {
     },
     async getOrganisationsData() {
       var pData = this.$store.getters.getPlatformData;
-      var pFamilyData = this.platformFamilies;
+
       if (!pData?.organisations) {
         const platformData = await getByCampaign(
           this.$store.getters.getActiveCampaign
@@ -394,9 +391,7 @@ export default {
       this.tableData.map((o) => {
         o.reference = `${o.SK}`;
         o.name = `${o.organisation.name}`;
-        o.totalFamilies = `${
-          pFamilyData.filter((f) => f?.GSI3PK === o.GSI2PK).length ?? 0
-        }`;
+        o.totalFamilies = `${o.totalFamilies}`;
         o.totalNominators = `${
           this.platformData.nominators.filter((f) => f?.GSI3PK === o.GSI2PK)
             .length ?? 0
@@ -413,9 +408,6 @@ export default {
   },
   watch: {
     async platformData() {
-      await this.getOrganisationsData();
-    },
-    async platformFamilies() {
       await this.getOrganisationsData();
     },
   },

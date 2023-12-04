@@ -149,15 +149,6 @@ export const store = new Vuex.Store({
       paths: ["campaigns.platformSubscribers"],
     }),
     createPersistedState({
-      key: "CFFLS",
-      storage: {
-        getItem: (key) => getStorageData(key, "platformFamilies"),
-        setItem: (key, value) => setStorageData(key, value, "platformFamilies"),
-        removeItem: (key) => removeStorageData(key),
-      },
-      paths: ["campaigns.platformFamilies"],
-    }),
-    createPersistedState({
       key: "CFS",
       storage: {
         getItem: (key) => {

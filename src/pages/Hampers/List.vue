@@ -179,8 +179,7 @@
 import Vue from "vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
 import {
-  getFamilyByOrganisation,
-  getFamilies,
+  listFamilies,
   deleteFamily,
   markDirectHamper,
 } from "@/api/families.api";
@@ -289,11 +288,6 @@ export default {
       this.allNominatorsData = newVal;
     },
     async platformData() {
-      this.isLoading = true;
-      await this.getFamilyData();
-      this.isLoading = false;
-    },
-    async platformFamilies() {
       this.isLoading = true;
       await this.getFamilyData();
       this.isLoading = false;
@@ -614,9 +608,6 @@ export default {
     platformData() {
       return this.$store.getters?.getPlatformData ?? {};
     },
-    platformFamilies() {
-      return this.$store.getters?.getPlatformFamilies ?? [];
-    },
   },
   methods: {
     isFilterActive(value) {
@@ -833,8 +824,8 @@ export default {
             (n) => n.GSI2PK === r.nominatorId
           );
           if (this.currentNominator) {
-            this.familyData = this.platformFamilies.find(
-              (f) => f.GSI2PK === r.requestId
+            this.familyData = this.tableData.find(
+              (f) => f.requestId === r.requestId
             );
 
             if (
@@ -940,27 +931,22 @@ export default {
         this.userInGroup("admin") || this.userInGroup("teamlead")
       );
 
-      const familiesToRemove = this.platformFamilies
-        ? this.platformFamilies.filter(
+      const familiesToRemove = this.tableData
+        ? this.tableData.filter(
             (f) =>
-              f?.GSI3PK === this.organisationId &&
+              f?.organisationId === this.organisationId &&
               (!nominatorSpecific ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK)
+                f?.nominatorId === this.currentNominator?.GSI2PK)
           )
         : [];
       for (const family of familiesToRemove) {
-        const indexToDelete = this.platformFamilies
-          ? this.platformFamilies.findIndex((f) => f?.GSI2PK === family?.GSI2PK)
+        const indexToDelete = this.tableData
+          ? this.tableData.findIndex((f) => f?.requestId === family?.requestId)
           : null;
         if (indexToDelete >= 0) {
-          this.platformFamilies.splice(indexToDelete, 1);
+          this.tableData.splice(indexToDelete, 1);
         }
       }
-
-      await this.$store.dispatch("setPlatformFamilyData", [
-        ...this.platformFamilies,
-        ...families,
-      ]);
 
       this.createKey = !this.createKey;
 
@@ -1091,22 +1077,11 @@ export default {
       if (this.data && typeof this.data === "object") {
         familiesData = this.data;
       } else {
-        if (this.organisation.requestId) {
-          familiesData = await this.platformFamilies.filter(
-            (f) =>
-              (this.userInGroup("admin") ||
-                this.userInGroup("teamlead") ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK) &&
-              f?.GSI3PK === this.organisation.requestId &&
-              f?.type === "family"
-          );
-
-          this.familyMemberData = []; //Object.values(res?.data?.members);
-        } else if (this.userInGroup("admin")) {
-          familiesData = await this.platformFamilies.filter(
-            (n) => n?.type === "family"
-          );
-        }
+        const familiesResult = await listFamilies(
+          this.$store.getters.getActiveCampaign,
+          { organisationId: this.organisation.requestId }
+        );
+        familiesData = familiesResult?.data ?? [];
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
