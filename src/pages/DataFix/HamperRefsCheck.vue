@@ -25,6 +25,7 @@
 <script>
 /* eslint-disable no-console */
 import Vue from "vue";
+import { listFamilies } from "@/api/families.api";
 import { fixReferences } from "@/api/users.api";
 import { getPlatformData } from "@/services/campaignData";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
@@ -57,35 +58,35 @@ export default {
       pData.donors.filter((d) => {
         if (d.familyDetails.request.length) {
           d.familyDetails.request.filter((r) => {
-            
-            r.allocation && r.allocation.length && r.allocation.filter((a) => {
-              /* */
-              const hamper = pFamilyData.find((f) =>
-                f.GSI2SK === `SK#${a.hamperId}`);
+            r.allocation &&
+              r.allocation.length &&
+              r.allocation.filter((a) => {
                 /* */
-                console.log(a.hamperId, hamper ? hamper.allocatedTo : 'UNKNOWN', d.GSI2PK);
+                const hamper = pFamilyData.find(
+                  (f) => f.GSI2SK === `SK#${a.hamperId}`
+                );
+                /* */
                 if (!hamper) {
-                  console.log('allocation', a);
+                  // console.log("allocation", a);
                   result.push({
-                    "reference": a.hamperId,
-                    "GSI2PK": hamper.GSI2PK ?? "unknown",
-                    "allocatedTo": hamper?.allocatedTo?? 'unknown',
-                    "donorId": d.GSI2PK
+                    reference: a.hamperId,
+                    GSI2PK: "unknown",
+                    allocatedTo: "unknown",
+                    donorId: d.GSI2PK,
                   });
-
                 } else if (hamper.allocatedTo !== d.GSI2PK) {
-                  console.log('hamper', hamper);
+                  // console.log("hamper", hamper);
                   result.push({
-                    "reference": hamper?.GSI2SK ?? a.hamperId,
-                    "GSI2PK": hamper.GSI2PK,
-                    "allocatedTo": hamper?.allocatedTo?? 'unknown',
-                    "donorId": d.GSI2PK
+                    reference: hamper?.GSI2SK ?? a.hamperId,
+                    GSI2PK: hamper.GSI2PK,
+                    allocatedTo: hamper?.allocatedTo ?? "unknown",
+                    donorId: d.GSI2PK,
                   });
-              }
-            })
-          })
+                }
+              });
+          });
         }
-      })
+      });
       /* *
       result.map((f) => {
         f.authorised = pData?.nominators
@@ -299,9 +300,10 @@ export default {
     async getFamilyData() {
       const pData = this.platformData;
       let familiesData = [];
-      familiesData = await this.platformFamilies.filter(
-        (f) => f?.type === "family"
+      const familiesResult = await listFamilies(
+        this.$store.getters.getActiveCampaign
       );
+      familiesData = familiesResult.data;
       const errorFamilies = await familiesData.filter((f) => {
         const fOrg = pData.organisations.find((o) => o.GSI2PK === f?.GSI3PK);
         if (!fOrg?.SK) {
@@ -437,7 +439,12 @@ export default {
     },
   },
   data() {
-    const searchKeys = ["reference", "GSI2PK", "familyDetail", "nominatorDetail"];
+    const searchKeys = [
+      "reference",
+      "GSI2PK",
+      "familyDetail",
+      "nominatorDetail",
+    ];
 
     const options = {
       create: false,
