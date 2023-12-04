@@ -368,7 +368,6 @@ export default {
   },
   watch: {
     async familyData(newVal) {
-      console.log("familyData", newVal);
       if (newVal?.requestId) {
         this.nominations = [];
         await this.updateFamilyData(newVal.requestId);
@@ -383,7 +382,6 @@ export default {
     this.resetWindow();
 
     this.chosenNominatorId = this.nominatorId;
-    console.log(this.saveType, this.familyData?.requestId);
     if (this.saveType != "create" && this.familyData?.requestId) {
       await this.updateFamilyData(this.familyData.requestId);
     }
