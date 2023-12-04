@@ -266,8 +266,6 @@
 import Vue from "vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
 import {
-  getFamilyByOrganisation,
-  getFamilies,
   markDirectHampersBulk,
   listFamilies,
   deleteFamily,
@@ -1110,28 +1108,7 @@ export default {
           this.$store.getters.getActiveCampaign
         );
 
-        if (familiesResult?.data && familiesResult?.data.length) {
-          familiesData = familiesResult.data;
-        }
-        /* *
-        if (this.organisation.requestId) {
-          familiesData = await this.platformFamilies.filter(
-            (f) =>
-              (this.userInGroup("admin") ||
-                this.userInGroup("teamlead") ||
-                f?.GSI3SK === this.currentNominator?.GSI2PK) &&
-              f?.GSI3PK === this.organisation.requestId &&
-              f?.type === "family"
-          );
-          
-          
-          this.familyMemberData = []; //Object.values(res?.data?.members);
-        } else if (this.userInGroup("admin")) {
-          familiesData = await this.platformFamilies.filter(
-            (n) => n?.type === "family"
-          );
-        }
-        /* */
+        familiesData = familiesResult?.data ?? [];
       }
       this.tableData = familiesData.map((f) => ({
         requestId: f?.GSI2PK ?? "",
