@@ -1151,6 +1151,14 @@ export default {
           familiesData = familiesResult.data;
         }
         /* *
+        const familiesResult = await listFamilies(
+          this.$store.getters.getActiveCampaign
+        );
+
+        if (familiesResult?.data && familiesResult?.data.length) {
+          familiesData = familiesResult.data;
+        }
+        /* *
         if (this.organisation.requestId) {
           familiesData = await this.platformFamilies.filter(
             (f) =>
@@ -1161,12 +1169,14 @@ export default {
               f?.type === "family"
           );
           
+          
           this.familyMemberData = []; //Object.values(res?.data?.members);
         } else if (this.userInGroup("admin")) {
           familiesData = await this.platformFamilies.filter(
             (n) => n?.type === "family"
           );
         }
+        /* */
         /* */
       }
       this.tableData = familiesData.map((f) => ({
@@ -1175,6 +1185,8 @@ export default {
         organisationId: f?.GSI3PK,
         nominatorId: f?.GSI3SK,
         reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
+        nominatorDetail: f?.nominatorDetail ?? "", // this.createNominatorDetail(f?.GSI3SK),
+        donorDetail: f?.donorDetail ?? "", // this.createDonorDetail(f?.allocatedTo),
         nominatorDetail: f?.nominatorDetail ?? "", // this.createNominatorDetail(f?.GSI3SK),
         donorDetail: f?.donorDetail ?? "", // this.createDonorDetail(f?.allocatedTo),
         familyDetail: this.createFamilyDetail(f?.members),
