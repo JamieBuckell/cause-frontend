@@ -53,7 +53,6 @@ export default {
       let result = [];
 
       const pData = this.$store.getters.getPlatformData;
-      const pFamilyData = this.$store.getters.getPlatformFamilies;
 
       pData.donors.filter((d) => {
         if (d.familyDetails.request.length) {
@@ -62,7 +61,7 @@ export default {
               r.allocation.length &&
               r.allocation.filter((a) => {
                 /* */
-                const hamper = pFamilyData.find(
+                const hamper = this.families.find(
                   (f) => f.GSI2SK === `SK#${a.hamperId}`
                 );
                 /* */
@@ -233,9 +232,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   methods: {
     filtersChanged() {
@@ -304,6 +300,7 @@ export default {
         this.$store.getters.getActiveCampaign
       );
       familiesData = familiesResult.data;
+      this.families = familiesData;
       const errorFamilies = await familiesData.filter((f) => {
         const fOrg = pData.organisations.find((o) => o.GSI2PK === f?.GSI3PK);
         if (!fOrg?.SK) {
@@ -432,11 +429,6 @@ export default {
       await this.getFamilyData();
       this.isLoading = false;
     },
-    async platformFamilies() {
-      this.isLoading = true;
-      await this.getFamilyData();
-      this.isLoading = false;
-    },
   },
   data() {
     const searchKeys = [
@@ -459,6 +451,7 @@ export default {
         unauthorised: false,
         admin: false,
       },
+      families: [],
     };
 
     const tableColumns = [

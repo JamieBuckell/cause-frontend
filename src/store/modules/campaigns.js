@@ -7,7 +7,6 @@ const getDefaultState = () => {
     platformNominators: [],
     platformOrganisations: [],
     platformSubscribers: [],
-    platformFamilies: [],
     genericData: {
       example: "any data",
     },
@@ -31,12 +30,6 @@ const getters = {
     organisations: state.platformOrganisations,
     subscribers: state.platformSubscribers,
   }),
-  getPlatformFamilies: (state) =>
-    state.platformFamilies
-      ? typeof state.platformFamilies === "object"
-        ? state.platformFamilies
-        : state.platformFamilies
-      : [],
   getLastUpdated: (state) => state.lastUpdated,
 };
 
@@ -65,10 +58,6 @@ const mutations = {
     }
   },
   setPlatformData(state, data) {
-    if (data.families) {
-      state.platformFamilies = data.families.length ? data.families : [];
-      delete data.families;
-    }
     if (data?.donors) {
       state.platformDonors = data.donors;
     }
@@ -84,10 +73,6 @@ const mutations = {
     state.platformCampaignId = data.campaignId;
     state.lastUpdated = new Date().getTime() / 1000;
   },
-  setPlatformFamilyData(state, data) {
-    state.platformFamilies = data;
-    state.lastUpdated = new Date().getTime() / 1000;
-  },
 };
 
 const actions = {
@@ -99,9 +84,6 @@ const actions = {
   },
   setPlatformData({ commit }, data) {
     commit("setPlatformData", data);
-  },
-  setPlatformFamilyData({ commit }, data) {
-    commit("setPlatformFamilyData", data);
   },
 };
 

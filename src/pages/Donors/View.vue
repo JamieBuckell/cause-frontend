@@ -569,9 +569,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   methods: {
     isAllocated(campaign) {

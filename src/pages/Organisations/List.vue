@@ -295,9 +295,6 @@ export default {
     platformData() {
       return this.$store.getters.getPlatformData;
     },
-    platformFamilies() {
-      return this.$store.getters.getPlatformFamilies;
-    },
   },
   methods: {
     isFilterActive(value) {
@@ -411,9 +408,6 @@ export default {
   },
   watch: {
     async platformData() {
-      await this.getOrganisationsData();
-    },
-    async platformFamilies() {
       await this.getOrganisationsData();
     },
   },

@@ -386,11 +386,6 @@ export default {
       await this.getFamilyData();
       this.isLoading = false;
     },
-    async platformFamilies() {
-      this.isLoading = true;
-      await this.getFamilyData();
-      this.isLoading = false;
-    },
   },
   data() {
     const tableColumns = [
@@ -754,9 +749,6 @@ export default {
     },
     platformData() {
       return this.$store.getters?.getPlatformData ?? {};
-    },
-    platformFamilies() {
-      return this.$store.getters?.getPlatformFamilies ?? [];
     },
   },
   methods: {
