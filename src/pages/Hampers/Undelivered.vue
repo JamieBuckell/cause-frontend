@@ -15,6 +15,7 @@
         @handleCustomAction="handleCustomAction"
         @downloadCSV="downloadCSV"
         @updateSearch="updateSearch"
+        :dataLoading="isLoading"
       >
         <template v-slot:header>
           {{ heading }} ({{ listingsData.length }})

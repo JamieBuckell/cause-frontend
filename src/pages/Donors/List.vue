@@ -9,6 +9,7 @@
         @editItem="handleEdit"
         @deleteItem="handleDelete"
         @downloadCSV="downloadCSV"
+        :dataLoading="false"
       >
         <template v-slot:header> All Donors </template>
         <template v-slot:filters>

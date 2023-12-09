@@ -75,6 +75,7 @@
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
         @downloadCSV="downloadCSV"
+        :dataLoading="isLoading"
       >
         <template v-slot:header>
           <button

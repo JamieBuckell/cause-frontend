@@ -8,6 +8,7 @@
         listingsType="emails"
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
+        :dataLoading="false"
       >
         <template v-slot:header>
           All Sent Emails

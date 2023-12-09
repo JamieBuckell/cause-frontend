@@ -233,6 +233,10 @@ export default {
     DonorDetail,
   },
   props: {
+    dataLoading: {
+      type: Boolean,
+      default: false,
+    },
     listingsData: {
       type: Array,
       default: () => [],
@@ -359,8 +363,6 @@ export default {
   },
   mounted() {
     this.tableData = this.listingsData;
-    this.isLoading = false;
-
     this.initFuse();
   },
   beforeUnmount() {
@@ -371,6 +373,9 @@ export default {
     listingsData(newVal) {
       this.tableData = newVal;
       this.initFuse();
+    },
+    dataLoading(newVal) {
+      this.isLoading = newVal;
     },
   },
   methods: {

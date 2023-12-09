@@ -6,6 +6,7 @@
         :listingsData="listingsData"
         :options="options"
         listingsType="teamleads"
+        :dataLoading="false"
       >
         <template v-slot:header> All Nominators </template>
       </ListingsPage>

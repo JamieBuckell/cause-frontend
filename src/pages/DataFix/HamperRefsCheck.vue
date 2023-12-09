@@ -12,6 +12,7 @@
             :customActions="getCustomActions"
             @handleCustomAction="handleCustomAction"
             @updateSearch="updateSearch"
+            :dataLoading="false"
           >
             <template v-slot:header>
               Families To Fix ({{ listingsData.length }})

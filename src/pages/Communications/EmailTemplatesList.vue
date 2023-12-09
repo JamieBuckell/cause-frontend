@@ -9,6 +9,7 @@
         @editItem="handleEdit"
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
+        :dataLoading="false"
       >
         <template v-slot:header> All Emails Templates </template>
       </ListingsPage>
