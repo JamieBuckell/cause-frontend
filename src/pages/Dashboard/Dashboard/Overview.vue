@@ -179,7 +179,7 @@ export default {
       ).toString();
       this.dashdata.pledged.value = (dashData.data.pledged ?? 0).toString();
       this.dashdata.pledged.subvalue =
-        (dashData.data.individuals ?? 0).toString() + " Verified";
+        (dashData.data.verifiedPledged ?? 0).toString() + " Verified";
       this.dashdata.allocated.value = (dashData.data.allocated ?? 0).toString();
       this.dashdata.subscribers.value = (
         dashData.data.subscribers ?? 0

@@ -788,7 +788,34 @@ export default {
         header.push("Allocation Confirmed");
       }
 
-      let rows = [header];
+      let rows;
+      if (this.organisation.reference) {
+        const orgTeamLeads = this.platformData.nominators.filter(
+          (n) =>
+            n.GSI3PK === this.organisation.requestId && n.type === "team-lead"
+        );
+        const tlHeader = [
+          "Team Lead First Name",
+          "Team Lead Last Name",
+          "Team Lead Telephone",
+          "Team Lead Email",
+        ];
+        rows = [tlHeader];
+
+        for (const tl of orgTeamLeads) {
+          rows.push([
+            `"${tl.nominatorDetails.firstName}"`,
+            `"${tl.nominatorDetails.lastName}"`,
+            `"${tl.nominatorDetails.telephone}"`,
+            `"${tl.nominatorDetails.email}"`,
+          ]);
+        }
+
+        rows.push([`""`, `""`, `""`, `""`]);
+        rows.push([header]);
+      } else {
+        rows = [header];
+      }
 
       const data = downloadData.map((f) => {
         let tmp = document.createElement("DIV");
@@ -1097,7 +1124,8 @@ export default {
         familiesData = this.data;
       } else {
         const familiesResult = await listFamilies(
-          this.$store.getters.getActiveCampaign
+          this.$store.getters.getActiveCampaign,
+          { organisationId: this.organisationId }
         );
 
         familiesData = familiesResult?.data ?? [];
