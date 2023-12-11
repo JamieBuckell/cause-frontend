@@ -307,7 +307,7 @@ export default {
         firstName: "",
         lastName: "",
       },
-      isLoading: true,
+      isLoading: this.dataLoading,
       tableColumns: this.options.columns,
       tableData: [],
       pagination,
