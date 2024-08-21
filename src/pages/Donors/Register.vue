@@ -155,7 +155,7 @@
                       <div class="col-12">
                         <ValidationProvider name="howHeard" v-slot="{ passed }">
                           <fg-input
-                            label="How did you heard about us?"
+                            label="How did you hear about us?"
                             class="mb-0"
                           >
                             <el-select
