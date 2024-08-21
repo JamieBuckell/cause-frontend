@@ -155,7 +155,7 @@ export default {
       lastType: "",
       organisation: {},
       filters: {
-        orgTypes: ["charity", "local-authority", "school"],
+        orgTypes: ["charity", "local-authority", "nhs", "school"],
       },
       messages: [],
       teamLeads: [],

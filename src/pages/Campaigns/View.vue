@@ -110,7 +110,7 @@ export default {
       isLoading: true,
       campaign: {},
       filters: {
-        orgTypes: ["charity", "local-authority", "school"],
+        orgTypes: ["charity", "local-authority", "nhs", "school"],
       },
       messages: [],
       pickerOptions1: {
