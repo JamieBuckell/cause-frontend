@@ -201,6 +201,12 @@
               path: '/data/allocation-mismatch',
             }"
           ></sidebar-item>
+          <sidebar-item
+            :link="{
+              name: 'Export Orgs',
+              path: '/data/export-orgs',
+            }"
+          ></sidebar-item>
         </sidebar-item>
 
         <sidebar-item

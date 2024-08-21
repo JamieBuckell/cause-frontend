@@ -120,6 +120,8 @@ const EmailTemplatesList = () =>
 const HamperRefsCheck = () => import("src/pages/DataFix/HamperRefsCheck.vue");
 const AllocationMismatch = () =>
   import("src/pages/DataFix/AllocationMismatch.vue");
+const ExportOrganisationsCustom = () =>
+  import("src/pages/DataFix/ExportOrganisationsCustom.vue");
 
 let dataMenu = {
   path: "/data",
@@ -135,6 +137,11 @@ let dataMenu = {
       path: "allocation-mismatch",
       name: "AllocationMismatch",
       component: AllocationMismatch,
+    },
+    {
+      path: "export-orgs",
+      name: "ExportOrganisationsCustom",
+      component: ExportOrganisationsCustom,
     },
   ],
 };
