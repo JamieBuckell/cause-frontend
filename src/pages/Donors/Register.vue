@@ -7,7 +7,7 @@
       id="loading"
     ></div>
 
-    <div class="row d-flex justify-content-center">
+    <div class="row d-flex justify-content-center" v-if="isOpen">
       <div class="col-lg-8 col-md-8 col-sm-10">
         <fade-render-transition>
           <card>
@@ -15,7 +15,7 @@
               <img :src="logo" :alt="logoAlt" class="site-logo" />
               <h3 class="card-title text-center">Donor Registration</h3>
             </div>
-            <div v-if="isOpen">
+            <div>
               <ValidationObserver
                 v-slot="{ handleSubmit }"
                 v-if="!submitSuccess"
@@ -396,11 +396,6 @@
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="row" v-else>
-              <div class="col-12 col-md-12 text-center">
-                <p>Registrations have now closed.</p>
               </div>
             </div>
           </card>
