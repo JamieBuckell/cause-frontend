@@ -343,7 +343,7 @@ export default {
     this.emailTemplatesData = res.data;
 
     this.emailTemplatesData.sort((a, b) =>
-      b.SK > a.SK ? 1 : a.SK > b.SK ? -1 : 0
+      b.SK < a.SK ? 1 : a.SK < b.SK ? -1 : 0
     );
     this.isLoading = false;
   },
