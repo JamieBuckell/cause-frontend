@@ -73,20 +73,97 @@
           </div>
         </div>
       </el-dialog>
+
+      <el-dialog center :visible.sync="showEdit" width="80%">
+        <div class="global-loading" v-if="isLoading">
+          <div class="center">
+            <div class="spinner-border text-muted" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <card>
+              <div slot="header">
+                <h4 class="title mt-0">Email Template Edit</h4>
+                <div class="container">
+                  <div class="row">
+                    <div class="col-12">
+                      <label for="description">Email Description:</label>
+                      <el-input
+                        type="text"
+                        id="description"
+                        class="mb-3 w-100"
+                        style="width: 200px"
+                        placeholder="Email Description"
+                        v-model="previewData.description"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <label for="subject">Email Subject:</label>
+                      <el-input
+                        type="text"
+                        id="subject"
+                        class="mb-3 w-100"
+                        style="width: 200px"
+                        placeholder="Email Subject"
+                        v-model="previewData.subject"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <label for="title">Email Title:</label>
+                      <el-input
+                        type="text"
+                        id="title"
+                        class="mb-3 w-100"
+                        style="width: 200px"
+                        placeholder="Email Title"
+                        v-model="previewData.title"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <label for="content">Content:</label>
+                      <wysiwyg v-model="previewData.content" class="mb-4" />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <button
+                        type="submit"
+                        class="btn btn-fill btn-wd pull-right btn-info"
+                        @click.prevent="doSaveTemplate"
+                      >
+                        Save Template
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </card>
+          </div>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
 <script>
 import Vue from "vue";
-import { sendEmail } from "@/api/communications.api";
-import { getSentCommuncations } from "@/api/communications.api";
-import { getEmailTemplates } from "@/api/emailTemplates.api";
+import {
+  getEmailTemplates,
+  updateEmailTemplate,
+} from "@/api/emailTemplates.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import EmailPreview from "@/components/Communications/EmailPreview.vue";
 import { Dialog } from "element-ui";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
-import parseJson from "parse-json";
 
 Vue.prototype.$confirm = MessageBox.confirm;
 
@@ -111,11 +188,14 @@ export default {
   },
   data() {
     return {
+      isLoading: true,
+      showEdit: false,
       showPreview: false,
       previewData: {
         template: "",
         title: "",
         subject: "",
+        description: "",
         content: "",
         options: {},
         dateAdded: "",
@@ -136,14 +216,25 @@ export default {
             minWidth: 150,
           },
           {
+            prop: "pageTitle",
+            label: "Email Title",
+            minWidth: 200,
+          },
+          {
             prop: "description",
             label: "Email Description",
             minWidth: 200,
           },
         ],
-        searchKeys: ["subject", "pageTitle", "pageContent", "description"],
+        searchKeys: [
+          "subject",
+          "description",
+          "pageTitle",
+          "pageContent",
+          "description",
+        ],
         delete: false,
-        edit: false,
+        edit: true,
       },
     };
   },
@@ -184,10 +275,12 @@ export default {
   },
   methods: {
     async handleEdit(i, r) {
-      this.showPreview = true;
+      this.showEdit = true;
 
+      this.previewData.key = r?.PK ?? "";
       this.previewData.template = r?.template ?? "";
       this.previewData.subject = r?.subject ?? "";
+      this.previewData.description = r?.description ?? "";
       this.previewData.title = r?.pageTitle ?? "";
       this.previewData.content = r?.pageContent ?? "";
     },
@@ -196,8 +289,10 @@ export default {
         case "previewEmail":
           this.showPreview = true;
 
+          this.previewData.key = r?.PK ?? "";
           this.previewData.template = r?.template ?? "";
           this.previewData.subject = r?.subject ?? "";
+          this.previewData.description = r?.description ?? "";
           this.previewData.title = r?.pageTitle ?? "";
           this.previewData.content = r?.pageContent ?? "";
           break;
@@ -205,6 +300,39 @@ export default {
           this.$emit(k, i, r);
           break;
       }
+    },
+    async doSaveTemplate() {
+      this.isLoading = true;
+      const saveTemplateRes = await updateEmailTemplate({
+        key: this.previewData.key,
+        subject: this.previewData.subject,
+        description: this.previewData.description,
+        pageTitle: this.previewData.title,
+        pageContent: this.previewData.content,
+      });
+
+      if (saveTemplateRes.status == 200) {
+        Swal.fire({
+          title: "Success",
+          text: "Email template saved successfully.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+
+        const res = await getEmailTemplates();
+        this.emailTemplatesData = res.data;
+
+        this.showEdit = false;
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "An unexpected error occurred",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+
+      this.isLoading = false;
     },
   },
   async mounted() {
@@ -217,6 +345,7 @@ export default {
     this.emailTemplatesData.sort((a, b) =>
       b.SK > a.SK ? 1 : a.SK > b.SK ? -1 : 0
     );
+    this.isLoading = false;
   },
 };
 </script>
@@ -227,5 +356,37 @@ export default {
   > span {
     font-weight: 700;
   }
+}
+
+.global-loading {
+  padding: 30px 15px;
+  min-height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  max-width: -webkit-fill-available;
+  z-index: 1000;
+  padding-top: 90px;
+  text-align: center;
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    .spinner-border {
+      z-index: 1001;
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.5em;
+    }
+  }
+}
+</style>
+
+<style lang="css">
+@import "~vue-wysiwyg/dist/vueWysiwyg.css";
+.editr {
+  background: #fff;
 }
 </style>
