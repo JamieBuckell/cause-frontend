@@ -9,7 +9,7 @@
         @editItem="handleEdit"
         @deleteItem="handleDelete"
         @downloadCSV="downloadCSV"
-        :dataLoading="false"
+        :dataLoading="dataLoading"
       >
         <template v-slot:header>
           All Organisations
@@ -171,7 +171,9 @@ export default {
     const savedFilters = this.$store.getters.getGenericData(
       "organisationsFilters"
     );
+    const dataLoading = false;
     return {
+      dataLoading,
       tableData: [],
       pagination: {
         perPage: this.paginateOptions.perPage ?? 5,
@@ -223,7 +225,7 @@ export default {
       const sum = this.listingsData.reduce((accumulator, org) => {
         return accumulator + parseInt(org.totalFamilies);
       }, 0);
-      return sum;
+      return sum ?? 0;
     },
     listingsData() {
       let result = this?.tableData ?? [];
@@ -342,6 +344,7 @@ export default {
       this.$router.push(`/organisations/view/${r.GSI2PK}`);
     },
     async handleDelete(i, r) {
+      this.dataLoading = true;
       const updateRes = await deleteOrganisation(
         r.GSI2PK,
         this.$store.getters.getActiveCampaign
@@ -370,6 +373,7 @@ export default {
           });
         }
       }
+      this.dataLoading = false;
     },
     async getOrganisationsData() {
       var pData = this.$store.getters.getPlatformData;

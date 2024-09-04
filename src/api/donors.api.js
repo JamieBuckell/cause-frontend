@@ -46,6 +46,9 @@ export const changePledge = async (
 export const deleteDonor = async (body) =>
   await httpClient.post(`/donors/delete`, body);
 
+export const hideDonor = async (body) =>
+  await httpClient.post(`/donors/hide`, body);
+
 export const deletePledge = async (body) =>
   await httpClient.post(`/donors/delete-pledge`, body);
 

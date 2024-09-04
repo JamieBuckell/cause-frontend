@@ -2,7 +2,7 @@ import config from "../../config";
 import router from "@/router";
 import { getCookie, setCookie } from "@/router";
 var AmazonCognitoIdentity = require("amazon-cognito-identity-js");
-import { migrateUserPool } from "@/api/users.api";
+import { migrateUserPool, getMeData } from "@/api/users.api";
 
 import VueJwtDecode from "vue-jwt-decode";
 
@@ -153,6 +153,8 @@ const actions = {
           const returnUrl = getCookie("ReturnUrl");
           setCookie("ReturnUrl", "", -1);
 
+          getMeData();
+
           if (returnUrl && !returnUrl.includes("signin")) {
             router.push(decodeURIComponent(returnUrl));
           } else {
@@ -248,6 +250,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       if (state.cognitoUser) {
         state.cognitoUser.getUserAttributes(function (err, attributes) {
+          console.log("attributes", attributes);
           if (err) {
             // console.error(JSON.stringify(err))
             reject(err);

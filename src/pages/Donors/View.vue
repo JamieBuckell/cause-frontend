@@ -711,13 +711,20 @@ export default {
       });
       Swal.close();
       if (allocateRes.status == 200) {
-        const linkSource = `data:application/pdf;base64,${allocateRes.data}`;
+        var linkSource = "";
+        if (allocateRes.data?.pdfUrl) {
+          linkSource = allocateRes.data?.pdfUrl;
+        } else {
+          linkSource = `data:application/pdf;base64,${allocateRes.data}`;
+        }
+
         const downloadLink = document.createElement("a");
         const fileName = `${this.donor.donorDetails.firstName.toLowerCase()}-${this.donor.donorDetails.lastName.toLowerCase()}-labels-${type.toLowerCase()}-pdf`;
 
         downloadLink.href = linkSource;
         downloadLink.download = fileName;
         downloadLink.click();
+
         this.downloadPending = false;
       } else {
         if (allocateRes?.data?.messages) {

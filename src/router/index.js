@@ -1,26 +1,27 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import routes from '@/routes/routes';
+import routes from "@/routes/routes";
 import { store } from "@/store";
 
 Vue.use(VueRouter);
 
 const router = new VueRouter({
   mode: "history",
-  routes, 
-  linkActiveClass: 'active'
+  routes,
+  linkActiveClass: "active",
 });
 
 router.beforeEach((to, from, next) => {
-  const {
-    userIsLoggedIn,
-  } = store.getters;
+  const { userIsLoggedIn } = store.getters;
 
   if (userIsLoggedIn) {
     // console.log('User is Logged in...');
   } else {
     if (to.matched.some((route) => route.meta.requiresAuth)) {
-      if (!to.path.endsWith("/login") && !to.path.endsWith("/login/password-reset")) {
+      if (
+        !to.path.endsWith("/login") &&
+        !to.path.endsWith("/login/password-reset")
+      ) {
         const returnUrl = encodeURIComponent(to.fullPath);
         setCookie("ReturnUrl", returnUrl, 10);
       }
@@ -33,11 +34,7 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
-export const setCookie = (
-  key,
-  value,
-  expiresMins
-) => {
+export const setCookie = (key, value, expiresMins) => {
   const now = new Date();
   now.setTime(now.getTime() + expiresMins * 60 * 1000);
   const expires = now.toUTCString();

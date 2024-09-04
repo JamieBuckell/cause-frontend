@@ -8,7 +8,15 @@
     ></div>
 
     <div class="row d-flex justify-content-center" v-if="isOpen">
-      <div class="col-lg-8 col-md-8 col-sm-10">
+      <div v-if="!registerClicked" class="col-lg-8 col-md-8 col-sm-10">
+        <button
+          @click="registerClicked = true"
+          class="btn btn-fill btn-info btn-round btn-wd"
+        >
+          Click here to register
+        </button>
+      </div>
+      <div v-else class="col-lg-8 col-md-8 col-sm-10">
         <fade-render-transition>
           <card>
             <div slot="header" class="text-center">
@@ -455,10 +463,11 @@ export default {
       howHeard: "",
       howHeardOther: "",
       marketing: false,
-      campaign: "CH2",
+      campaign: "",
     };
     return {
       isOpen: true,
+      registerClicked: false,
       isLoading: true,
       maxFamilyDetail: 5,
       logo: "/static/img/cause-foundation-logo.png",
@@ -587,7 +596,13 @@ export default {
 
     const response = await activeCampaigns();
     if (response.status == 200) {
-      this.isOpen = response.data.campaignActive;
+      this.isOpen = response.data.campaignActive || this.isJamie();
+      if (response.data.campaignKeys.length) {
+        this.donorData.campaign = response.data.campaignKeys[0];
+      }
+      if (!this.donorData.campaign && this.isJamie()) {
+        this.donorData.campaign = "CH24";
+      }
       this.isLoading = false;
     } else {
       this.isOpen = false;

@@ -153,12 +153,15 @@
                   <label class="d-block d-md-none pt-3"
                     >Additional Information</label
                   >
-                  <fg-input
-                    type="text"
-                    class="mb-0 d-none d-md-block"
-                    placeholder="Dietry Requirements/Special Needs etc"
-                    v-model="member.additionalInfo"
-                  >
+
+                  <fg-input>
+                    <textarea
+                      class="form-control"
+                      :placeholder="`Dietry Requirements/Special Needs etc
+Likes & Dislikes`"
+                      rows="2"
+                      v-model="member.additionalInfo"
+                    ></textarea>
                   </fg-input>
 
                   <el-input

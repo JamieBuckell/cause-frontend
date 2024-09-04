@@ -9,6 +9,8 @@
         @editItem="handleEdit"
         @deleteItem="handleDelete"
         @downloadCSV="downloadCSV"
+        :customActions="getCustomActions"
+        @handleCustomAction="handleCustomAction"
         :dataLoading="false"
       >
         <template v-slot:header> All Donors </template>
@@ -204,6 +206,32 @@
               </el-option>
             </el-select>
           </div>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2">Show Hidden</span>
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.hidden),
+                },
+              ]"
+              v-model="filters.hidden"
+              @change="filtersChanged()"
+              placeholder="Hidden"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
         </template>
       </ListingsPage>
     </div>
@@ -212,7 +240,7 @@
 <script>
 import Vue from "vue";
 import { Select, Option } from "element-ui";
-import { deleteDonor, resendVerification } from "@/api/donors.api";
+import { deleteDonor, hideDonor, resendVerification } from "@/api/donors.api";
 import { getByCampaign } from "@/api/campaign.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import moment from "moment";
@@ -239,6 +267,10 @@ export default {
     organisationId: {
       type: String,
       default: "",
+    },
+    customActions: {
+      type: Array,
+      default: () => [],
     },
     paginateOptions: {
       type: Object,
@@ -300,6 +332,7 @@ export default {
         total: 0,
       },
       filters: {
+        hidden: savedFilters?.hidden ? savedFilters.hidden : "No",
         verified: savedFilters?.verified ? savedFilters.verified : "Yes",
         bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
         pledged: savedFilters?.pledged ? savedFilters.pledged : "All",
@@ -342,6 +375,13 @@ export default {
     listingsData() {
       let result = this?.tableData ?? [];
       if (result.length) {
+        if (this.filters.hidden && this.filters.hidden != "All") {
+          const v = this.filters.hidden === "Yes";
+          result = result.filter(
+            (d) =>
+              d?.donorDetails?.hidden === v || (!d?.donorDetails?.hidden && !v)
+          );
+        }
         if (this.filters.verified && this.filters.verified != "All") {
           const v = this.filters.verified === "Yes";
           result = result.filter(
@@ -464,6 +504,19 @@ export default {
 
       return result;
     },
+    getCustomActions() {
+      const propCustomActions = this.customActions;
+      if (this.userInGroup("admin")) {
+        propCustomActions.push({
+          emit: "hideEmail",
+          type: "icon",
+          icon: "fa fa-eye-slash",
+          class: "btn-info",
+          text: "Hide/Show Email",
+        });
+      }
+      return propCustomActions;
+    },
     platformData() {
       return this.$store.getters.getPlatformData;
     },
@@ -471,6 +524,48 @@ export default {
   methods: {
     isFilterActive(value) {
       return value !== "All" && value != "";
+    },
+    async handleCustomAction(i, k, r) {
+      switch (k) {
+        case "hideEmail":
+          console.log("hideEmail");
+
+          const donor = this.tableData.find((n) => n.GSI2PK === r.GSI2PK);
+
+          if (donor.donorDetails) {
+            const updateRes = await hideDonor({
+              campaign: this.$store.getters.getActiveCampaign,
+              donorId: r?.GSI2PK ?? "UNKNOWN",
+            });
+            if (updateRes?.status != 200 && updateRes?.data?.messages) {
+              this.messages = Object.keys(updateRes?.data?.messages).map(
+                (k) => ({
+                  error: updateRes?.data?.messages[k],
+                })
+              );
+            } else {
+              const pData = this.$store.getters.getPlatformData;
+              const indexToReplace = pData.donors.findIndex(
+                (d) => d?.GSI2PK === r.GSI2PK
+              );
+              if (indexToReplace >= 0) {
+                const dnr = { ...pData.donors[indexToReplace] };
+                if (!dnr?.donorDetails) {
+                  dnr.donorDetails = {};
+                }
+                dnr.donorDetails["hidden"] = !dnr.donorDetails?.hidden;
+                pData.donors[indexToReplace] = dnr;
+
+                await this.$store.dispatch("setPlatformData", {
+                  ...pData,
+                });
+              }
+
+              await this.getDonorData();
+            }
+          }
+          break;
+      }
     },
     downloadCSV() {
       let rows = [

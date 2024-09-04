@@ -301,6 +301,14 @@ export default {
           break;
       }
     },
+    async doGetTemplates() {
+      const res = await getEmailTemplates();
+      this.emailTemplatesData = res.data;
+
+      this.emailTemplatesData.sort((a, b) =>
+        b.SK < a.SK ? 1 : a.SK < b.SK ? -1 : 0
+      );
+    },
     async doSaveTemplate() {
       this.isLoading = true;
       const saveTemplateRes = await updateEmailTemplate({
@@ -319,8 +327,7 @@ export default {
           showConfirmButton: false,
         });
 
-        const res = await getEmailTemplates();
-        this.emailTemplatesData = res.data;
+        await this.doGetTemplates();
 
         this.showEdit = false;
       } else {
@@ -339,12 +346,7 @@ export default {
     if (!this.userInGroup("admin") && !this.organisationId) {
       this.$router.push("/");
     }
-    const res = await getEmailTemplates();
-    this.emailTemplatesData = res.data;
-
-    this.emailTemplatesData.sort((a, b) =>
-      b.SK < a.SK ? 1 : a.SK < b.SK ? -1 : 0
-    );
+    await this.doGetTemplates();
     this.isLoading = false;
   },
 };
