@@ -41,7 +41,11 @@
                   </qrcode-stream>
 
                   <br />
-                  <l-alert type="danger" v-for="m in messages" :key="m">
+                  <l-alert
+                    type="danger"
+                    v-for="(m, idx) in messages"
+                    :key="idx"
+                  >
                     <span> {{ getErrorMessage(m) }}</span>
                   </l-alert>
 
@@ -118,6 +122,7 @@
 </template>
 <script>
 import Vue from "vue";
+import config from "@/config";
 import { FadeRenderTransition } from "src/components/index";
 import AuthLayout from "src/pages/Dashboard/Pages/AuthLayout.vue";
 import { extend } from "vee-validate";
@@ -182,7 +187,9 @@ export default {
       const res = await checkHamper({
         hamperId: this.hamperId,
         campaignId:
-          activeCampaign && activeCampaign.length ? activeCampaign : "CH2",
+          activeCampaign && activeCampaign.length
+            ? activeCampaign
+            : config.portalDefaults.campaign,
       });
 
       this.loading = false;
@@ -218,7 +225,7 @@ export default {
         noBags: this.numberOfBags,
         campaignId: this.$store.getters.getActiveCampaign.length
           ? this.$store.getters.getActiveCampaign
-          : "CH2",
+          : config.portalDefaults.campaign,
       });
       if (res?.data?.messages) {
         this.messages = Object.keys(res?.data?.messages).map((k) => ({

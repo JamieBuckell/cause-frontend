@@ -9,6 +9,7 @@
 <script>
 /* eslint-disable no-console */
 import Vue from "vue";
+import config from "@/config";
 let crypto = require("crypto");
 
 window.EventBus = new Vue({
@@ -156,7 +157,7 @@ export default {
           console.log(
             `${apiURL}subscription/verify/${encodeURI(
               email
-            )}?v=${donorHash}&c=CH2`
+            )}?v=${donorHash}&c=${config.portalDefaults.campaign}`
           );
         }
       }

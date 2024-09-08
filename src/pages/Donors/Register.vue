@@ -10,7 +10,7 @@
     <div class="row d-flex justify-content-center" v-if="isOpen">
       <div v-if="!registerClicked" class="col-lg-8 col-md-8 col-sm-10">
         <button
-          @click="registerClicked = true"
+          @click="registerClickedHandler()"
           class="btn btn-fill btn-info btn-round btn-wd"
         >
           Click here to register
@@ -414,6 +414,7 @@
 </template>
 <script>
 import Vue from "vue";
+import config from "@/config";
 import { FadeRenderTransition, Checkbox } from "src/components/index";
 import { Collapse, CollapseItem, Select, Option } from "element-ui";
 import StandaloneLayout from "../Dashboard/Pages/StandaloneLayout.vue";
@@ -502,6 +503,12 @@ export default {
     };
   },
   methods: {
+    registerClickedHandler() {
+      this.registerClicked = true;
+      setTimeout(() => {
+        this.resizeIframe();
+      }, 500);
+    },
     updatedHowHeard() {
       if (this.donorData.howHeard === "other") {
         this.resizeIframe();
@@ -600,8 +607,8 @@ export default {
       if (response.data.campaignKeys.length) {
         this.donorData.campaign = response.data.campaignKeys[0];
       }
-      if (!this.donorData.campaign && this.isJamie()) {
-        this.donorData.campaign = "CH24";
+      if (!this.donorData.campaign) {
+        this.donorData.campaign = config.portalDefaults.campaign;
       }
       this.isLoading = false;
     } else {

@@ -24,6 +24,7 @@
 <script>
 import { defineComponent } from "vue";
 import { getHamperScreen } from "@/api/dashboard.api";
+import config from "@/config";
 
 export default defineComponent({
   components: {},
@@ -49,7 +50,9 @@ export default defineComponent({
   methods: {
     updateStats: async (campaignId) => {
       const dashData = await getHamperScreen(
-        campaignId && campaignId.length ? campaignId : "CH2"
+        campaignId && campaignId.length
+          ? campaignId
+          : config.portalDefaults.campaign
       );
       const droppped = (dashData.data.hampersDropped ?? 0).toString();
       const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
