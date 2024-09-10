@@ -1,7 +1,7 @@
 import { httpClient } from "@/api/core/httpClient";
 
 export const createCampaign = async (body) =>
-  httpClient.post(`/campaigns/create`, body);
+  await httpClient.post(`/campaigns/create`, body);
 
 export const getAllCampaigns = async () =>
   await httpClient.get(`/campaigns/list`);

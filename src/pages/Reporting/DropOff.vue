@@ -350,7 +350,7 @@ export default {
   async mounted() {
     const isAdmin = await this.userInGroup("admin");
     if (!isAdmin) {
-      this.$router.push("/organisations/me");
+      // this.$router.push("/organisations/me");
     } else {
       let chartist = await import("chartist");
       this.$Chartist = chartist.default ? chartist.default : chartist;

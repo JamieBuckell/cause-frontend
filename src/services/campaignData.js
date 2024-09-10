@@ -23,7 +23,7 @@ export const getPlatformData = async (force = false) => {
     const allCampaigns = await getCampaigns(
       force || currentTime - lastUpdated >= refreshCampaignMinutes * 60
     );
-    if (allCampaigns.length) {
+    if (allCampaigns && allCampaigns.length) {
       if (!activeCampaignId) {
         activeCampaignId = allCampaigns[0]?.campaignId ?? "";
         await store.commit("setActiveCampaign", activeCampaignId);

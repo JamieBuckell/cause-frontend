@@ -747,7 +747,6 @@ const routes = [
   lockPage,
   {
     path: "/reports",
-    alias: "/",
     component: DashboardLayout,
     redirect: "/reports/dropoff",
     children: [

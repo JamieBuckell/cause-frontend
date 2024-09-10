@@ -46,14 +46,30 @@ const errorInterceptor = (error) => {
       if (response.data) {
         return response;
       }
-      break;
-
+      return Promise.reject({
+        statusCode: response.status,
+        error: response.data?.errorString
+          ? response.data?.errorString
+          : message,
+        code: errorCode,
+        message,
+      });
+    /*
     case 401:
       router.push({
         path: "/error/access",
       });
-      break;
+      return Promise.reject({
+        statusCode: response.status,
+        error: response.data?.errorString
+          ? response.data?.errorString
+          : message,
+        code: errorCode,
+        message,
+      });
+      */
 
+    case 401:
     case 403:
       if (response.config && response.config.url === "/auth/refresh") {
         store.dispatch("signOut");
@@ -61,12 +77,33 @@ const errorInterceptor = (error) => {
         response.config &&
         response.config.url !== "/auth/reset-password/auth"
       ) {
-        if (process.env.NODE_ENV === "production") {
-          router.push({
-            path: "/",
-          });
-        }
+        //if (process.env.NODE_ENV === "production") {
+        router.push({
+          path: "/login",
+        });
+        //}
       }
+
+      let errorCode,
+        message = "";
+      if (response.data?.errorInfo) {
+        const { details } = response.data?.errorInfo;
+        const obj = details[0];
+        errorCode = obj.errorCode;
+        message = obj.message;
+      } else if (response.data) {
+        errorCode = error.response.status;
+        message = response.data.messages;
+      }
+
+      return Promise.reject({
+        statusCode: response.status,
+        error: response.data?.errorString
+          ? response.data?.errorString
+          : message,
+        code: errorCode,
+        message,
+      });
 
     // eslint-disable-next-line no-fallthrough
     default: {
@@ -82,15 +119,14 @@ const errorInterceptor = (error) => {
         message = response.data.messages;
       }
 
-      const err = {
+      return Promise.reject({
         statusCode: response.status,
         error: response.data?.errorString
           ? response.data?.errorString
           : message,
         code: errorCode,
         message,
-      };
-      return Promise.reject(err);
+      });
     }
   }
 };
