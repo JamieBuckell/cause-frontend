@@ -13,14 +13,125 @@
         listingsType="nominators"
         @editItem="handleEdit"
         @deleteItem="handleDelete"
+        @downloadCSV="downloadCSV"
         :customActions="getCustomActions"
         @handleCustomAction="handleCustomAction"
-        @downloadCSV="downloadCSV"
         :dataLoading="isLoading"
       >
         <template v-slot:header>
           {{ heading }} ({{ listingsData.length }})
           <p class="small" v-if="getSubHeading" v-html="getSubHeading" />
+        </template>
+        <template v-slot:filters>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2"
+              >Email Verified</span
+            >
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.verified),
+                },
+              ]"
+              v-model="filters.verified"
+              @change="filtersChanged()"
+              placeholder="Verified"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2">Type</span>
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.nomType),
+                },
+              ]"
+              v-model="filters.nomType"
+              @change="filtersChanged()"
+              placeholder="Type"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.nomTypeOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2">Approved</span>
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.approved),
+                },
+              ]"
+              v-model="filters.approved"
+              @change="filtersChanged()"
+              placeholder="Approved"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
+          <div class="col-12 col-md-3">
+            <span class="text-muted small d-block py-1 px-2"
+              >Email Bounced</span
+            >
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.bounced),
+                },
+              ]"
+              v-model="filters.bounced"
+              @change="filtersChanged()"
+              placeholder="Bounced"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
         </template>
       </ListingsPage>
 
@@ -133,6 +244,7 @@
 </template>
 <script>
 import Vue from "vue";
+import { Select, Option } from "element-ui";
 import {
   approveNominator,
   updateNominator,
@@ -148,6 +260,8 @@ Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
   components: {
+    [Select.name]: Select,
+    [Option.name]: Option,
     ListingsPage,
     [Dialog.name]: Dialog,
     LAlert,
@@ -234,6 +348,8 @@ export default {
         minWidth: 250,
       },
     ];
+    const savedFilters =
+      this.$store.getters.getGenericData("nominatorsFilters");
     return {
       isLoading: true,
       editMessages: [],
@@ -249,28 +365,29 @@ export default {
         total: 0,
       },
       filters: {
-        verified: "Yes",
-        verifiedOptions: ["All", "Yes", "No"],
-        bounced: "All",
-        bouncedOptions: ["All", "Yes", "No"],
-        familySize: "All",
-        familySizeOptions: [
+        hidden: savedFilters?.hidden ? savedFilters.hidden : "No",
+        verified: savedFilters?.verified ? savedFilters.verified : "All",
+        bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
+        approved: savedFilters?.approved ? savedFilters.approved : "All",
+        nomType: savedFilters?.nomType ? savedFilters.nomType : "All",
+        nomTypeOptions: ["Team Lead", "Nominator", "All"],
+        allocated: savedFilters?.allocated ? savedFilters.allocated : "All",
+        allocatedOptions: [
           "All",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10+",
+          "Not Allocated",
+          "Part Allocated",
+          "Fully Allocated",
+          "Over Allocated",
         ],
-        allocationStatus: "All",
-        allocationStatusOptions: ["All", "Allocated", "Unallocated"],
-        sort: "Reference A-Z",
-        sortOptions: ["Reference A-Z", "Reference Z-A"],
+        hasAdditionalInformation: savedFilters?.hasAdditionalInformation
+          ? savedFilters.hasAdditionalInformation
+          : "All",
+        isSubscribed: savedFilters?.hasAdditionalInformation
+          ? savedFilters.hasAdditionalInformation
+          : "All",
+        genericOptions: ["All", "Yes", "No"],
+        sort: savedFilters?.sort ? savedFilters.sort : "Newest First",
+        sortOptions: ["Newest First", "User Reference (Desc)"],
       },
       listingsOptions: {
         columns: tableColumns,
@@ -295,9 +412,129 @@ export default {
     listingsData() {
       let result = this?.tableData ?? [];
 
-      result.sort((a, b) =>
-        b.firstName < a.firstName ? 1 : a.firstName < b.firstName ? -1 : 0
-      );
+      if (result.length) {
+        if (this.filters.hidden && this.filters.hidden != "All") {
+          const v = this.filters.hidden === "Yes";
+          result = result.filter(
+            (d) =>
+              d?.donorDetails?.hidden === v || (!d?.donorDetails?.hidden && !v)
+          );
+        }
+        if (this.filters.verified && this.filters.verified != "All") {
+          const v = this.filters.verified === "Yes";
+          result = result.filter(
+            (d) => d?.verified === v || (!d?.verified && !v)
+          );
+        }
+        if (this.filters.bounced && this.filters.bounced != "All") {
+          const b = this.filters.bounced === "Yes";
+          console.log(result);
+          result = result.filter(
+            (d) => d?.bounced === b || (!d?.bounced && !b)
+          );
+        }
+        if (this.filters.approved && this.filters.approved != "All") {
+          const b = this.filters.approved === "Yes";
+          console.log(result);
+          result = result.filter(
+            (d) => d?.approved === b || (!d?.approved && !b)
+          );
+        }
+
+        if (this.filters.nomType && this.filters.nomType != "All") {
+          result = result.filter(
+            (d) =>
+              d?.type ===
+              (this.filters.nomType == "Team Lead" ? "team-lead" : "nominator")
+          );
+          console.log(result.length);
+        }
+        if (this.filters.allocated && this.filters.allocated != "All") {
+          result = result.filter((d) => {
+            const numberOfFamilies = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + b.numberOfFamilies,
+                  0
+                )
+              : 0;
+            const allocationOfFamilies = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + (b?.allocation ? b.allocation.length : 0),
+                  0
+                )
+              : 0;
+            switch (this.filters.allocated.toLowerCase()) {
+              case "not allocated":
+                return numberOfFamilies > 0 && allocationOfFamilies === 0;
+              case "part allocated":
+                return (
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies > 0 &&
+                  allocationOfFamilies < numberOfFamilies
+                );
+              case "fully allocated":
+                return (
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies >= numberOfFamilies
+                );
+              case "over allocated":
+                return (
+                  numberOfFamilies > 0 &&
+                  allocationOfFamilies > numberOfFamilies
+                );
+              default:
+                return true;
+            }
+          });
+        }
+
+        if (
+          this.filters.hasAdditionalInformation &&
+          this.filters.hasAdditionalInformation != "All"
+        ) {
+          result = result.filter((d) => {
+            const aI = d?.familyDetails?.request
+              ? d.familyDetails.request.reduce(
+                  (a, b) => a + b.additionalInfo,
+                  ""
+                )
+              : "";
+            return this.filters.hasAdditionalInformation === "Yes"
+              ? aI !== ""
+              : aI === "";
+          });
+        }
+
+        if (this.filters.isSubscribed && this.filters.isSubscribed != "All") {
+          var pData = this.$store.getters.getPlatformData;
+
+          result = result.filter((d) => {
+            const isSubscriber = pData.subscribers.find((s) => {
+              return s?.PK === d?.GSI3PK && s?.subscribed;
+            });
+
+            // console.log(isSubscriber, d);
+
+            return this.filters.isSubscribed === "Yes"
+              ? isSubscriber?.PK
+              : !isSubscriber?.PK;
+          });
+        }
+      }
+
+      if (this.filters.sort && this.filters.sort === "User Reference (Desc)") {
+        result.sort((a, b) =>
+          a.userReference > b.userReference
+            ? 1
+            : b.userReference > a.userReference
+            ? -1
+            : 0
+        );
+      } else {
+        result.sort((a, b) =>
+          b.firstName < a.firstName ? 1 : a.firstName < b.firstName ? -1 : 0
+        );
+      }
 
       return result;
     },
@@ -328,6 +565,9 @@ export default {
     },
   },
   methods: {
+    isFilterActive(value) {
+      return value !== "All" && value != "";
+    },
     async handleNominatorEditSubmit() {
       try {
         const newNomData = this?.tableData ? this.tableData.slice(0) : [];
@@ -504,6 +744,12 @@ export default {
       link.remove();
       /* */
     },
+    filtersChanged() {
+      this.$store.dispatch("setGenericData", {
+        key: "nominatorsFilters",
+        data: this.filters,
+      });
+    },
     handleCustomAction(i, k, r) {
       switch (k) {
         case "viewOrganisation":
@@ -522,6 +768,7 @@ export default {
     },
     async getListData() {
       if (this.platformData?.nominators) {
+        console.log(this.platformData?.nominators);
         this.tableData = this.platformData?.nominators
           .filter(
             (n) =>
@@ -540,6 +787,12 @@ export default {
             telephoneNumber: `${n?.nominatorDetails?.telephoneNumber ?? ""}`,
             organisationId: `${n?.GSI3PK ?? ""}`,
             status: `${n?.status ?? ""}`,
+            type: `${n?.type ?? ""}`,
+            verified:
+              n?.emailVerification?.verified?.toLowerCase?.() === "true",
+            bounced: n?.emailVerification?.bounced?.toLowerCase?.() === "true",
+            approved:
+              n?.emailVerification?.status?.toLowerCase?.() === "approved",
           }));
       }
 
