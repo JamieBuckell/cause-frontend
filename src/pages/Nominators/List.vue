@@ -428,14 +428,12 @@ export default {
         }
         if (this.filters.bounced && this.filters.bounced != "All") {
           const b = this.filters.bounced === "Yes";
-          console.log(result);
           result = result.filter(
             (d) => d?.bounced === b || (!d?.bounced && !b)
           );
         }
         if (this.filters.approved && this.filters.approved != "All") {
           const b = this.filters.approved === "Yes";
-          console.log(result);
           result = result.filter(
             (d) => d?.approved === b || (!d?.approved && !b)
           );
@@ -447,7 +445,6 @@ export default {
               d?.type ===
               (this.filters.nomType == "Team Lead" ? "team-lead" : "nominator")
           );
-          console.log(result.length);
         }
         if (this.filters.allocated && this.filters.allocated != "All") {
           result = result.filter((d) => {
@@ -512,8 +509,6 @@ export default {
             const isSubscriber = pData.subscribers.find((s) => {
               return s?.PK === d?.GSI3PK && s?.subscribed;
             });
-
-            // console.log(isSubscriber, d);
 
             return this.filters.isSubscribed === "Yes"
               ? isSubscriber?.PK
@@ -768,7 +763,6 @@ export default {
     },
     async getListData() {
       if (this.platformData?.nominators) {
-        console.log(this.platformData?.nominators);
         this.tableData = this.platformData?.nominators
           .filter(
             (n) =>

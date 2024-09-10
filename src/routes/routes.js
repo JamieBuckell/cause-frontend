@@ -529,6 +529,13 @@ let donorsRegisterMenu = {
   component: DonorsRegister,
 };
 
+let pledgeMenu = {
+  path: "/pledge",
+  name: "Donors Register (Pledge)",
+  component: DonorsRegister,
+  meta: { skipButton: true },
+};
+
 let feedbackHamperMenu = {
   path: "/feedback",
   redirect: "/feedback/hamper",
@@ -717,6 +724,7 @@ const routes = [
   subscribersMenu,
   feedbackHamperMenu,
   donorsRegisterMenu,
+  pledgeMenu,
   donorSubscriptionVerificationMenu,
   subscriberUnsubscribeMenu,
   donorConfirmPledgeMenu,

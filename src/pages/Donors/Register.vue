@@ -600,6 +600,9 @@ export default {
     if (this?.$route?.query?.c) {
       this.isLoading = false;
     }
+    if (this?.$route?.meta?.skipButton) {
+      this.registerClicked = true;
+    }
 
     const response = await activeCampaigns();
     if (response.status == 200) {
