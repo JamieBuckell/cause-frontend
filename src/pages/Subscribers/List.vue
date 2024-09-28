@@ -360,7 +360,6 @@ export default {
         }
         if (this.filters.unsubscribed && this.filters.unsubscribed != "All") {
           const b = !(this.filters.unsubscribed === "Yes");
-          console.log("unsubscribed filter", b);
           result = result.filter(
             (s) => s?.subscribed === b || (!s?.subscribed && !b)
           );
