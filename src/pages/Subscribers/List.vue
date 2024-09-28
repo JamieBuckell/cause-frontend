@@ -529,9 +529,9 @@ export default {
       let rows = [
         ["Subscriber Name", "Email Address", "Organisation", "Telephone"],
       ];
-
-      if (this.tableData) {
-        const data = this.tableData.map((subscriber) => {
+      const dataForCSV = this.listingsData;
+      if (dataForCSV) {
+        const data = dataForCSV.map((subscriber) => {
           return [
             `"${subscriber.firstName} ${subscriber.lastName}"`,
             `"${subscriber?.emailAddress ?? ""}"`,
