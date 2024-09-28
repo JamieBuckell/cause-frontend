@@ -22,7 +22,7 @@
         </div>
       </div>
     </div>
-    <div class="row">
+    <div class="row" v-else>
       <div class="col-12 col-lg-3">
         <card>
           <div slot="header">
@@ -482,7 +482,7 @@ export default {
   },
   data() {
     return {
-      isLoading: false,
+      isLoading: true,
       allocationLoading: false,
       activeCampaign: {},
       downloadPending: false,
@@ -1137,6 +1137,7 @@ export default {
         );
         if (!this.donor) {
           this.$router.push("/donors");
+          return;
         }
 
         if (pData?.subscribers) {
@@ -1168,6 +1169,9 @@ export default {
       this.$router.push("/");
     }
     await this.getDonorData();
+    if (this.donor) {
+      this.isLoading = false;
+    }
   },
   watch: {
     async platformData() {
