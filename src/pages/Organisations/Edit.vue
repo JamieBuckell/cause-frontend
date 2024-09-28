@@ -171,8 +171,15 @@
     </div>
     <div class="row">
       <div class="col-12">
+        <div
+          class="spinner-border text-muted"
+          role="status"
+          v-if="isLoading.organisation"
+        >
+          <span class="sr-only">Loading...</span>
+        </div>
         <FamiliesList
-          v-if="organisation.requestId"
+          v-else-if="organisation.requestId"
           :organisation="organisation"
           :organisationId="organisationId"
           heading="Families"

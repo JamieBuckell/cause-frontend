@@ -250,7 +250,6 @@ const actions = {
     return new Promise((resolve, reject) => {
       if (state.cognitoUser) {
         state.cognitoUser.getUserAttributes(function (err, attributes) {
-          console.log("attributes", attributes);
           if (err) {
             // console.error(JSON.stringify(err))
             reject(err);

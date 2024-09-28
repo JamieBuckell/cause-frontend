@@ -1006,7 +1006,7 @@ export default {
               error: "An unexpected error has occurred.",
             });
           }
-          this.isLoading = true;
+          this.isLoading = false;
           /* */
           break;
         default:

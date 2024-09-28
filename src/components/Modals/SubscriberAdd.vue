@@ -118,6 +118,7 @@ export default {
         company: this.model.company,
       });
       if (created.status == 200) {
+        this.$emit("success", created.data.subscriberId);
         return true;
       } else {
         if (created.data.messages) {

@@ -41,9 +41,9 @@
                   <el-option
                     class="select-default"
                     v-for="nominator in allNominators"
-                    :key="nominator.requestId"
+                    :key="nominator.GSI2PK"
                     :label="`${nominator.fullName} (${nominator.userReference})`"
-                    :value="nominator.requestId"
+                    :value="nominator.GSI2PK"
                   >
                   </el-option>
                 </el-select>
@@ -239,6 +239,10 @@ export default {
       type: String,
       default: "",
     },
+    nominatorRef: {
+      type: String,
+      default: "",
+    },
     nominatorId: {
       type: String,
       default: "",
@@ -394,15 +398,14 @@ export default {
     );
     if (this.allNominators.length) {
       const storedNomExists =
-        storedNominator && storedNominator.requestId
-          ? this.allNominators.find(
-              (n) => n.requestId === storedNominator.requestId
-            )
+        storedNominator && storedNominator.GSI2PK
+          ? this.allNominators.find((n) => n.GSI2PK === storedNominator.GSI2PK)
           : false;
       this.chosenNominatorId = storedNomExists
-        ? storedNomExists.requestId
-        : this.allNominators[0].requestId;
+        ? storedNomExists.GSI2PK
+        : this.allNominators[0].GSI2PK;
     }
+
     if (this.saveType === "create") {
       this.changeNominator();
     }
@@ -428,7 +431,7 @@ export default {
       );
     },
     setChosenNominator(nominator) {
-      this.chosenNominatorId = nominator.requestId;
+      this.chosenNominatorId = nominator.GSI2PK;
       this.chosenNominator = this.platformData.nominators.find(
         (n) =>
           n.GSI2PK === this.chosenNominatorId &&
@@ -442,12 +445,12 @@ export default {
     },
     async changeNominator() {
       const nominator = this.allNominators.find(
-        (n) => n.requestId === this.chosenNominatorId
+        (n) => n.GSI2PK === this.chosenNominatorId
       );
       if (
         this?.chosenNominatorId &&
-        nominator?.requestId &&
-        this?.chosenNominatorId !== this.chosenNominator?.requestId
+        nominator?.GSI2PK &&
+        this?.chosenNominatorId !== this.chosenNominator?.GSI2PK
       ) {
         this.setChosenNominator(nominator);
         if (this.nominations[0]) {

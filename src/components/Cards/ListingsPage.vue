@@ -9,6 +9,14 @@
       >
         Download CSV
       </button>
+      <button
+        type="submit"
+        class="btn btn-info btn-fill btn-wd ml-3 pull-right"
+        @click.prevent="doCreate()"
+        v-if="!isLoading && canCreate()"
+      >
+        Add {{ listingsType.charAt(0).toUpperCase() + listingsType.slice(1) }}
+      </button>
 
       <drop-down
         class="btn-group bulk-actions-dropdown pull-right"
@@ -432,8 +440,14 @@ export default {
     canDownload() {
       return this.options?.download;
     },
+    canCreate() {
+      return this.options?.create;
+    },
     downloadCSV() {
       this.$emit("downloadCSV");
+    },
+    doCreate() {
+      this.$emit("createItem");
     },
     hasCustomActions() {
       let hasCustomActions = this.customActions.length;

@@ -1,13 +1,13 @@
 import { httpClient } from "@/api/core/httpClient";
 
 export const createSubscriber = async (body) =>
-  httpClient.post(`/subscriber/create`, body);
+  httpClient.post(`/subscription/create`, body);
 
 export const getSubscribers = async () =>
   await httpClient.get(`/subscription/list`);
 
 export const deleteSubscriber = async (subscriberId) =>
-  httpClient.post(`/subscriber/delete/${subscriberId}`);
+  httpClient.post(`/subscription/delete/${subscriberId}`);
 
 export const checkSubscriber = async (email, hash) =>
   await httpClient.get(`/subscription/check/${email}/${hash}`);
