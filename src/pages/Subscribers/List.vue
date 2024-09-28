@@ -29,32 +29,6 @@
         </template>
         <template v-slot:filters>
           <div class="col-12 col-md-2">
-            <span class="text-muted small d-block py-1 px-2">Subscribed</span>
-            <el-select
-              class="select-default w-100"
-              :class="[
-                {
-                  'filter-active': isFilterActive(filters.subscribed),
-                },
-              ]"
-              v-model="filters.subscribed"
-              @change="filtersChanged()"
-              placeholder="Subscribed"
-              autocomplete="off"
-              data-lpignore="true"
-              data-form-type="other"
-            >
-              <el-option
-                class="select-default"
-                v-for="item in filters.genericOptions"
-                :key="item"
-                :label="item"
-                :value="item"
-              >
-              </el-option>
-            </el-select>
-          </div>
-          <div class="col-12 col-md-2">
             <span class="text-muted small d-block py-1 px-2"
               >Email Verified</span
             >
@@ -113,6 +87,33 @@
           </div>
 
           <div class="col-12 col-md-2">
+            <span class="text-muted small d-block py-1 px-2">Unsubscribed</span>
+            <el-select
+              class="select-default w-100"
+              :class="[
+                {
+                  'filter-active': isFilterActive(filters.unsubscribed),
+                },
+              ]"
+              v-model="filters.unsubscribed"
+              @change="filtersChanged()"
+              placeholder="Unsubscribed"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            >
+              <el-option
+                class="select-default"
+                v-for="item in filters.genericOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </div>
+
+          <div class="col-12 col-md-3">
             <span class="text-muted small d-block py-1 px-2">How Heard</span>
             <el-select
               class="select-default w-100"
@@ -139,7 +140,7 @@
             </el-select>
           </div>
 
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-md-3">
             <span class="text-muted small d-block py-1 px-2">Company</span>
             <el-select
               class="select-default w-100"
@@ -313,7 +314,9 @@ export default {
       filters: {
         hidden: savedFilters?.hidden ? savedFilters.hidden : "No",
         verified: savedFilters?.verified ? savedFilters.verified : "All",
-        subscribed: savedFilters?.subscribed ? savedFilters.subscribed : "Yes",
+        unsubscribed: savedFilters?.unsubscribed
+          ? savedFilters.unsubscribed
+          : "No",
         bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
         howHeard: savedFilters?.howHeard ? savedFilters.howHeard : "All",
         company: savedFilters?.company ? savedFilters.company : "All",
@@ -355,8 +358,9 @@ export default {
             (s) => s?.verified === v || (!s?.verified && !v)
           );
         }
-        if (this.filters.subscribed && this.filters.subscribed != "All") {
-          const b = this.filters.subscribed === "Yes";
+        if (this.filters.unsubscribed && this.filters.unsubscribed != "All") {
+          const b = !(this.filters.unsubscribed === "Yes");
+          console.log("unsubscribed filter", b);
           result = result.filter(
             (s) => s?.subscribed === b || (!s?.subscribed && !b)
           );
