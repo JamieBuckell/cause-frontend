@@ -536,22 +536,32 @@ export default {
     getCustomActions() {
       const propCustomActions = this.customActions;
       if (!this.organisationId) {
-        propCustomActions.push({
-          emit: "viewOrganisation",
-          type: "icon",
-          icon: "nc-icon nc-istanbul",
-          class: "btn-primary",
-          text: "View Organisation",
-        });
+        const exists =
+          propCustomActions.length &&
+          propCustomActions.find((a) => a?.emit === "viewOrganisation");
+        if (!exists) {
+          propCustomActions.push({
+            emit: "viewOrganisation",
+            type: "icon",
+            icon: "nc-icon nc-istanbul",
+            class: "btn-primary",
+            text: "View Organisation",
+          });
+        }
       }
       if (this.userInGroup("admin")) {
-        propCustomActions.push({
-          emit: "resetPassword",
-          type: "icon",
-          icon: "nc-icon nc-lock-circle-open",
-          class: "btn-info",
-          text: "Reset Password",
-        });
+        const exists =
+          propCustomActions.length &&
+          propCustomActions.find((a) => a?.emit === "resetPassword");
+        if (!exists) {
+          propCustomActions.push({
+            emit: "resetPassword",
+            type: "icon",
+            icon: "nc-icon nc-lock-circle-open",
+            class: "btn-info",
+            text: "Reset Password",
+          });
+        }
       }
       return propCustomActions;
     },
@@ -771,6 +781,7 @@ export default {
           )
           .map((n) => ({
             requestId: n?.GSI2PK ?? "",
+            GSI2PK: n?.GSI2PK ?? "",
             userReference: n?.nominatorDetails?.reference ?? "",
             emailAddress: n?.nominatorDetails?.email ?? "",
             fullName: `${n?.nominatorDetails?.firstName ?? ""} ${
