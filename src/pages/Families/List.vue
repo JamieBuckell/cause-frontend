@@ -509,7 +509,7 @@ export default {
       listingsOptions: {
         columns: tableColumns,
         searchKeys: this.searchKeys,
-        create: this.options?.create ? this.options.create : false,
+        create: false, // this.options?.create ? this.options.create : false,
         edit: this.options?.update ? this.options.update : false,
         delete: this.options?.delete ? this.options.delete : false,
         download: this.options?.download ? this.options.download : false,
