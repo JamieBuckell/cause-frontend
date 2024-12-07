@@ -25,6 +25,8 @@ import Lock from "src/pages/Dashboard/Pages/Lock.vue";
 import HartlepoolTest from "src/pages/DataFix/HartlepoolTest.vue";
 import AllocatedCounts from "src/pages/DataFix/AllocatedCounts.vue";
 import AllocatedMismatch from "src/pages/DataFix/AllocatedMismatch.vue";
+import FixMissingAllocations from "src/pages/DataFix/FixMissingAllocations.vue";
+import FamilyHamperIdMismatch from "src/pages/DataFix/FamilyHamperIdMismatch.vue";
 import MissingDonors from "src/pages/DataFix/MissingDonors.vue";
 import DonorVerificationFix from "src/pages/DataFix/DonorVerificationFix.vue";
 
@@ -668,6 +670,18 @@ let allocatedMismatchPage = {
   component: AllocatedMismatch,
 };
 
+let fixMissingAllocationsPage = {
+  path: "/fix/missing-allocations",
+  name: "FixMissingAllocations",
+  component: FixMissingAllocations,
+};
+
+let fixFamilyHamperIdMismatchPage = {
+  path: "/fix/family-hamper-id-mismatch",
+  name: "FamilyHamperIdMismatch",
+  component: FamilyHamperIdMismatch,
+};
+
 let missingDonorsPage = {
   path: "/fix/missing-donations",
   name: "MissingDonorsFix",
@@ -739,6 +753,8 @@ const routes = [
   hartlepoolTestPage,
   allocatedCountsPage,
   allocatedMismatchPage,
+  fixMissingAllocationsPage,
+  fixFamilyHamperIdMismatchPage,
   missingDonorsPage,
   donorVerificationIssue,
   logoutPage,

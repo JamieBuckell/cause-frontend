@@ -322,6 +322,7 @@ export default {
     async resetWindow() {
       this.activePanel = 0;
       this.hamperData = {};
+      this.usedReferences = {};
     },
     async splitFamilies() {
       this.splittingFamily = true;
@@ -351,10 +352,10 @@ export default {
 
       this.hamperData = {
         campaign: this.$store.getters.getActiveCampaign,
-        familyId: this.familyData?.GSI2PK,
-        nominatorId: this.familyData?.GSI3SK,
-        hamperId: this.familyData?.GSI2SK
-          ? this.familyData?.GSI2SK.replace("SK#", "")
+        familyId: this.familyData?.requestId,
+        nominatorId: this.familyData?.nominatorId,
+        hamperId: this.familyData?.reference
+          ? this.familyData.reference
           : this.getHamperReference(),
         adults: 0,
         children: 0,

@@ -82,7 +82,7 @@
                         {{ hamperDetails.bagsReceived }}
                       </div>
                     </div>
-                    <!--
+                    <!-- -->
                     <div class="row">
                       <div class="col col-12 text-center">
                         <button
@@ -94,7 +94,7 @@
                         </button>
                       </div>
                     </div>
-                    -->
+                    <!-- -->
                   </div>
                 </div>
                 <!--

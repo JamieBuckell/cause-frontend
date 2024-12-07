@@ -49,20 +49,24 @@ export default defineComponent({
   },
   methods: {
     updateStats: async (campaignId) => {
-      const dashData = await getHamperScreen(
-        campaignId && campaignId.length
-          ? campaignId
-          : config.portalDefaults.campaign
-      );
-      const droppped = (dashData.data.hampersDropped ?? 0).toString();
-      const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
-      const pending = (
-        (dashData?.data?.allocatedConfirmed ?? 0) -
-        (dashData?.data?.hampersDropped ?? 0) -
-        (dashData?.data?.hampersDirect ?? 0)
-      ).toString();
+      try {
+        const dashData = await getHamperScreen(
+          campaignId && campaignId.length
+            ? campaignId
+            : config.portalDefaults.campaign
+        );
+        const droppped = (dashData.data.hampersDropped ?? 0).toString();
+        const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
+        const pending = (
+          (dashData?.data?.allocatedConfirmed ?? 0) -
+          (dashData?.data?.hampersDropped ?? 0) -
+          (dashData?.data?.hampersDirect ?? 0)
+        ).toString();
 
-      return [droppped, dropppedBags, pending];
+        return [droppped, dropppedBags, pending];
+      } catch (e) {
+        console.log(error);
+      }
     },
   },
   async mounted() {

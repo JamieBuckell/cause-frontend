@@ -173,7 +173,7 @@ export default {
             } else {
               if (family.allocatedTo != donor.GSI2PK) {
                 errors++;
-                this.output += `${allocation.hamperId} (${family?.SK}) is allocated to ${family.allocatedTo} but is in the allocation of ${donor.GSI2PK}: ${donor.GSI3PK}<br />`;
+                this.output += `${allocation.hamperId} is allocated to ${family.allocatedTo} but is in the allocation of ${donor.GSI2PK}: ${donor.GSI3PK}<br />`;
               }
             }
           }

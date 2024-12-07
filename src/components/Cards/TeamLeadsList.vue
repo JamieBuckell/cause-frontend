@@ -116,6 +116,16 @@
                   @click="handleDeleteAdmin(props.$index, props.row)"
                   ><i class="fa fa-times"></i
                 ></a>
+
+                <template v-if="props.row.emailSent && isJamie()">
+                  <a
+                    v-tooltip.top-center="'Resend Welcome Email'"
+                    class="btn-info btn-simple btn-link"
+                    @click.prevent="resendWelcome(0, props.row)"
+                  >
+                    <i class="fa fa-hand-spock-o"></i>
+                  </a>
+                </template>
               </div>
             </template>
           </el-table-column>
