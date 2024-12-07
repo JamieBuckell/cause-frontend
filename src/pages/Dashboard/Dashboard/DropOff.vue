@@ -65,7 +65,9 @@ export default defineComponent({
 
         return [droppped, dropppedBags, pending];
       } catch (e) {
+        /* eslint-disable no-console */
         console.log(error);
+        /* eslint-enable no-console */
       }
     },
   },

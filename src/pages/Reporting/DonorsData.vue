@@ -2,6 +2,37 @@
   <div>
     <div class="row">
       <div class="col-lg-12">
+        <strong>Donor Registration</strong>
+        <ul>
+          <li>
+            Source Analysis:
+            <ul>
+              <li>
+                Pie/Bar Chart: Proportion of donors by "How did you hear about
+                us?" responses.
+              </li>
+              <li>
+                Trend Over Time: Line graph showing donor registrations over
+                time to track the effectiveness of campaigns.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Donor Commitments:
+            <ul>
+              <li>
+                Bar Chart: Number of families each donor commits to, grouped by
+                categories (1 family, 2-5 families, etc.).
+              </li>
+              <li>
+                Stacked Bar Chart: Family size preferences compared to actual
+                allocations (to identify demand vs. supply mismatches).
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="col-lg-12">
         Date:
         <el-select
           class="select-default mb-0"
@@ -361,7 +392,6 @@ export default {
     } else {
       let chartist = await import("chartist");
       this.$Chartist = chartist.default ? chartist.default : chartist;
-      this.dateChosen = this.dateOptions[0];
       await this.initCharts();
 
       this.isLoading = false;

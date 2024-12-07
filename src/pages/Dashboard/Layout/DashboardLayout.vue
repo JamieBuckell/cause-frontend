@@ -187,6 +187,32 @@
 
         <sidebar-item
           v-if="isJamie()"
+          :link="{
+            name: 'Reporting',
+            icon: 'nc-icon nc-paper-2',
+            path: '/reports/dropoff',
+          }"
+        >
+          <sidebar-item
+            v-if="checkRole('admin')"
+            :link="{
+              name: 'Drop Offs',
+              path: '/reports/dropoff',
+              isRoute: false,
+            }"
+          ></sidebar-item>
+          <sidebar-item
+            v-if="checkRole('admin')"
+            :link="{
+              name: 'Hampers & Bags',
+              path: '/reports/hamper-data',
+              isRoute: false,
+            }"
+          ></sidebar-item>
+        </sidebar-item>
+
+        <sidebar-item
+          v-if="isJamie()"
           :link="{ name: 'Data Stuff', icon: 'nc-icon nc-app' }"
         >
           <sidebar-item

@@ -12,6 +12,9 @@ import Stats from "src/pages/Dashboard/Dashboard/Stats.vue";
 // Reporting Pages
 
 import ReportsDropOff from "src/pages/Reporting/DropOff.vue";
+import HamperData from "src/pages/Reporting/HamperData.vue";
+import FamiliesData from "src/pages/Reporting/FamiliesData.vue";
+import DonorsData from "src/pages/Reporting/DonorsData.vue";
 
 // Pages
 import User from "src/pages/Dashboard/Pages/UserProfile.vue";
@@ -770,6 +773,21 @@ const routes = [
         path: "dropoff",
         name: "ReportsDropOff",
         component: ReportsDropOff,
+      },
+      {
+        path: "hamper-data",
+        name: "HamperData",
+        component: HamperData,
+      },
+      {
+        path: "families-data",
+        name: "FamiliesData",
+        component: FamiliesData,
+      },
+      {
+        path: "donors-data",
+        name: "DonorsData",
+        component: DonorsData,
       },
     ],
   },

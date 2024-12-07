@@ -528,7 +528,7 @@ export default {
     async handleCustomAction(i, k, r) {
       switch (k) {
         case "hideEmail":
-          console.log("hideEmail");
+          // console.log("hideEmail");
 
           const donor = this.tableData.find((n) => n.GSI2PK === r.GSI2PK);
 

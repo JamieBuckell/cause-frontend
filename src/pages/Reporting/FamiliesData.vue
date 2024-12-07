@@ -2,6 +2,51 @@
   <div>
     <div class="row">
       <div class="col-lg-12">
+        <strong>Families in Need</strong>
+        <ul>
+          <li>
+            Demographics Overview:
+            <ul>
+              <li>
+                Bar Chart: Count of each role (Mam, Dad, Boy, Girl, etc.) across
+                all families.
+              </li>
+              <li>
+                Age Distribution: Histogram of ages (grouped by years or
+                months), highlighting ranges like infants, children, adults, and
+                seniors.
+              </li>
+              <li>
+                Special Needs/Dietary Overview:
+                <ul>
+                  <li>
+                    Word Cloud: Most common keywords from free-text dietary and
+                    special needs data.
+                  </li>
+                  <li>
+                    Table or Pie Chart: Proportion of families with specific
+                    dietary or special needs.
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li>
+            Family Size Insights:
+            <ul>
+              <li>
+                Pie Chart: Proportion of families by size categories (e.g.,
+                Single, Small, Medium, etc.).
+              </li>
+              <li>
+                Geographic Map: If the system collects location data, show the
+                distribution of families by region/area.
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="col-lg-12">
         Date:
         <el-select
           class="select-default mb-0"
@@ -361,7 +406,6 @@ export default {
     } else {
       let chartist = await import("chartist");
       this.$Chartist = chartist.default ? chartist.default : chartist;
-      this.dateChosen = this.dateOptions[0];
       await this.initCharts();
 
       this.isLoading = false;
