@@ -306,11 +306,22 @@ export default {
     downloadCSV() {
       let rows = [["Ref", "Name", "Families"]];
 
-      const data = this.tableData.map((organisation) => {
+      const data = this.listingsData.map((organisation) => {
         return [
           `"${organisation.reference}"`,
           `"${organisation.name ? organisation.name : ""}"`,
           `"${organisation.totalFamilies ? organisation.totalFamilies : 0}"`,
+          ...this.platformData?.nominators
+            .filter(
+              (n) =>
+                n?.GSI3PK === organisation.GSI2PK && n?.type === "team-lead"
+            )
+            .map((nominator) => [
+              `"${nominator.nominatorDetails.firstName} ${nominator.nominatorDetails.lastName}"`,
+              `"${nominator.nominatorDetails.email}"`,
+              `"${nominator.nominatorDetails.telephone}"`,
+            ])
+            .flat(),
         ];
       });
       rows.push(...data);
