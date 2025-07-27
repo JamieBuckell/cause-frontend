@@ -33,7 +33,7 @@
                 <div class="col-md-2"><label>Who</label></div>
                 <div class="col-md-2"><label>Age</label></div>
                 <div class="col-md-3">
-                  <label>Additional Information</label>
+                  <label>Additional Information for the Donor</label>
                 </div>
                 <div class="col-md-1"></div>
               </div>
@@ -87,7 +87,7 @@
 
                 <div class="col-md-3">
                   <label class="d-block d-md-none pt-3"
-                    >Additional Information</label
+                    >Additional Information for the Donor</label
                   >
                   {{
                     member.additionalInfo

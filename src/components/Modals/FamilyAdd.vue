@@ -60,11 +60,10 @@
               </template>
               <div class="row d-none d-md-flex">
                 <div class="col-md-1"></div>
-                <div class="col-md-2"><label>Who</label></div>
-                <div class="col-md-2"><label>Age</label></div>
-                <div class="col-md-2"></div>
+                <div class="col-md-3"><label>Who</label></div>
+                <div class="col-md-3"><label>Age</label></div>
                 <div class="col-md-4">
-                  <label>Additional Information</label>
+                  <label>Additional Information for the Donor</label>
                 </div>
                 <div class="col-md-1"></div>
               </div>
@@ -74,7 +73,7 @@
                 :key="memberIndex"
               >
                 <div class="col-md-1">#{{ memberIndex + 1 }}</div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                   <label class="d-block d-md-none">Who</label>
                   <el-select
                     class="select-default mb-0 w-100"
@@ -82,6 +81,10 @@
                     placeholder="Who"
                     filterable
                     default-first-option
+                    :class="{
+                      'is-invalid':
+                        memberErrors?.[nomIndex]?.[memberIndex]?.who,
+                    }"
                   >
                     <el-option
                       class="select-default"
@@ -92,6 +95,12 @@
                     >
                     </el-option>
                   </el-select>
+                  <small
+                    v-if="memberErrors?.[nomIndex]?.[memberIndex]?.who"
+                    class="text-danger"
+                  >
+                    {{ memberErrors[nomIndex][memberIndex].who }}
+                  </small>
                   <div v-if="member.who == 'Other'">
                     <el-input
                       type="text"
@@ -101,16 +110,22 @@
                     />
                   </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                   <label class="d-block d-md-none pt-3">Age</label>
                   <el-select
                     class="select-default mb-0 w-100"
                     v-model="member.age"
                     @change="calculateAges(nomIndex)"
                     placeholder="Age"
+                    aria-required
                     filterable
                     default-first-option
+                    :class="{
+                      'is-invalid':
+                        memberErrors?.[nomIndex]?.[memberIndex]?.age,
+                    }"
                   >
+                    <!--
                     <el-option
                       class="select-default"
                       key=""
@@ -118,16 +133,24 @@
                       value=""
                     >
                     </el-option>
+                    -->
                     <el-option
                       v-for="item in ageList"
-                      :key="item"
-                      :label="item"
-                      :value="item"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
                     >
                     </el-option>
                   </el-select>
+                  <small
+                    v-if="memberErrors?.[nomIndex]?.[memberIndex]?.age"
+                    class="text-danger"
+                  >
+                    {{ memberErrors[nomIndex][memberIndex].age }}
+                  </small>
                 </div>
 
+                <!--
                 <div class="col-md-2">
                   <label class="d-block d-md-none pt-0"></label>
 
@@ -149,16 +172,16 @@
                     </el-option>
                   </el-select>
                 </div>
+                -->
                 <div class="col-md-4">
                   <label class="d-block d-md-none pt-3"
-                    >Additional Information</label
+                    >Additional Information for the Donor</label
                   >
 
                   <fg-input>
                     <textarea
                       class="form-control"
-                      :placeholder="`Dietry Requirements/Special Needs etc
-Likes & Dislikes`"
+                      :placeholder="`Likes/Dietary Requirements/Special Needs etc`"
                       rows="2"
                       v-model="member.additionalInfo"
                     ></textarea>
@@ -168,7 +191,7 @@ Likes & Dislikes`"
                     class="d-block d-md-none"
                     type="textarea"
                     :autosize="{ minRows: 4 }"
-                    placeholder="Dietry Requirements/Special Needs etc"
+                    placeholder="Likes/Dietary Requirements/Special Needs etc"
                     v-model="member.additionalInfo"
                   >
                   </el-input>
@@ -282,6 +305,7 @@ export default {
         child: ["Boy", "Girl"],
       },
       messages: [],
+      memberErrors: [],
     };
   },
   computed: {
@@ -292,8 +316,18 @@ export default {
     },
     breakpoints: () => breakpoints.screen,
     ageList() {
-      const ageListArray = Array.from(Array(115).keys());
-      ageListArray.shift();
+      const ageListArray = [
+        { label: "0-6 months", value: 0.25 },
+        { label: "6-12 months", value: 0.75 },
+        { label: "12-18 months", value: 1 },
+        { label: "18-24 months", value: 1.5 },
+        { label: "2 years", value: 2 },
+      ];
+
+      for (let i = 3; i <= 114; i++) {
+        ageListArray.push({ label: `${i} years`, value: i });
+      }
+
       return ageListArray;
     },
     ageTypes() {
@@ -474,6 +508,52 @@ export default {
     },
     async createFamilies() {
       this.submittingFamily = true;
+
+      let hasErrors = false;
+
+      this.memberErrors = this.nominations.map((nomination) =>
+        nomination.members.map((member) => {
+          return {
+            who: !member.who ? "Who is required." : null,
+            age: !member.age ? "Age is required." : null,
+          };
+        })
+      );
+
+      hasErrors = this.memberErrors.some((nomErrs) =>
+        nomErrs.some((fieldErrs) => fieldErrs.who || fieldErrs.age)
+      );
+
+      if (hasErrors) {
+        this.submittingFamily = false;
+        return;
+      }
+
+      const hasOver18 = this.nominations.some((nomination) =>
+        nomination.members.some((member) => {
+          const parsedAge = parseInt(member.age);
+          return !isNaN(parsedAge) && parsedAge >= 18;
+        })
+      );
+
+      if (!hasOver18) {
+        try {
+          await this.$confirm(
+            "There are no adults attached to this family. Are you sure you want to continue?",
+            "Confirm Submission",
+            {
+              confirmButtonText: "Yes",
+              cancelButtonText: "Cancel",
+              type: "warning",
+            }
+          );
+        } catch {
+          // User cancelled
+          this.submittingFamily = false;
+          return;
+        }
+      }
+
       const res = await createFamily({
         campaign: this.$store.getters.getActiveCampaign,
         nominations: this.nominations,
@@ -611,5 +691,8 @@ export default {
 }
 .el-dialog__wrapper {
   z-index: 1050 !important;
+}
+.is-invalid {
+  border-color: red;
 }
 </style>

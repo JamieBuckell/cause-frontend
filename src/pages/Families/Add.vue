@@ -145,7 +145,7 @@
                     <div class="col-md-6">
                       <fg-input
                         type="text"
-                        placeholder="Dietry Requirements/Special Needs etc"
+                        placeholder="Dietary Requirements/Special Needs etc"
                         :label="isMobile ? 'Any Additional Information' : ''"
                         v-model="member.additionalInfo"
                       >
@@ -214,7 +214,17 @@ export default {
       return ["Years", "Months"];
     },
     whoList() {
-      return ["Mam", "Dad", "Boy", "Girl", "Grandma", "Grandad", "Male", "Female", "Other"];
+      return [
+        "Mam",
+        "Dad",
+        "Boy",
+        "Girl",
+        "Grandma",
+        "Grandad",
+        "Male",
+        "Female",
+        "Other",
+      ];
     },
     nextHamperId() {
       let nextId = (this.nominations.length + 1).toString().padStart(3, "0");
