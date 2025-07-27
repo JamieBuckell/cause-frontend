@@ -148,16 +148,22 @@ export default {
   },
   methods: {
     updateCampaignData(v) {
-      this.campaign.dates.campaign[0] = moment(v[0]).toISOString();
-      this.campaign.dates.campaign[1] = moment(v[1]).toISOString();
+      this.campaign.dates.campaign = [
+        moment(v[0]).toISOString(),
+        moment(v[1]).toISOString(),
+      ];
     },
     updateNominationData(v) {
-      this.campaign.dates.nominations[0] = moment(v[0]).toISOString();
-      this.campaign.dates.nominations[1] = moment(v[1]).toISOString();
+      this.campaign.dates.nominations = [
+        moment(v[0]).toISOString(),
+        moment(v[1]).toISOString(),
+      ];
     },
     updateRegistrationnData(v) {
-      this.campaign.dates.registration[0] = moment(v[0]).toISOString();
-      this.campaign.dates.registration[1] = moment(v[1]).toISOString();
+      this.campaign.dates.registration = [
+        moment(v[0]).toISOString(),
+        moment(v[1]).toISOString(),
+      ];
     },
     async initCampaign() {
       this.campaign = {
@@ -165,9 +171,9 @@ export default {
         reference: "",
         referenceSet: false,
         dates: {
-          campaign: "",
-          nominations: "",
-          registration: "",
+          campaign: [null, null],
+          nominations: [null, null],
+          registration: [null, null],
         },
       };
     },
