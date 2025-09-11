@@ -32,6 +32,7 @@ import { getPlatformData } from "@/services/campaignData";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import { Dialog, Select, Option } from "element-ui";
 import moment from "moment";
+import { ageListBase } from "src/util/common";
 
 window.EventBus = new Vue({
   methods: {
@@ -395,13 +396,19 @@ export default {
       if (members) {
         /* */
         for (const [key, m] of Object.entries(members)) {
+          const ageListIndex = ageListBase.findIndex((al) => al.value == m.age);
+          console.log(ageListIndex);
           rtnString += `
                     <div class="row">
                         <div class="col-12">
                             <strong>
                             ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
                             </strong>
-                            ${m.age} ${m.age ? m.ageType : ""}
+                             ${
+                               ageListIndex >= 0
+                                 ? ageListBase[ageListIndex].label
+                                 : m.age + " " + (m.age ? m.ageType : "")
+                             }
                             ${
                               m.additionalInfo
                                 ? "<br />Info: " + m.additionalInfo

@@ -195,6 +195,8 @@ import Swal from "sweetalert2";
 Vue.prototype.$confirm = MessageBox.confirm;
 import moment from "moment";
 
+import { ageListBase } from "src/util/common";
+
 window.EventBus = new Vue({
   methods: {
     emit(payload) {
@@ -1053,13 +1055,18 @@ export default {
       if (members) {
         /* */
         for (const [key, m] of Object.entries(members)) {
+          const ageListIndex = ageListBase.findIndex((al) => al.value == m.age);
           rtnString += `
                     <div class="row">
                         <div class="col-12">
                             <strong>
                             ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
                             </strong>
-                            ${m.age} ${m.age ? m.ageType : ""}
+                            ${
+                              ageListIndex >= 0
+                                ? ageListBase[ageListIndex].label
+                                : m.age + " " + (m.age ? m.ageType : "")
+                            }
                             ${
                               m.additionalInfo
                                 ? "<br />Info: " + m.additionalInfo
