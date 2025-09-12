@@ -128,6 +128,8 @@ const AllocationMismatch = () =>
 const ExportOrganisationsCustom = () =>
   import("src/pages/DataFix/ExportOrganisationsCustom.vue");
 
+const InvalidAges = () => import("src/pages/DataFix/InvalidAges.vue");
+
 let dataMenu = {
   path: "/data",
   component: DashboardLayout,
@@ -142,6 +144,11 @@ let dataMenu = {
       path: "allocation-mismatch",
       name: "AllocationMismatch",
       component: AllocationMismatch,
+    },
+    {
+      path: "invalid-ages",
+      name: "InvalidAgesFix",
+      component: InvalidAges,
     },
     {
       path: "export-orgs",

@@ -32,7 +32,7 @@ import { getPlatformData } from "@/services/campaignData";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import { Dialog, Select, Option } from "element-ui";
 import moment from "moment";
-import { ageListBase } from "src/util/common";
+import { createFamilyDetail } from "src/util/common";
 
 window.EventBus = new Vue({
   methods: {
@@ -338,7 +338,7 @@ export default {
           GSI2PK: f?.GSI2PK ?? "",
           nominatorDetail: this.createNominatorDetail(f?.GSI3SK),
           donorDetail: this.createDonorDetail(f?.allocatedTo),
-          familyDetail: this.createFamilyDetail(f?.members),
+          familyDetail: createFamilyDetail(f?.members),
           totalUnit: f?.totalUnit ?? 0,
           bagsReceived: f?.bagsReceived ?? 0,
           status: f?.status ?? "",
@@ -390,37 +390,6 @@ export default {
         }
       }
       return rtnStr;
-    },
-    createFamilyDetail(members) {
-      var rtnString = "";
-      if (members) {
-        /* */
-        for (const [key, m] of Object.entries(members)) {
-          const ageListIndex = ageListBase.findIndex((al) => al.value == m.age);
-          console.log(ageListIndex);
-          rtnString += `
-                    <div class="row">
-                        <div class="col-12">
-                            <strong>
-                            ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
-                            </strong>
-                             ${
-                               ageListIndex >= 0
-                                 ? ageListBase[ageListIndex].label
-                                 : m.age + " " + (m.age ? m.ageType : "")
-                             }
-                            ${
-                              m.additionalInfo
-                                ? "<br />Info: " + m.additionalInfo
-                                : ""
-                            }
-                        </div>
-                    </div>
-                    `;
-        }
-        /* */
-      }
-      return rtnString;
     },
   },
   watch: {

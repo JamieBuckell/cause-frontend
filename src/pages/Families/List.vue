@@ -283,7 +283,7 @@ import Swal from "sweetalert2";
 Vue.prototype.$confirm = MessageBox.confirm;
 import moment from "moment";
 
-import { ageListBase } from "src/util/common";
+import { createFamilyDetail } from "src/util/common";
 
 window.EventBus = new Vue({
   methods: {
@@ -1096,36 +1096,6 @@ export default {
         return `${value}`;
       }
     },
-    createFamilyDetail(members) {
-      var rtnString = "";
-      if (members) {
-        /* */
-        for (const [key, m] of Object.entries(members)) {
-          const ageListIndex = ageListBase.findIndex((al) => al.value == m.age);
-          rtnString += `
-                    <div class="row">
-                        <div class="col-12">
-                            <strong>
-                            ${m.who}${m.whoOther ? " (" + m.whoOther + ")" : ""}
-                            </strong>
-                            ${
-                              ageListIndex >= 0
-                                ? ageListBase[ageListIndex].label
-                                : m.age + " " + (m.age ? m.ageType : "")
-                            }
-                            ${
-                              m.additionalInfo
-                                ? "<br />Info: " + m.additionalInfo
-                                : ""
-                            }
-                        </div>
-                    </div>
-                    `;
-        }
-        /* */
-      }
-      return rtnString;
-    },
     async getFamilyData() {
       let familiesData = [];
       if (this.data && typeof this.data === "object") {
@@ -1146,7 +1116,7 @@ export default {
         reference: f?.SK ? f.GSI2SK.replace("SK#", "") : "",
         nominatorDetail: f?.nominatorDetail ?? "",
         donorDetail: f?.donorDetail ?? "",
-        familyDetail: this.createFamilyDetail(f?.members),
+        familyDetail: createFamilyDetail(f?.members),
         totalUnit: f?.totalUnit ?? 0,
         bagsReceived: f?.bagsReceived ?? 0,
         status: f?.status ?? "",
