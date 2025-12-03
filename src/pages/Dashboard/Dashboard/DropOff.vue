@@ -3,16 +3,26 @@
     <div class="diagonal-overlay"></div>
     <div class="background-overlay"></div>
     <div class="row text-center align-items-center" :style="cssVars">
-      <div class="col col-6 mx-auto">
-        <span>Dropped Off</span>
-        <div class="widget-circle in">
-          {{ droppped }}<br />
-          <span style="font-size: 1.5rem; position: absolute; bottom: 70px"
-            >({{ dropppedBags }} Bags)</span
-          >
+      <div class="col col-8 mx-auto">
+        <div class="row text-center align-items-center" :style="cssVars">
+          <div class="col col-6 mx-auto">
+            <span>Dropped Off</span>
+            <div class="widget-circle in">
+              {{ droppped }}<br />
+              <span style="font-size: 1.5rem; position: absolute; bottom: 70px"
+                >({{ dropppedBags }} Bags)</span
+              >
+            </div>
+          </div>
+          <div class="col col-4 mx-auto">
+            <span>Direct</span>
+            <div class="widget-circle in">
+              {{ direct }}
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col col-6 mx-auto">
+      <div class="col col-4 mx-auto">
         <span>Awaiting</span>
         <div class="widget-circle out">
           {{ pending }}
@@ -45,6 +55,7 @@ export default defineComponent({
       droppped: 0,
       dropppedBags: 0,
       pending: 0,
+      direct: 0,
     };
   },
   methods: {
@@ -57,13 +68,14 @@ export default defineComponent({
         );
         const droppped = (dashData.data.hampersDropped ?? 0).toString();
         const dropppedBags = (dashData.data.bagsDropped ?? 0).toString();
+        const direct = (dashData.data.hampersDirect ?? 0).toString();
         const pending = (
           (dashData?.data?.allocatedConfirmed ?? 0) -
           (dashData?.data?.hampersDropped ?? 0) -
           (dashData?.data?.hampersDirect ?? 0)
         ).toString();
 
-        return [droppped, dropppedBags, pending];
+        return [droppped, dropppedBags, pending, direct];
       } catch (e) {
         /* eslint-disable no-console */
         console.log(error);
@@ -78,9 +90,8 @@ export default defineComponent({
     //} else {
 
     const infiniteStats = async () => {
-      [this.droppped, this.dropppedBags, this.pending] = await this.updateStats(
-        this.$store.getters.getActiveCampaign
-      );
+      [this.droppped, this.dropppedBags, this.pending, this.direct] =
+        await this.updateStats(this.$store.getters.getActiveCampaign);
       setTimeout(async () => {
         await infiniteStats();
       }, "120000");
@@ -104,7 +115,7 @@ body,
   margin-top: -44vmin;
 }
 .hampers-data {
-  background: linear-gradient(90deg, #009643 50%, #a68888 50%);
+  background: linear-gradient(90deg, #009643 68.5%, #a68888 31.5%);
   color: #fff;
   font-weight: bold;
   height: 100vh;
