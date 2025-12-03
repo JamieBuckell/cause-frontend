@@ -121,8 +121,6 @@ export default {
     });
     if (result.length) {
     }
-
-    console.log(result);
   },
 };
 </script>

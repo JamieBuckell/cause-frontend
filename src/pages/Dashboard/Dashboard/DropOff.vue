@@ -91,7 +91,10 @@ export default defineComponent({
 
     const infiniteStats = async () => {
       [this.droppped, this.dropppedBags, this.pending, this.direct] =
-        await this.updateStats(this.$store.getters.getActiveCampaign);
+        await this.updateStats(
+          this.$route.params?.campaignId ??
+            this.$store.getters.getActiveCampaign
+        );
       setTimeout(async () => {
         await infiniteStats();
       }, "120000");

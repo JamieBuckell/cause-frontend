@@ -347,7 +347,7 @@ let checkHamper = {
 };
 
 let dropOffView = {
-  path: "/screens/drop-offs",
+  path: "/screens/drop-offs/:campaignId?",
   name: "DropOffs",
   component: DropOff,
 };

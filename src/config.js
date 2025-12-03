@@ -20,7 +20,7 @@ const poolData = {
 };
 
 const portalDefaults = {
-  campaign: "CH24",
+  campaign: "CH25",
 };
 
 export default { poolData, portalDefaults };
