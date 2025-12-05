@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-md-4 mx-auto mt-3 mt-md-0">
+      <div class="col-12 col-md-4 mx-auto mt-3 mt-md-0 pending-hampers">
         <span class="hamper-title">Awaiting</span>
         <div class="widget-circle out">
           <span class="figure-label">{{ pending }}</span>
@@ -126,7 +126,7 @@ export default defineComponent({
 }
 
 .hampers-row {
-  width: 100%;
+  min-width: 100%;
   position: relative;
   z-index: 1; /* above the overlays */
 }
@@ -210,6 +210,10 @@ div.widget-circle {
   .hampers-data {
     padding: 2rem 0 4rem;
     background: linear-gradient(90deg, #009643 65.5%, #009643 31.5%);
+  }
+
+  .pending-hampers {
+    background-color: #a68888;
   }
 
   .hampers-data .hamper-title {
