@@ -13,7 +13,7 @@
           <div class="col-12 col-md-6 mx-auto mb-5 mb-md-0">
             <span class="hamper-title">Dropped Off</span>
             <div class="widget-circle in">
-              {{ droppped }}<br />
+              <span class="figure-label">{{ droppped }}</span>
               <span class="bags-label">({{ dropppedBags }} Bags)</span>
             </div>
           </div>
@@ -21,7 +21,7 @@
           <div class="col-12 col-md-6 mx-auto mb-5 mb-md-0">
             <span class="hamper-title">Direct</span>
             <div class="widget-circle in">
-              {{ direct }}
+              <span class="figure-label">{{ direct }}</span>
             </div>
           </div>
         </div>
@@ -30,7 +30,7 @@
       <div class="col-12 col-md-4 mx-auto mt-3 mt-md-0">
         <span class="hamper-title">Awaiting</span>
         <div class="widget-circle out">
-          {{ pending }}
+          <span class="figure-label">{{ pending }}</span>
         </div>
       </div>
     </div>
@@ -137,10 +137,13 @@ export default defineComponent({
   margin-bottom: 1.5rem;
 }
 
+.hampers-data .figure-label,
+.hampers-data .bags-label {
+  display: block;
+}
+
 .hampers-data .bags-label {
   font-size: 1.5rem;
-  position: absolute;
-  bottom: 70px;
 }
 
 /* CIRCLES – dynamic, non-overlapping */
@@ -154,17 +157,34 @@ div.widget-circle {
   box-shadow: 0 0 0 1.875vmin,
     inset 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125),
     3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
+
+  /* base font-size for the big number */
   font-size: calc(var(--circle-size) / 2.6);
   text-shadow: 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
-  position: relative;
+
+  position: relative; /* important: anchor for absolute children */
   margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 50%;
   overflow: hidden;
   color: white;
-  border-radius: 50%;
   font-weight: 700;
+}
+
+.hampers-data .figure-label {
+  position: absolute;
+  top: 48%; /* centre-ish */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+.hampers-data .bags-label {
+  position: absolute;
+  bottom: 12%; /* percentage of circle height, scales nicely */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(var(--circle-size) / 14); /* smaller than main figure */
+  line-height: 1.2;
 }
 
 /* Slight tweaks on medium and down */
