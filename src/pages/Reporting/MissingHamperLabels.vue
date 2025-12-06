@@ -1,6 +1,8 @@
 <template>
   <div v-if="!loading">
-    <div>Pending Hampers: {{ pendingHampers.length }}</div>
+    <div class="page landscape">
+      Pending Hampers: {{ pendingHampers.length }}
+    </div>
     <div
       class="page landscape"
       v-for="hamper in pendingHampers"
