@@ -39,6 +39,13 @@
                       />
                     </div>
                   </qrcode-stream>
+                  <div v-if="showManual" class="text-center mt-3">
+                    <small>Having trouble focusing?</small><br />
+                    <qrcode-capture
+                      @decode="onDecode"
+                      style="margin-top: 0.5rem"
+                    />
+                  </div>
 
                   <br />
                   <l-alert
@@ -141,10 +148,12 @@ export default {
     FadeRenderTransition,
     AuthLayout,
     QrcodeStream,
+    QrcodeCapture,
     LAlert,
   },
   data() {
     return {
+      showManual: false,
       messages: [],
       submitting: false,
       camera: "auto",
@@ -293,7 +302,10 @@ export default {
 </script>
 <style lang="scss">
 .qrcode-stream-camera {
-  height: 200px !important;
+  height: 60vh !important; // or 70–80vh if you prefer
+  width: 100%;
+  object-fit: cover;
+  display: block;
 }
 .scan-confirmation {
   position: absolute;
