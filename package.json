@@ -41,6 +41,7 @@
     "js-cookie": "^2.2.1",
     "moment": "^2.29.4",
     "perfect-scrollbar": "1.5.5",
+    "qrcode": "^1.5.4",
     "secure-ls": "^1.2.6",
     "sweetalert2": "11.4.4",
     "topojson": "3.0.2",

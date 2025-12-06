@@ -34,3 +34,38 @@ export const createFamilyDetail = (members) => {
   }
   return rtnString;
 };
+
+export const createFamilyDetailBasic = (members) => {
+  if (!members) return "";
+
+  const parts = [];
+
+  for (const [, m] of Object.entries(members)) {
+    if (!m) continue;
+
+    // Base name: "Dad" or "Mam (Gran)" etc.
+    const who = m.whoOther ? `${m.who} (${m.whoOther})` : m.who || "";
+
+    // Look up age label if present in ageListBase
+    const ageItem = ageListBase.find((al) => al.value == m.age);
+
+    let ageLabel = "";
+    if (ageItem) {
+      // e.g. "46 Years" or "Adult"
+      ageLabel = ageItem.label;
+    } else if (m.age) {
+      // Fallback: "46 Years" built from raw data
+      ageLabel = `${m.age} ${m.ageType || ""}`.trim();
+    }
+
+    // Build "Mam 46 Years" or just "Dad" if no age
+    const piece = ageLabel ? `${who} ${ageLabel}`.trim() : who.trim();
+
+    if (piece) {
+      parts.push(piece);
+    }
+  }
+
+  // "Dad, Mam 46 Years" / "Mam, Boy 4 Years, Boy 6 Years"
+  return parts.join(", ");
+};

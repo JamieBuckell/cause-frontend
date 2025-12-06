@@ -209,6 +209,14 @@
               isRoute: false,
             }"
           ></sidebar-item>
+          <sidebar-item
+            v-if="checkRole('admin')"
+            :link="{
+              name: 'Missing Hamper Labels',
+              path: '/reports/missing-hamper-labels',
+              isRoute: false,
+            }"
+          ></sidebar-item>
         </sidebar-item>
 
         <sidebar-item

@@ -13,6 +13,7 @@ import Stats from "src/pages/Dashboard/Dashboard/Stats.vue";
 
 import ReportsDropOff from "src/pages/Reporting/DropOff.vue";
 import HamperData from "src/pages/Reporting/HamperData.vue";
+import MissingHamperLabels from "src/pages/Reporting/MissingHamperLabels.vue";
 import FamiliesData from "src/pages/Reporting/FamiliesData.vue";
 import DonorsData from "src/pages/Reporting/DonorsData.vue";
 
@@ -785,6 +786,11 @@ const routes = [
         path: "hamper-data",
         name: "HamperData",
         component: HamperData,
+      },
+      {
+        path: "missing-hamper-labels",
+        name: "MissingHamperLabels",
+        component: MissingHamperLabels,
       },
       {
         path: "families-data",
