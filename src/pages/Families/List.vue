@@ -460,8 +460,6 @@ export default {
       },
       filters: {
         nominatorId: "All",
-        verified: savedFilters?.verified ? savedFilters.verified : "Yes",
-        verifiedOptions: ["All", "Yes", "No"],
         bounced: savedFilters?.bounced ? savedFilters.bounced : "All",
         bouncedOptions: ["All", "Yes", "No"],
         familySize: savedFilters?.familySize ? savedFilters.familySize : "All",
@@ -758,6 +756,47 @@ export default {
     isFilterActive(value) {
       return value !== "All" && value != "";
     },
+    buildCsvFilename() {
+      const parts = [];
+
+      // Base: org ref (if present) + families-list
+      if (this.organisation.reference) {
+        parts.push(this.organisation.reference);
+      }
+      parts.push("families-list");
+
+      const slug = (str) =>
+        String(str)
+          .trim()
+          .toLowerCase()
+          .replace(/\+/g, "plus") // 10+ → 10plus
+          .replace(/\s+/g, "-") // spaces → dashes
+          .replace(/[^a-z0-9-]/g, ""); // strip anything weird
+
+      const f = this.filters || {};
+
+      // Only add segments when value is not "All" / empty
+      if (f.familySize && f.familySize !== "All") {
+        parts.push(`family-size-${slug(f.familySize)}`);
+      }
+      if (f.hasAdditionalInformation && f.hasAdditionalInformation !== "All") {
+        parts.push(`additional-info-${slug(f.hasAdditionalInformation)}`);
+      }
+      if (f.allocationStatus && f.allocationStatus !== "All") {
+        parts.push(`allocation-${slug(f.allocationStatus)}`);
+      }
+      if (f.dropoffStatus && f.dropoffStatus !== "All") {
+        parts.push(`dropoff-${slug(f.dropoffStatus)}`);
+      }
+      if (f.nominatorId && f.nominatorId !== "All") {
+        parts.push(`nominator-${slug(f.nominatorId)}`);
+      }
+      if (f.bounced && f.bounced !== "All") {
+        parts.push(`bounced-${slug(f.bounced)}`);
+      }
+
+      return `${parts.join("-")}.csv`;
+    },
     updateSearch(results) {
       this.searchResults = results;
     },
@@ -900,12 +939,7 @@ export default {
       /* */
       var link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute(
-        "download",
-        `${
-          this.organisation.reference ? this.organisation.reference + "-" : ""
-        }families-list.csv`
-      );
+      link.setAttribute("download", this.buildCsvFilename());
       document.body.appendChild(link); // Required for FF
 
       link.click();
