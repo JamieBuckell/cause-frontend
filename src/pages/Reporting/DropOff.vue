@@ -20,7 +20,7 @@
           </el-option>
         </el-select>
         <card
-          title="Drop Off Times"
+          :title="'Drop Off Times (' + totalHampers + ' Hampers)'"
           subTitle="Peaks of Drop Off Times by single day"
         >
           <div id="chartDropOffs" class="ct-chart"></div>
@@ -71,7 +71,7 @@ export default {
     dateOptions() {
       switch (this.$store.getters.getActiveCampaign) {
         case "CH25":
-          return ["20241205", "20241206", "20241207"];
+          return ["20251204", "20251205", "20251206", "20251207"];
         case "CH24":
           return ["20241206", "20241207", "20241208"];
         default:
@@ -85,6 +85,7 @@ export default {
       dateChosen: "",
       editTooltip: "Edit Task",
       deleteTooltip: "Remove",
+      totalHampers: 0,
       pieChart: {
         data: {
           labels: ["40%", "20%", "40%"],
@@ -243,6 +244,11 @@ export default {
       if (reportRes.status == 200) {
         dataDropOffs.series = [reportRes.data.timeData];
       }
+
+      this.totalHampers = (reportRes?.data?.timeData?.data ?? []).reduce(
+        (total, { y }) => total + (typeof y === "number" ? y : 0),
+        0
+      );
 
       const optionsDropOffs = {
         height: "250px",

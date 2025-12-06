@@ -116,7 +116,7 @@ export default {
     dateOptions() {
       switch (this.$store.getters.getActiveCampaign) {
         case "CH25":
-          return ["20241205", "20241206", "20241207"];
+          return ["20251205", "20251206", "20251207"];
         case "CH24":
           return ["20241206", "20241207", "20241208"];
         default:
