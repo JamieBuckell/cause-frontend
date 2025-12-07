@@ -94,6 +94,24 @@
                     <div class="col col-12" v-html="familyDynamic"></div>
                   </div>
 
+                  <div class="row" v-if="donorName !== ''">
+                    <div class="col col-5">
+                      <strong>Donor:</strong>
+                    </div>
+                    <div class="col col-7">
+                      {{ donorName }}
+                    </div>
+                  </div>
+
+                  <div class="row" v-if="donorCompany !== ''">
+                    <div class="col col-5">
+                      <strong>Company:</strong>
+                    </div>
+                    <div class="col col-7">
+                      {{ donorCompany }}
+                    </div>
+                  </div>
+
                   <ValidationProvider
                     name="numberOfBags"
                     rules="required"
@@ -164,6 +182,8 @@ export default {
       hamperId: "",
       numberOfBags: "",
       familyUnitTotal: "",
+      donorName: "",
+      donorCompany: "",
       familyDynamic: "",
       callback: false,
       showerr: false,
@@ -220,6 +240,13 @@ export default {
       if (res?.data?.familyUnitTotal) {
         this.familyUnitTotal = res.data.familyUnitTotal;
       }
+      if (res?.data?.donor?.name) {
+        this.donorName = res.data.donor.name;
+      }
+      if (res?.data?.donor?.company && res.data.donor.company != "") {
+        this.donorCompany = res.data.donor.company;
+      }
+
       if (res?.data?.familyDynamic) {
         this.familyDynamic = res.data.familyDynamic;
       }
