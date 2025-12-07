@@ -54,8 +54,9 @@
   </div>
 </template>
 <script>
-import { getDropOffsReport, getAllDropOffsReport } from "@/api/reports.api";
+import { listFamilies } from "@/api/families.api";
 import { Select, Option } from "element-ui";
+
 export default {
   components: {
     [Select.name]: Select,
@@ -86,6 +87,8 @@ export default {
       editTooltip: "Edit Task",
       deleteTooltip: "Remove",
       totalHampers: 0,
+      familiesData: [],
+      messages: [],
       pieChart: {
         data: {
           labels: ["40%", "20%", "40%"],
@@ -151,15 +154,7 @@ export default {
           title: "Nominators",
           value: "0",
           active: true,
-        } /*
-        admins: {
-          url: "/admin/users",
-          icon: "nc-badge text-warning",
-          class: "order-8 order-xl-8",
-          title: "Admin Users",
-          value: "0",
-          active: true,
-        },*/,
+        },
         hampersDropped: {
           url: "/hampers/list",
           icon: "nc-bag text-primary",
@@ -173,82 +168,100 @@ export default {
     };
   },
   watch: {
-    async dateChosen(newVal) {
+    async dateChosen() {
       await this.initDropOffsChart();
     },
-    activeCampaign(newQuestion, oldQuestion) {
-      this.updateReportData();
+    async activeCampaign() {
+      await this.updateReportData();
     },
   },
   methods: {
-    async initDropOffsChart() {
-      const dataDropOffs = {
-        labels: [
-          "0800",
-          "",
-          "0830",
-          "",
-          "0900",
-          "",
-          "0930",
-          "",
-          "1000",
-          "",
-          "1030",
-          "",
-          "1100",
-          "",
-          "1130",
-          "",
-          "1200",
-          "",
-          "1230",
-          "",
-          "1300",
-          "",
-          "1330",
-          "",
-          "1400",
-          "",
-          "1430",
-          "",
-          "1500",
-          "",
-          "1530",
-          "",
-          "1600",
-          "",
-          "1630",
-          "",
-          "1700",
-          "",
-          "1730",
-          "",
-          "1800",
-          "",
-          "1830",
-        ],
-        series: [],
-      };
+    getSelectedDateString() {
+      if (!this.dateChosen) return null;
+      const y = this.dateChosen.slice(0, 4);
+      const m = this.dateChosen.slice(4, 6);
+      const d = this.dateChosen.slice(6, 8);
+      return `${y}-${m}-${d}`;
+    },
 
-      const reportRes = await getDropOffsReport(
-        this.$store.getters.getActiveCampaign,
-        this.dateChosen
-      );
+    buildEmptyTimeSeries() {
+      const series = [];
+      const startMinutes = 8 * 60; // 08:00
+      const endMinutes = 18 * 60 + 30; // 18:30
+      for (let t = startMinutes; t <= endMinutes; t += 15) {
+        series.push(0);
+      }
+      return series;
+    },
 
-      if (reportRes.data?.messages) {
-        this.messages = Object.keys(reportRes?.data?.messages).map((k) => ({
-          error: reportRes?.data?.messages[k],
+    buildDropoffLabels() {
+      return [
+        "0800",
+        "",
+        "0830",
+        "",
+        "0900",
+        "",
+        "0930",
+        "",
+        "1000",
+        "",
+        "1030",
+        "",
+        "1100",
+        "",
+        "1130",
+        "",
+        "1200",
+        "",
+        "1230",
+        "",
+        "1300",
+        "",
+        "1330",
+        "",
+        "1400",
+        "",
+        "1430",
+        "",
+        "1500",
+        "",
+        "1530",
+        "",
+        "1600",
+        "",
+        "1630",
+        "",
+        "1700",
+        "",
+        "1730",
+        "",
+        "1800",
+        "",
+        "1830",
+      ];
+    },
+
+    async fetchFamilies(force = false) {
+      if (!force && this.familiesData && this.familiesData.length) {
+        return;
+      }
+      const res = await listFamilies(this.$store.getters.getActiveCampaign);
+      if (res?.data?.messages) {
+        this.messages = Object.keys(res.data.messages).map((k) => ({
+          error: res.data.messages[k],
         }));
       }
-      if (reportRes.status == 200) {
-        dataDropOffs.series = [reportRes.data.timeData];
-      }
+      this.familiesData = res?.data ?? [];
+    },
 
-      this.totalHampers = (reportRes?.data?.timeData?.data ?? []).reduce(
-        (total, { y }) => total + (typeof y === "number" ? y : 0),
-        0
-      );
+    async initDropOffsChart() {
+      await this.fetchFamilies();
+
+      const dataDropOffs = {
+        labels: this.buildDropoffLabels(),
+        series: [],
+      };
 
       const optionsDropOffs = {
         height: "250px",
@@ -263,70 +276,88 @@ export default {
         },
       };
 
+      const selectedDate = this.getSelectedDateString();
+
+      // no date chosen yet → just empty chart
+      if (!selectedDate) {
+        this.totalHampers = 0;
+        this.$Chartist.Line("#chartDropOffs", dataDropOffs, optionsDropOffs);
+        return;
+      }
+
+      const seriesValues = this.buildEmptyTimeSeries();
+      const startMinutes = 8 * 60;
+
+      this.familiesData.forEach((f) => {
+        const received = f?.receivedDate;
+        if (!received) return;
+
+        // receivedDate: "2025-12-05 19:11:01"
+        const dateStr = String(received).slice(0, 10); // "YYYY-MM-DD"
+        if (dateStr !== selectedDate) return;
+
+        const timePart = String(received).slice(11, 16); // "HH:MM"
+        const [hStr, mStr] = timePart.split(":");
+        const h = parseInt(hStr, 10);
+        const m = parseInt(mStr, 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return;
+
+        // floor to nearest 15-minute slot
+        const quarterMinutes = Math.floor(m / 15) * 15;
+        const totalMinutes = h * 60 + quarterMinutes;
+        const index = Math.floor((totalMinutes - startMinutes) / 15);
+
+        if (index < 0 || index >= seriesValues.length) return;
+
+        // count 1 hamper per family with a receivedDate in that slot
+        seriesValues[index] += 1;
+      });
+
+      this.totalHampers = seriesValues.reduce((sum, v) => sum + v, 0);
+      dataDropOffs.series = [seriesValues];
+
       this.$Chartist.Line("#chartDropOffs", dataDropOffs, optionsDropOffs);
     },
+
     async initAllDropOffsChart() {
+      await this.fetchFamilies();
+
       const dataAllDropOffs = {
-        labels: [
-          "0800",
-          "",
-          "0830",
-          "",
-          "0900",
-          "",
-          "0930",
-          "",
-          "1000",
-          "",
-          "1030",
-          "",
-          "1100",
-          "",
-          "1130",
-          "",
-          "1200",
-          "",
-          "1230",
-          "",
-          "1300",
-          "",
-          "1330",
-          "",
-          "1400",
-          "",
-          "1430",
-          "",
-          "1500",
-          "",
-          "1530",
-          "",
-          "1600",
-          "",
-          "1630",
-          "",
-          "1700",
-          "",
-          "1730",
-          "",
-          "1800",
-          "",
-          "1830",
-        ],
+        labels: this.buildDropoffLabels(),
         series: [],
       };
 
-      const reportRes = await getAllDropOffsReport(
-        this.$store.getters.getActiveCampaign
-      );
+      const startMinutes = 8 * 60;
+      const perDate = {}; // { 'YYYY-MM-DD': [counts per slot] }
 
-      if (reportRes.data?.messages) {
-        this.messages = Object.keys(reportRes?.data?.messages).map((k) => ({
-          error: reportRes?.data?.messages[k],
-        }));
-      }
-      if (reportRes.status == 200) {
-        dataAllDropOffs.series = reportRes.data.allDropOffsData;
-      }
+      this.familiesData.forEach((f) => {
+        const received = f?.receivedDate;
+        if (!received) return;
+
+        const dateStr = String(received).slice(0, 10); // "YYYY-MM-DD"
+        if (!perDate[dateStr]) {
+          perDate[dateStr] = this.buildEmptyTimeSeries();
+        }
+
+        const timePart = String(received).slice(11, 16); // "HH:MM"
+        const [hStr, mStr] = timePart.split(":");
+        const h = parseInt(hStr, 10);
+        const m = parseInt(mStr, 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return;
+
+        const quarterMinutes = Math.floor(m / 15) * 15;
+        const totalMinutes = h * 60 + quarterMinutes;
+        const index = Math.floor((totalMinutes - startMinutes) / 15);
+
+        if (index < 0 || index >= perDate[dateStr].length) return;
+
+        perDate[dateStr][index] += 1;
+      });
+
+      // one line per day, so you’ll see overlapping lines for each date
+      dataAllDropOffs.series = Object.keys(perDate)
+        .sort()
+        .map((d) => perDate[d]);
 
       const optionsAllDropOffs = {
         height: "250px",
@@ -347,19 +378,21 @@ export default {
         optionsAllDropOffs
       );
     },
+
     async initCharts() {
+      await this.fetchFamilies(true); // force refresh for current campaign
       await this.initDropOffsChart();
       await this.initAllDropOffsChart();
-      // this.initStockChart();
-      // this.initViewsChart();
-      // this.initActivityChart();
     },
+
     async updateReportData() {
       if (!this.activeCampaign) {
         return;
       }
-
-      return;
+      this.isLoading = true;
+      this.familiesData = [];
+      await this.initCharts();
+      this.isLoading = false;
     },
   },
   async mounted() {
@@ -367,9 +400,10 @@ export default {
     if (!isAdmin) {
       // this.$router.push("/organisations/me");
     } else {
-      let chartist = await import("chartist");
+      const chartist = await import("chartist");
       this.$Chartist = chartist.default ? chartist.default : chartist;
-      this.dateChosen = this.dateOptions[0];
+
+      this.dateChosen = this.dateOptions[0]; // pick first date by default
       await this.initCharts();
 
       this.isLoading = false;
@@ -377,6 +411,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 .card-subtitle {
   font-size: 0.8rem;
