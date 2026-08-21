@@ -18,25 +18,48 @@
         <div class="row">
           <div
             class="col-12"
-            :class="hasAdditionalDetail ? 'col-xl-8 order-1 order-xl-1' : ''"
+            :class="hasPreviewSidebar ? 'col-xl-8 order-1 order-xl-1' : ''"
           >
             <template v-if="previewData.subject">
               <h3 class="email-subject">
                 Subject:
-                <span v-html="previewData.subject" />
+                <span v-html="getPreviewSubject" />
               </h3>
             </template>
           </div>
           <div
             class="col-12"
-            :class="hasAdditionalDetail ? 'col-xl-8 order-3 order-xl-2' : ''"
+            :class="hasPreviewSidebar ? 'col-xl-8 order-3 order-xl-2' : ''"
           >
             <EmailPreview :previewContent="getPreviewContent" />
           </div>
           <div
             class="col-12"
-            :class="hasAdditionalDetail ? 'col-xl-4 order-2 order-xl-3' : ''"
+            :class="hasPreviewSidebar ? 'col-xl-4 order-2 order-xl-3' : ''"
           >
+            <div v-if="detectedPlaceholders.length" class="placeholder-panel">
+              <h3>Preview placeholder values</h3>
+              <p class="text-muted">
+                Enter sample values to see this email as a recipient would.
+              </p>
+              <div
+                v-for="placeholder in detectedPlaceholders"
+                :key="placeholder.key"
+                class="placeholder-field"
+              >
+                <label :for="`placeholder-${placeholder.key}`">
+                  {{ placeholder.label }}
+                  <small>&lt;&lt;{{ placeholder.key }}&gt;&gt;</small>
+                </label>
+                <el-input
+                  :id="`placeholder-${placeholder.key}`"
+                  v-model="placeholderValues[placeholder.key]"
+                  type="textarea"
+                  :rows="placeholder.multiline ? 3 : 1"
+                  :placeholder="placeholder.example"
+                />
+              </div>
+            </div>
             <template v-if="previewData.dateAdded">
               <h3>Date Sent</h3>
               <p v-html="previewData.dateAdded" />
@@ -165,6 +188,34 @@ import { Dialog } from "element-ui";
 import Swal from "sweetalert2";
 import { MessageBox } from "element-ui";
 
+const EMAIL_PLACEHOLDER_REGEX =
+  /((%3C%3C)|(&lt;&lt;)|(<<))([a-zA-Z\.0-9]+)((>>)|(&gt;&gt;)|(%3E%3E))/gm;
+
+const EMAIL_PLACEHOLDERS = {
+  "DONOR.FIRSTNAME": { label: "Donor first name", example: "Alex" },
+  "DONOR.LASTNAME": { label: "Donor last name", example: "Smith" },
+  "DONOR.EMAIL": { label: "Donor email", example: "alex@example.com" },
+  "DONOR.TELEPHONE": { label: "Donor telephone", example: "07123 456789" },
+  "DONOR.COMPANY": { label: "Donor company", example: "Example Ltd" },
+  "REQUEST.FAMILY": { label: "Family request", example: "Family request details", multiline: true },
+  "ORGANISATION.NAME": { label: "Organisation name", example: "Example Organisation" },
+  "NOMINATOR.FIRSTNAME": { label: "Nominator first name", example: "Sam" },
+  "NOMINATOR.LASTNAME": { label: "Nominator last name", example: "Taylor" },
+  "NOMINATOR.FULLNAME": { label: "Nominator full name", example: "Sam Taylor" },
+  "NOMINATOR.EMAIL": { label: "Nominator email", example: "sam@example.com" },
+  "NOMINATOR.PASSWORD": { label: "Nominator password", example: "Temporary password" },
+  "NOMINATOR.REGISTRATION.LINK": { label: "Registration link", example: "https://example.com/register" },
+  "NOMINATOR.RESETPASSWORD.LINK": { label: "Reset password link", example: "https://example.com/reset-password" },
+  "PASSWORD.TEMPORARY": { label: "Temporary password", example: "Temporary password" },
+  "DONOR.EMAIL.VERIFY.LINK": { label: "Email verification link", example: "https://example.com/subscription/verify/..." },
+  "DONOR.PLEDGE.ACCEPT": { label: "Accept pledge link", example: "https://example.com/pledge-confirmation?t=accept..." },
+  "DONOR.PLEDGE.CHANGE": { label: "Change pledge link", example: "https://example.com/pledge-confirmation?t=change..." },
+  "ALLOCATION.PDFLINK": { label: "Allocation PDF link", example: "https://example.com/allocation.pdf" },
+  "ALLOCATION.DATA": { label: "Allocation data", example: "Allocation details", multiline: true },
+  "ALLOCATION.DATA.NOID": { label: "Allocation data (without ID)", example: "Allocation details", multiline: true },
+  "PORTAL.URL": { label: "Portal URL", example: "https://example.com" },
+};
+
 Vue.prototype.$confirm = MessageBox.confirm;
 
 export default {
@@ -191,6 +242,7 @@ export default {
       isLoading: true,
       showEdit: false,
       showPreview: false,
+      placeholderValues: {},
       previewData: {
         template: "",
         title: "",
@@ -239,6 +291,9 @@ export default {
     };
   },
   computed: {
+    hasPreviewSidebar() {
+      return this.hasAdditionalDetail || this.detectedPlaceholders.length > 0;
+    },
     hasAdditionalDetail() {
       return (
         this.previewData?.dateAdded ||
@@ -256,7 +311,27 @@ export default {
         "{{pageContent}}",
         this.previewData?.content
       );
-      return previewContent;
+      return this.replacePreviewPlaceholders(previewContent);
+    },
+    getPreviewSubject() {
+      return this.replacePreviewPlaceholders(this.previewData?.subject ?? "");
+    },
+    detectedPlaceholders() {
+      const content = [
+        this.previewData?.template,
+        this.previewData?.subject,
+        this.previewData?.title,
+        this.previewData?.content,
+      ].join(" ");
+      const keys = [];
+      const matches = content.match(EMAIL_PLACEHOLDER_REGEX) || [];
+
+      matches.forEach((match) => {
+        const key = this.getPlaceholderKey(match);
+        if (EMAIL_PLACEHOLDERS[key] && !keys.includes(key)) keys.push(key);
+      });
+
+      return keys.map((key) => ({ key, ...EMAIL_PLACEHOLDERS[key] }));
     },
     getCustomActions() {
       const propCustomActions = [];
@@ -274,6 +349,43 @@ export default {
     },
   },
   methods: {
+    getPlaceholderKey(match) {
+      return match
+        .replace(
+          /((%3C%3C)|(&lt;&lt;)|(<<)|(>>)|(&gt;&gt;)|(%3E%3E))/gm,
+          ""
+        )
+        .toUpperCase();
+    },
+    replacePreviewPlaceholders(content) {
+      const matches = content.match(EMAIL_PLACEHOLDER_REGEX);
+      if (!matches) return content;
+
+      matches.forEach((match) => {
+        const key = this.getPlaceholderKey(match);
+        let value = EMAIL_PLACEHOLDERS[key]
+          ? this.placeholderValues[key] ?? ""
+          : "";
+        if (key === "PORTAL.URL") {
+          value = `<a href="${value}">${value}</a>`;
+        }
+        content = content.replace(match, value);
+      });
+
+      return content;
+    },
+    resetPlaceholderValues() {
+      this.placeholderValues = {};
+      this.$nextTick(() => {
+        this.detectedPlaceholders.forEach((placeholder) => {
+          this.$set(
+            this.placeholderValues,
+            placeholder.key,
+            placeholder.example ?? ""
+          );
+        });
+      });
+    },
     async handleEdit(i, r) {
       this.showEdit = true;
 
@@ -295,6 +407,7 @@ export default {
           this.previewData.description = r?.description ?? "";
           this.previewData.title = r?.pageTitle ?? "";
           this.previewData.content = r?.pageContent ?? "";
+          this.resetPlaceholderValues();
           break;
         default:
           this.$emit(k, i, r);
@@ -357,6 +470,35 @@ export default {
   font-weight: 400;
   > span {
     font-weight: 700;
+  }
+}
+
+.placeholder-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  background: #f8f9fa;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.placeholder-field {
+  margin-top: 0.85rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+
+  small {
+    color: #6c757d;
+    font-family: monospace;
+    font-weight: 400;
   }
 }
 
