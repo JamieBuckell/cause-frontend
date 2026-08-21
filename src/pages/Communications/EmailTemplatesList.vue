@@ -159,6 +159,13 @@
                   <div class="row">
                     <div class="col-12">
                       <button
+                        type="button"
+                        class="btn btn-wd pull-left btn-secondary"
+                        @click.prevent="previewCurrentTemplate"
+                      >
+                        Preview Template
+                      </button>
+                      <button
                         type="submit"
                         class="btn btn-fill btn-wd pull-right btn-info"
                         @click.prevent="doSaveTemplate"
@@ -349,6 +356,10 @@ export default {
     },
   },
   methods: {
+    previewCurrentTemplate() {
+      this.resetPlaceholderValues();
+      this.showPreview = true;
+    },
     getPlaceholderKey(match) {
       return match
         .replace(
