@@ -103,7 +103,7 @@ export default defineComponent({
                 errorCorrectionLevel: "M",
               });
             } catch (err) {
-              console.error("Failed to generate QR for", reference, err);
+              // console.error("Failed to generate QR for", reference, err);
               qrDataUrl = "";
             }
           }
