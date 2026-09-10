@@ -24,6 +24,7 @@ import Login from "src/pages/Dashboard/Pages/Login.vue";
 import Logout from "src/pages/Dashboard/Pages/Logout.vue";
 import SetPassword from "src/pages/Dashboard/Pages/SetPassword.vue";
 import ResetPassword from "src/pages/Dashboard/Pages/ResetPassword.vue";
+import ChangePassword from "src/pages/Dashboard/Pages/ChangePassword.vue";
 import Lock from "src/pages/Dashboard/Pages/Lock.vue";
 
 import HartlepoolTest from "src/pages/DataFix/HartlepoolTest.vue";
@@ -723,6 +724,21 @@ let resetPasswordPage = {
   component: ResetPassword,
 };
 
+let changePasswordPage = {
+  path: "/change-password",
+  component: DashboardLayout,
+  children: [
+    {
+      path: "",
+      name: "Change Password",
+      component: ChangePassword,
+    },
+  ],
+  meta: {
+    requiresAuth: true,
+  },
+};
+
 let lockPage = {
   path: "/lock",
   name: "Lock",
@@ -771,6 +787,7 @@ const routes = [
   logoutPage,
   setPasswordPage,
   resetPasswordPage,
+  changePasswordPage,
   lockPage,
   {
     path: "/reports",

@@ -41,6 +41,12 @@
               </li>
               -->
               <li>
+                <router-link class="profile-dropdown" to="/change-password">
+                  <span class="sidebar-mini">CP</span>
+                  <span class="sidebar-normal">Change Password</span>
+                </router-link>
+              </li>
+              <li>
                 <a class="profile-dropdown" href="#" @click="logOut">
                   <span class="sidebar-mini">L</span>
                   <span class="sidebar-normal">Logout</span>

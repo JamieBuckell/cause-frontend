@@ -247,10 +247,10 @@ import Vue from "vue";
 import { Select, Option } from "element-ui";
 import {
   approveNominator,
+  deleteNominator,
   updateNominator,
   resetNominatorPassword,
 } from "@/api/nominators.api";
-import { deleteUser } from "@/api/users.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import LAlert from "src/components/Alert";
 import Swal from "sweetalert2";
@@ -608,7 +608,7 @@ export default {
       this.nominatorData.originalEmail = r.emailAddress;
     },
     async handleDelete(i, r) {
-      const updateRes = await deleteUser(this.organisationId, r.emailAddress);
+      const updateRes = await deleteNominator(r.requestId);
 
       if (updateRes.data?.messages) {
         this.messages = Object.keys(updateRes?.data?.messages).map((k) => ({
@@ -626,9 +626,7 @@ export default {
 
         const pData = this.$store.getters.getPlatformData;
         indexToDelete = pData.nominators.findIndex(
-          (d) =>
-            d?.SK === `EMAIL#${r.emailAddress}` &&
-            d?.GSI3PK === this.organisationId
+          (d) => d?.GSI2PK === r.requestId
         );
         if (indexToDelete >= 0) {
           pData.nominators.splice(indexToDelete, 1);
