@@ -263,6 +263,36 @@ const actions = {
       }
     });
   },
+  changePassword(_context, { currentPassword, newPassword }) {
+    return new Promise((resolve, reject) => {
+      const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+      const cognitoUser = userPool.getCurrentUser();
+
+      if (!cognitoUser) {
+        reject(new Error("No authenticated Cognito user"));
+        return;
+      }
+
+      cognitoUser.getSession((sessionError, session) => {
+        if (sessionError || !session || !session.isValid()) {
+          reject(sessionError || new Error("Your session has expired"));
+          return;
+        }
+
+        cognitoUser.changePassword(
+          currentPassword,
+          newPassword,
+          (changeError, result) => {
+            if (changeError) {
+              reject(changeError);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+      });
+    });
+  },
   async checkTokenExpiration({ state, commit, dispatch }) {
     const timestamp = Date.now();
     const minutes = 10;
