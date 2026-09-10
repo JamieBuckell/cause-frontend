@@ -1,4 +1,4 @@
-name: Deploy main to development site
+name: Deploy main to production site
 
 on:
   workflow_dispatch:
@@ -35,7 +35,6 @@ jobs:
       - name: Build application
         run: npx vue-cli-service build
         env:
-          NODE_ENV: development
           NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Authenticate to AWS
@@ -47,5 +46,5 @@ jobs:
       - name: Deploy to S3
         run: aws s3 sync dist/ s3://causef.jamiebuckell.co.uk/ --only-show-errors
 
-      - name: Invalidate development site cache
-        run: aws cloudfront create-invalidation --distribution-id E2G9Q9M0SNBI07 --paths '/*'
+      - name: Invalidate production site cache
+        run: aws cloudfront create-invalidation --distribution-id E3S4Z05K6XBLYL --paths '/*'
