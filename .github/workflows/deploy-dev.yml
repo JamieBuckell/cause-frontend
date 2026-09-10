@@ -35,6 +35,7 @@ jobs:
       - name: Build application
         run: npx vue-cli-service build
         env:
+          NODE_ENV: development
           NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Authenticate to AWS

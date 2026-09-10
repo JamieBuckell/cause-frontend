@@ -23,6 +23,11 @@ export const approveNominator = async (nominatorId, organisationId) =>
 export const resetNominatorPassword = async (nominatorId) =>
   await httpClient.post(`/nominators/reset-password/${nominatorId}`);
 
+export const deleteNominator = async (nominatorId) =>
+  await httpClient.post(
+    `/nominators/delete/${encodeURIComponent(nominatorId)}`
+  );
+
 export const createNominator = async (body) =>
   await httpClient.post(`/nominators/create`, body);
 
