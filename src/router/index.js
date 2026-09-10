@@ -11,6 +11,43 @@ const router = new VueRouter({
   linkActiveClass: "active",
 });
 
+// Vue Router 3 rejects promise-based navigation when the destination is the
+// current route. Duplicate redirects can legitimately race (for example,
+// several 401 responses redirecting to login at once), so do not surface that
+// expected outcome as an unhandled error. Other navigation failures must still
+// reject so they remain visible and actionable.
+const ignoreDuplicatedNavigation = (navigation) =>
+  navigation.catch((error) => {
+    if (
+      VueRouter.isNavigationFailure(
+        error,
+        VueRouter.NavigationFailureType.duplicated
+      )
+    ) {
+      return router.currentRoute;
+    }
+
+    return Promise.reject(error);
+  });
+
+const push = router.push.bind(router);
+router.push = (location, onComplete, onAbort) => {
+  if (onComplete || onAbort) {
+    return push(location, onComplete, onAbort);
+  }
+
+  return ignoreDuplicatedNavigation(push(location));
+};
+
+const replace = router.replace.bind(router);
+router.replace = (location, onComplete, onAbort) => {
+  if (onComplete || onAbort) {
+    return replace(location, onComplete, onAbort);
+  }
+
+  return ignoreDuplicatedNavigation(replace(location));
+};
+
 router.beforeEach((to, from, next) => {
   const { userIsLoggedIn } = store.getters;
 
