@@ -8,7 +8,7 @@
     "build": "vue-cli-service build && npm run sentry:sourcemaps",
     "dev": "vue-cli-service serve --open",
     "lint": "vue-cli-service lint",
-    "deploy": "aws s3 cp dist/ s3://causef.jamiebuckell.co.uk/ --profile jamiebuckell --recursive",
+    "deploy": "aws s3 cp dist/ s3://causef.jamiebuckell.co.uk/ --profile jamiebuckell --recursive && aws s3 cp dist/donors/register s3://causef.jamiebuckell.co.uk/donors/register --profile jamiebuckell --content-type 'text/html; charset=utf-8'",
     "clear-cache": "aws cloudfront create-invalidation --profile jamiebuckell --distribution-id E3S4Z05K6XBLYL --paths /\\* /index.html /service-worker\\* /precache-manifest\\*",
     "clear-cache-bouchelle": "aws cloudfront create-invalidation --profile jamiebuckell --distribution-id E2G9Q9M0SNBI07 --paths /\\* /index.html /service-worker\\* /precache-manifest\\*",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cause-foundation --project javascript-vue ./dist && sentry-cli sourcemaps upload --org cause-foundation --project javascript-vue ./dist"

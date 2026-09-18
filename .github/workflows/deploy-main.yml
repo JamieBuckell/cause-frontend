@@ -46,5 +46,9 @@ jobs:
       - name: Deploy to S3
         run: aws s3 sync dist/ s3://causef.jamiebuckell.co.uk/ --only-show-errors
 
+      # The registration URL has no extension, so S3 cannot infer its MIME type.
+      - name: Set registration page content type
+        run: aws s3 cp dist/donors/register s3://causef.jamiebuckell.co.uk/donors/register --content-type 'text/html; charset=utf-8' --only-show-errors
+
       - name: Invalidate production site cache
         run: aws cloudfront create-invalidation --distribution-id E3S4Z05K6XBLYL --paths '/*'
