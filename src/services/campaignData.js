@@ -1,4 +1,5 @@
 import { getAllCampaigns, getByCampaign } from "@/api/campaign.api";
+import { isHandledAuthRedirect } from "@/api/core/httpErrors";
 
 import { store } from "@/store";
 
@@ -11,36 +12,46 @@ export const getPlatformData = async (force = false) => {
   const refreshMinutes = 3;
   const refreshCampaignMinutes = 10;
 
-  if (
-    force ||
-    !activeCampaignId ||
-    !activePlatformData ||
-    !activePlatformData?.campaignId ||
-    activePlatformData?.campaignId != activeCampaignId ||
-    !lastUpdated ||
-    currentTime - lastUpdated >= refreshMinutes * 60
-  ) {
-    const allCampaigns = await getCampaigns(
-      force || currentTime - lastUpdated >= refreshCampaignMinutes * 60
-    );
-    if (allCampaigns && allCampaigns.length) {
-      if (!activeCampaignId) {
-        activeCampaignId = allCampaigns[0]?.campaignId ?? "";
-        await store.commit("setActiveCampaign", activeCampaignId);
-      }
+  try {
+    if (
+      force ||
+      !activeCampaignId ||
+      !activePlatformData ||
+      !activePlatformData?.campaignId ||
+      activePlatformData?.campaignId != activeCampaignId ||
+      !lastUpdated ||
+      currentTime - lastUpdated >= refreshMinutes * 60
+    ) {
+      const allCampaigns = await getCampaigns(
+        force || currentTime - lastUpdated >= refreshCampaignMinutes * 60
+      );
+      if (allCampaigns && allCampaigns.length) {
+        if (!activeCampaignId) {
+          activeCampaignId = allCampaigns[0]?.campaignId ?? "";
+          await store.commit("setActiveCampaign", activeCampaignId);
+        }
 
-      /* */
-      const platformData = await getByCampaign(activeCampaignId);
-      if (platformData?.data) {
-        await store.dispatch("setPlatformData", {
-          ...platformData.data,
-          campaignId: activeCampaignId,
-        });
+        /* */
+        const platformData = await getByCampaign(activeCampaignId);
+        if (platformData?.data) {
+          await store.dispatch("setPlatformData", {
+            ...platformData.data,
+            campaignId: activeCampaignId,
+          });
+        }
+        /* */
       }
-      /* */
     }
+  } catch (error) {
+    // The HTTP interceptor redirects expired/unauthorised sessions to login.
+    // Treat that redirect as the handled outcome so async lifecycle hooks and
+    // watchers do not report the expected rejection as an application error.
+    if (!isHandledAuthRedirect(error)) {
+      throw error;
+    }
+  } finally {
     if (force) {
-      await store.commit("setForceRefresh", false);
+      store.commit("setForceRefresh", false);
     }
   }
 };

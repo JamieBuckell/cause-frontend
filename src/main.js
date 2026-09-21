@@ -9,6 +9,7 @@ import permissions from "./plugins/permissions";
 import moment from "moment";
 import VueSocialSharing from "vue-social-sharing";
 import * as Sentry from "@sentry/vue";
+import { isHandledAuthRedirect } from "@/api/core/httpErrors";
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
@@ -20,6 +21,16 @@ if (process.env.NODE_ENV === "production") {
     // Session Replay
     replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
     replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+    beforeSend(event, hint) {
+      // A 401/403 that has already redirected the user to login is expected
+      // session-expiry control flow, not an application failure. Unexpected
+      // auth errors and every other exception continue to be reported.
+      if (isHandledAuthRedirect(hint?.originalException)) {
+        return null;
+      }
+
+      return event;
+    },
   });
   Sentry.setTag("CF.User", store?.getters?.usersEmail ?? "unknown");
 }

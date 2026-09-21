@@ -1,6 +1,7 @@
 import { store } from "@/store";
 import router from "@/router";
 import axios from "axios";
+import { handledAuthRedirect } from "@/api/core/httpErrors";
 
 const apiURL =
   process.env.NODE_ENV === "production"
@@ -25,6 +26,37 @@ const authInterceptor = (config) => {
   return config;
 };
 
+const getResponseErrorDetails = (response) => {
+  if (response.data?.errorInfo?.details?.length) {
+    const { errorCode, message } = response.data.errorInfo.details[0];
+    return { errorCode, message };
+  }
+
+  return {
+    errorCode: response.status,
+    message: response.data?.messages,
+  };
+};
+
+const createHttpError = (axiosError, response, authRedirected = false) => {
+  const { errorCode, message } = getResponseErrorDetails(response);
+  const responseError = response.data?.errorString || message;
+
+  // Keep Axios' Error instance and stack trace while preserving the fields
+  // existing callers use to render API error messages.
+  axiosError.statusCode = response.status;
+  axiosError.error = responseError;
+  axiosError.code = errorCode;
+  if (typeof message === "string" && message) {
+    axiosError.message = message;
+  }
+  if (authRedirected) {
+    axiosError[handledAuthRedirect] = true;
+  }
+
+  return axiosError;
+};
+
 const errorInterceptor = (error) => {
   if (!error.response) {
     if (error.toString().includes("Network Error")) {
@@ -46,14 +78,7 @@ const errorInterceptor = (error) => {
       if (response.data) {
         return response;
       }
-      return Promise.reject({
-        statusCode: response.status,
-        error: response.data?.errorString
-          ? response.data?.errorString
-          : message,
-        code: errorCode,
-        message,
-      });
+      return Promise.reject(createHttpError(error, response));
     /*
     case 401:
       router.push({
@@ -70,9 +95,11 @@ const errorInterceptor = (error) => {
       */
 
     case 401:
-    case 403:
+    case 403: {
+      let authRedirected = false;
       if (response.config && response.config.url === "/auth/refresh") {
         store.dispatch("signOut");
+        authRedirected = true;
       } else if (
         response.config &&
         response.config.url !== "/auth/reset-password/auth"
@@ -82,51 +109,15 @@ const errorInterceptor = (error) => {
           path: "/login",
         });
         //}
+        authRedirected = true;
       }
 
-      let errorCode,
-        message = "";
-      if (response.data?.errorInfo) {
-        const { details } = response.data?.errorInfo;
-        const obj = details[0];
-        errorCode = obj.errorCode;
-        message = obj.message;
-      } else if (response.data) {
-        errorCode = error.response.status;
-        message = response.data.messages;
-      }
-
-      return Promise.reject({
-        statusCode: response.status,
-        error: response.data?.errorString
-          ? response.data?.errorString
-          : message,
-        code: errorCode,
-        message,
-      });
+      return Promise.reject(createHttpError(error, response, authRedirected));
+    }
 
     // eslint-disable-next-line no-fallthrough
     default: {
-      let errorCode,
-        message = "";
-      if (response.data?.errorInfo) {
-        const { details } = response.data?.errorInfo;
-        const obj = details[0];
-        errorCode = obj.errorCode;
-        message = obj.message;
-      } else if (response.data) {
-        errorCode = error.response.status;
-        message = response.data.messages;
-      }
-
-      return Promise.reject({
-        statusCode: response.status,
-        error: response.data?.errorString
-          ? response.data?.errorString
-          : message,
-        code: errorCode,
-        message,
-      });
+      return Promise.reject(createHttpError(error, response));
     }
   }
 };
