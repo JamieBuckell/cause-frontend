@@ -354,7 +354,13 @@
         </div>
       </div>
 
-      <dashboard-content @click.native="toggleSidebar"> </dashboard-content>
+      <!-- Campaign-dependent pages read the active campaign during mounting.
+           Do not mount them until platform initialization has selected one. -->
+      <dashboard-content
+        v-if="activeCampaignId"
+        @click.native="toggleSidebar"
+      >
+      </dashboard-content>
 
       <content-footer></content-footer>
     </div>
@@ -395,7 +401,7 @@ export default {
   data() {
     return {
       idleTimeLimit: 10, //In minutes
-      isLoading: false,
+      isLoading: true,
     };
   },
   computed: {
@@ -455,7 +461,11 @@ export default {
   async mounted() {
     this.initScrollbar();
     this.$store.dispatch("checkTokenExpiration");
-    await getPlatformData();
+    try {
+      await getPlatformData();
+    } finally {
+      this.isLoading = false;
+    }
   },
   watch: {
     $route(to, from) {
@@ -463,14 +473,20 @@ export default {
     },
     async activeCampaignId() {
       this.isLoading = true;
-      await getPlatformData();
-      this.isLoading = false;
+      try {
+        await getPlatformData();
+      } finally {
+        this.isLoading = false;
+      }
     },
     async forceRefresh(to) {
       if (to) {
         this.isLoading = true;
-        await getPlatformData(true);
-        this.isLoading = false;
+        try {
+          await getPlatformData(true);
+        } finally {
+          this.isLoading = false;
+        }
       }
     },
     async globalLoading(isLoading) {

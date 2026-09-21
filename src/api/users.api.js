@@ -1,4 +1,5 @@
 import { httpClient } from "@/api/core/httpClient";
+import { requiredPathParam } from "@/api/core/pathParams";
 
 export const getMeData = async () => await httpClient.get(`/users/me`);
 
@@ -9,19 +10,32 @@ export const createAdmin = async (body) =>
   await httpClient.post(`/users/create/admin`, body);
 
 export const deleteUser = async (organisationId, emailAddress) =>
-  await httpClient.post(`/users/delete/${organisationId}/${emailAddress}`);
+  await httpClient.post(
+    `/users/delete/${requiredPathParam(
+      organisationId,
+      "organisationId"
+    )}/${requiredPathParam(emailAddress, "emailAddress")}`
+  );
 
 export const deleteAdmin = async (organisationId, emailAddress) =>
   await httpClient.post(
-    `/users/delete/${organisationId}/${emailAddress}/admin`
+    `/users/delete/${requiredPathParam(
+      organisationId,
+      "organisationId"
+    )}/${requiredPathParam(emailAddress, "emailAddress")}/admin`
   );
 
 export const resetUserPassword = async (emailAddress) =>
-  await httpClient.post(`/users/reset-password/${emailAddress}`);
+  await httpClient.post(
+    `/users/reset-password/${requiredPathParam(emailAddress, "emailAddress")}`
+  );
 
 export const resetUserPasswordCommit = async (emailAddress, verificationHash) =>
   await httpClient.post(
-    `/users/reset-password-commit/${emailAddress}/${verificationHash}`
+    `/users/reset-password-commit/${requiredPathParam(
+      emailAddress,
+      "emailAddress"
+    )}/${requiredPathParam(verificationHash, "verificationHash")}`
   );
 
 export const migrateUserPool = async (authData) =>

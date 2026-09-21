@@ -1,15 +1,26 @@
 import { httpClient } from "@/api/core/httpClient";
+import { requiredPathParam } from "@/api/core/pathParams";
 
 export const getFamilies = async () => await httpClient.get(`/families/list`);
 
 export const getFamilyByRequest = async (requestId) =>
-  await httpClient.get(`/families/get-by-request/${requestId}`);
+  await httpClient.get(
+    `/families/get-by-request/${requiredPathParam(requestId, "requestId")}`
+  );
 
 export const getFamilyByOrganisation = async (organisationId) =>
-  await httpClient.get(`/families/organisation/${organisationId}`);
+  await httpClient.get(
+    `/families/organisation/${requiredPathParam(
+      organisationId,
+      "organisationId"
+    )}`
+  );
 
 export const listFamilies = async (campaignId, body = {}) =>
-  await httpClient.post(`/families/list/${campaignId}`, body);
+  await httpClient.post(
+    `/families/list/${requiredPathParam(campaignId, "campaignId")}`,
+    body
+  );
 
 export const updateFamily = async (body) =>
   await httpClient.post(`/families/update`, body);
@@ -21,7 +32,9 @@ export const splitFamily = async (body) =>
   await httpClient.post(`/families/split`, body);
 
 export const deleteFamily = async (familyId) =>
-  await httpClient.post(`/families/delete/${familyId}`);
+  await httpClient.post(
+    `/families/delete/${requiredPathParam(familyId, "familyId")}`
+  );
 
 export const allocateFamily = async (body) =>
   await httpClient.post(`/families/allocate`, body);
@@ -45,7 +58,9 @@ export const markDirectHampersBulk = async (body) =>
   await httpClient.post(`/hampers/mark-direct-bulk`, body);
 
 export const getHamperOverview = async (hamperId) =>
-  await httpClient.get(`/hampers/get-overview/${hamperId}`);
+  await httpClient.get(
+    `/hampers/get-overview/${requiredPathParam(hamperId, "hamperId")}`
+  );
 
 export const getHamperFeedbackLabels = async (body) =>
   httpClient.post(`/feedback/hampers/generate`, body);

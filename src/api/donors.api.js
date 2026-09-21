@@ -1,21 +1,30 @@
 import { httpClient } from "@/api/core/httpClient";
+import { requiredPathParam } from "@/api/core/pathParams";
 
 export const donorRegister = async (body) =>
   httpClient.post(`/donors/register`, body);
 
 export const getDonorsByCampaign = async (campaignId) =>
-  await httpClient.get(`/donors/campaign/list/${campaignId}`);
+  await httpClient.get(
+    `/donors/campaign/list/${requiredPathParam(campaignId, "campaignId")}`
+  );
 
 export const verifySubscription = async (emailAddress, hash, campaignId = "") =>
   await httpClient.get(
-    `/subscription/verify/${emailAddress}?v=${hash}${
-      campaignId ? "&campaignId=" + campaignId : ""
+    `/subscription/verify/${requiredPathParam(
+      emailAddress,
+      "emailAddress"
+    )}?v=${encodeURIComponent(hash)}${
+      campaignId ? "&campaignId=" + encodeURIComponent(campaignId) : ""
     }`
   );
 
 export const confirmPledge = async (emailAddress, hash, campaignRequestId) =>
   await httpClient.get(
-    `/donors/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
+    `/donors/confirm-pledge/${requiredPathParam(
+      emailAddress,
+      "emailAddress"
+    )}?v=${encodeURIComponent(hash)}&c=${encodeURIComponent(campaignRequestId)}`
   );
 
 export const confirmPledgeManual = async (
@@ -24,7 +33,10 @@ export const confirmPledgeManual = async (
   campaignRequestId
 ) =>
   await httpClient.post(
-    `/donors/confirm-pledge/${emailAddress}?v=${hash}&c=${campaignRequestId}`
+    `/donors/confirm-pledge/${requiredPathParam(
+      emailAddress,
+      "emailAddress"
+    )}?v=${encodeURIComponent(hash)}&c=${encodeURIComponent(campaignRequestId)}`
   );
 
 export const getHash = async (donorId) =>
@@ -37,7 +49,10 @@ export const changePledge = async (
   campaign
 ) =>
   await httpClient.post(
-    `/donors/change-pledge/${emailAddress}?v=${hash}&c=${campaign}`,
+    `/donors/change-pledge/${requiredPathParam(
+      emailAddress,
+      "emailAddress"
+    )}?v=${encodeURIComponent(hash)}&c=${encodeURIComponent(campaign)}`,
     {
       details: changeDetail,
     }
