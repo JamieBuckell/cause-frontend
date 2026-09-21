@@ -52,6 +52,7 @@
                             "
                             :hasSuccess="passed"
                             label="First name"
+                            id="donor-firstname"
                             name="firstname"
                             v-model="donorData.firstname"
                           ></fg-input>
@@ -70,6 +71,7 @@
                             "
                             :hasSuccess="passed"
                             label="Last name"
+                            id="donor-lastname"
                             name="lastname"
                             v-model="donorData.lastname"
                           ></fg-input>
@@ -91,6 +93,7 @@
                             "
                             :hasSuccess="passed"
                             label="Email address"
+                            id="donor-email"
                             name="email"
                             v-model="donorData.email"
                             @change="
@@ -115,6 +118,7 @@
                             "
                             :hasSuccess="passed"
                             label="Confirm Email address"
+                            id="donor-email_confirm"
                             name="email_confirm"
                             v-model="donorData.email_confirm"
                             @change="
@@ -137,6 +141,7 @@
                             placeholder="Your Telephone Number"
                             :hasSuccess="passed"
                             label="Telephone Number"
+                            id="donor-telephone"
                             name="telephone"
                             v-model="donorData.telephone"
                           >
@@ -152,6 +157,7 @@
                             placeholder="Company"
                             :hasSuccess="passed"
                             label="Company (If Applicable)"
+                            id="donor-company"
                             name="company"
                             v-model="donorData.company"
                           >
@@ -164,10 +170,12 @@
                         <ValidationProvider name="howHeard" v-slot="{ passed }">
                           <fg-input
                             label="How did you hear about us?"
+                            label-for="donor-how-heard"
                             class="mb-0"
                           >
                             <el-select
                               class="select-default mb-3 w-100"
+                              id="donor-how-heard"
                               :name="`howHeard`"
                               :hasSuccess="passed"
                               style="width: 200px"
@@ -194,12 +202,13 @@
                           name="howHeardOther"
                           v-slot="{ passed }"
                         >
-                          <fg-input label="Please Specify">
+                          <fg-input label="Please Specify" label-for="donor-howHeardOther">
                             <textarea
                               class="form-control"
                               placeholder="Please specify"
                               rows="2"
                               :hasSuccess="passed"
+                              id="donor-howHeardOther"
                               name="howHeardOther"
                               v-model="donorData.howHeardOther"
                             ></textarea>
@@ -219,6 +228,7 @@
                             placeholder="families"
                             :hasSuccess="passed"
                             label="How many families would you like to provide for?"
+                            id="donor-families"
                             name="families"
                             v-model="donorData.families"
                             :error="
@@ -244,7 +254,7 @@
                         :key="index"
                       >
                         <div class="col-12 col-md-3">
-                          <label :for="`familyDetail[${index - 1}]`"
+                          <label :for="`donor-family-preference-${index - 1}`"
                             >Family Preferences:</label
                           >
                         </div>
@@ -256,6 +266,7 @@
                           >
                             <el-select
                               class="select-default w-100"
+                              :id="`donor-family-preference-${index - 1}`"
                               :name="`familyDetail[${index - 1}]`"
                               :hasSuccess="passed"
                               style="width: 200px"
@@ -288,12 +299,13 @@
                           name="additionalInformation"
                           v-slot="{ passed }"
                         >
-                          <fg-input label="Additional Information">
+                          <fg-input label="Additional Information" label-for="donor-additionalInformation">
                             <textarea
                               class="form-control"
                               placeholder="preference regarding age/gender of children."
                               rows="5"
                               :hasSuccess="passed"
+                              id="donor-additionalInformation"
                               name="additionalInformation"
                               v-model="donorData.additionalInformation"
                             ></textarea>

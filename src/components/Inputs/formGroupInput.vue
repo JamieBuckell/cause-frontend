@@ -8,7 +8,7 @@
        {'has-label': label || $slots.label},
        {'has-success': !error && touched && hadError}]">
     <slot name="label">
-      <label v-if="label" :class="labelClasses">
+      <label v-if="label" :for="labelFor || $attrs.id" :class="labelClasses">
         {{label}}
         <span v-if="required">*</span>
       </label>
@@ -49,6 +49,7 @@
     props: {
       required: Boolean,
       label: String,
+      labelFor: String,
       error: String,
       labelClasses: String,
       inputClasses: String,
