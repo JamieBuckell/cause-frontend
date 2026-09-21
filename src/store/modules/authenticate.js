@@ -171,59 +171,75 @@ const actions = {
     );
   },
   signIn({ state, commit, dispatch }, authData) {
-    commit("clearError");
-    commit("setUserPool");
-    commit("setCognitoDetails", authData);
-    state.cognitoUser.authenticateUser(state.authDetails, {
-      onSuccess: (result) => {
-        if (poolData.UserPoolId === config.poolData.UserPoolId) {
-          dispatch("migrateUser", authData);
-        }
-        commit("setTokens", result);
-        commit("signIn");
-        const returnUrl = getCookie("ReturnUrl");
-        setCookie("ReturnUrl", "", -1);
+    return new Promise((resolve, reject) => {
+      commit("clearError");
+      commit("setUserPool");
+      commit("setCognitoDetails", authData);
 
-        dispatch("getUserAttributes");
-        dispatch("setLogoutTimer", 3600);
+      // Capture the instance used for this authentication attempt. A later
+      // attempt must not replace it before its callbacks have completed.
+      const authenticatingUser = state.cognitoUser;
+      authenticatingUser.authenticateUser(state.authDetails, {
+        onSuccess: async (result) => {
+          if (poolData.UserPoolId === config.poolData.UserPoolId) {
+            dispatch("migrateUser", authData);
+          }
+          commit("setTokens", result);
+          commit("signIn");
 
-        if (returnUrl && !returnUrl.includes("signin")) {
-          router.push(decodeURIComponent(returnUrl));
-        } else {
-          router.push("/admin");
-        }
-      },
-      newPasswordRequired: function (userAttributes, requiredAttributes) {
-        // User was signed up by an admin and must provide new
-        // password and required attributes, if any, to complete
-        // authentication.
+          try {
+            await dispatch("getUserAttributes", authenticatingUser);
+          } catch (err) {
+            commit("setError", JSON.stringify(err.code || err.message));
+            reject(err);
+            return;
+          }
 
-        // the api doesn't accept this field back
-        // delete userAttributes.email;
-        delete userAttributes.email_verified;
-        delete userAttributes.phone_number;
+          const returnUrl = getCookie("ReturnUrl");
+          setCookie("ReturnUrl", "", -1);
+          dispatch("setLogoutTimer", 3600);
 
-        // store userAttributes
-        commit("setNewPasswordAttributes", userAttributes);
-        router.push("/set-password");
-      },
-      mfaSetup: (result) => {
-        // console.log(result);
-      },
-      onFailure: (err) => {
-        // UserNotFoundException
-        if (
-          err.code === "UserNotFoundException" &&
-          poolData.UserPoolId === config.poolData.UserPoolIdV2
-        ) {
-          poolData.UserPoolId = config.poolData.UserPoolId;
-          poolData.ClientId = config.poolData.ClientId;
-          commit("setUserPool");
-          dispatch("signIn", authData);
-        } else {
-          commit("setError", JSON.stringify(err.code));
-        }
-      },
+          if (returnUrl && !returnUrl.includes("signin")) {
+            router.push(decodeURIComponent(returnUrl));
+          } else {
+            router.push("/admin");
+          }
+          resolve(result);
+        },
+        newPasswordRequired: function (userAttributes, requiredAttributes) {
+          // User was signed up by an admin and must provide new
+          // password and required attributes, if any, to complete
+          // authentication.
+
+          // the api doesn't accept this field back
+          // delete userAttributes.email;
+          delete userAttributes.email_verified;
+          delete userAttributes.phone_number;
+
+          // store userAttributes
+          commit("setNewPasswordAttributes", userAttributes);
+          router.push("/set-password");
+          resolve();
+        },
+        mfaSetup: (result) => {
+          // console.log(result);
+        },
+        onFailure: (err) => {
+          // UserNotFoundException
+          if (
+            err.code === "UserNotFoundException" &&
+            poolData.UserPoolId === config.poolData.UserPoolIdV2
+          ) {
+            poolData.UserPoolId = config.poolData.UserPoolId;
+            poolData.ClientId = config.poolData.ClientId;
+            commit("setUserPool");
+            dispatch("signIn", authData).then(resolve, reject);
+          } else {
+            commit("setError", JSON.stringify(err.code));
+            reject(err);
+          }
+        },
+      });
     });
   },
   tryAutoSignIn({ state, commit, dispatch }) {
@@ -246,10 +262,10 @@ const actions = {
   checkAuth({ state, commit }) {
     return state.cognitoUser;
   },
-  getUserAttributes({ state, commit }) {
+  getUserAttributes({ state, commit }, cognitoUser = state.cognitoUser) {
     return new Promise((resolve, reject) => {
-      if (state.cognitoUser) {
-        state.cognitoUser.getUserAttributes(function (err, attributes) {
+      if (cognitoUser) {
+        cognitoUser.getUserAttributes(function (err, attributes) {
           if (err) {
             // console.error(JSON.stringify(err))
             reject(err);
@@ -259,7 +275,7 @@ const actions = {
           }
         });
       } else {
-        reject("No CognitoUser");
+        reject(new Error("No CognitoUser"));
       }
     });
   },

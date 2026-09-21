@@ -56,8 +56,9 @@
                   <button
                     type="submit"
                     class="btn btn-fill btn-info btn-round btn-wd"
+                    :disabled="loading"
                   >
-                    Login
+                    {{ loading ? "Logging in..." : "Login" }}
                   </button>
                   <br />
                   <div class="forgot">
@@ -139,15 +140,25 @@ export default {
   },
   methods: {
     async submit() {
-      this.loader = "loading";
-      const l = this.loader;
-      this[l] = !this[l];
+      if (this.loading) {
+        return;
+      }
+
+      this.loading = true;
 
       var authData = {
         Username: this.email.trim(),
         Password: this.password.trim(),
       };
-      await this.$store.dispatch("signIn", authData);
+      try {
+        await this.$store.dispatch("signIn", authData);
+      } catch (error) {
+        // Authentication failures are reflected by errcode and rendered by
+        // the watcher below. Catch the rejected action so it is not reported
+        // as an unhandled promise rejection.
+      } finally {
+        this.loading = false;
+      }
     },
     getMessage: function () {
       return this.message;
@@ -165,9 +176,6 @@ export default {
   },
   watch: {
     errcode() {
-      this.loader = "loading";
-      const l = this.loader;
-      this[l] = !this[l];
       if (this.errcode !== "") {
         if (this.errcode === '"NotAuthorizedException"') {
           this.errmsg = "Incorrect username or password";
@@ -188,8 +196,6 @@ export default {
       } else {
         this.showerr = false;
       }
-      this[l] = false;
-      this.loader = null;
     },
   },
 };
