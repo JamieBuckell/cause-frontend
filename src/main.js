@@ -10,6 +10,7 @@ import moment from "moment";
 import VueSocialSharing from "vue-social-sharing";
 import * as Sentry from "@sentry/vue";
 import { isHandledAuthRedirect } from "@/api/core/httpErrors";
+import { startVersionCheck } from "@/services/versionCheck";
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
@@ -47,6 +48,10 @@ Vue.prototype.$hostname =
     ? "https://portal.cause-foundation.org.uk"
     : "http://localhost:4000";
 Vue.prototype.moment = moment;
+
+if (process.env.NODE_ENV === "production") {
+  startVersionCheck();
+}
 
 /* eslint-disable no-new */
 new Vue({
