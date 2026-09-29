@@ -121,7 +121,7 @@
                   <a
                     v-tooltip.top-center="'Resend Welcome Email'"
                     class="btn-info btn-simple btn-link"
-                    @click.prevent="resendWelcome(0, props.row)"
+                    @click.prevent="sendWelcome(0, props.row)"
                   >
                     <i class="fa fa-hand-spock-o"></i>
                   </a>
@@ -320,6 +320,22 @@ export default {
   },
   methods: {
     async sendWelcome(i, u) {
+      if (u.emailSent) {
+        const confirmation = await Swal.fire({
+          title: "Resend welcome email?",
+          text: `This will reset the password for ${u.emailAddress} and send them a new welcome email. Their current password will no longer work.`,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Reset password and resend",
+          cancelButtonText: "Cancel",
+          focusCancel: true,
+        });
+
+        if (!confirmation.isConfirmed) {
+          return;
+        }
+      }
+
       this.messages = [];
       u.emailSent = true;
       const sent = await sendWelcomeEmail(u.requestId);
