@@ -50,7 +50,8 @@ export const deleteNominator = async (nominatorId) =>
 export const createNominator = async (body) =>
   await httpClient.post(`/nominators/create`, body);
 
-export const sendWelcomeEmail = async (userId) =>
+export const sendWelcomeEmail = async (userId, resend = false) =>
   await httpClient.post(
-    `/nominators/send-welcome/${requiredPathParam(userId, "userId")}`
+    `/nominators/send-welcome/${requiredPathParam(userId, "userId")}`,
+    { resend }
   );

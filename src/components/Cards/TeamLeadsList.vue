@@ -320,7 +320,8 @@ export default {
   },
   methods: {
     async sendWelcome(i, u) {
-      if (u.emailSent) {
+      const wasEmailSent = Boolean(u.emailSent);
+      if (wasEmailSent) {
         const confirmation = await Swal.fire({
           title: "Resend welcome email?",
           text: `This will reset the password for ${u.emailAddress} and send them a new welcome email. Their current password will no longer work.`,
@@ -338,16 +339,18 @@ export default {
 
       this.messages = [];
       u.emailSent = true;
-      const sent = await sendWelcomeEmail(u.requestId);
+      const sent = await sendWelcomeEmail(u.requestId, wasEmailSent);
 
       if (sent.data?.messages) {
         this.messages = Object.keys(sent?.data?.messages).map((k) => ({
           error: sent?.data?.messages[k],
         }));
+      } else if (sent.data?.message) {
+        this.messages = [{ error: sent.data.message }];
       }
 
-      if (sent.status !== 200) {
-        u.emailSent = false;
+      if (sent.status !== 200 || sent.data?.result === false) {
+        u.emailSent = wasEmailSent;
       } else {
         const pData = this.$store.getters.getPlatformData;
         const indexToReplace = pData.nominators.findIndex(
