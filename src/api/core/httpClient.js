@@ -3,11 +3,7 @@ import router from "@/router";
 import axios from "axios";
 import { handledAuthRedirect } from "@/api/core/httpErrors";
 
-const apiURL =
-  process.env.NODE_ENV === "production"
-    ? "https://api.cause-foundation.org.uk/"
-    : "https://causeapi.bouchelle.co.uk/";
-// "https://ig3hly0ga3.execute-api.eu-west-2.amazonaws.com/"
+import { apiURL } from "@/environment";
 
 const httpClient = axios.create({
   baseURL: apiURL,

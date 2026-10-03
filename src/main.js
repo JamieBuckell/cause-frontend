@@ -1,4 +1,5 @@
 import Vue from "vue";
+import { environment, portalURL } from "./environment";
 import router from "./router";
 import LightBootstrap from "./light-bootstrap-main";
 import wysiwyg from "vue-wysiwyg";
@@ -15,6 +16,7 @@ import { startVersionCheck } from "@/services/versionCheck";
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
     Vue,
+    environment,
     dsn: "https://545dea5d3e63ea35e8b566787a6c2706@o4505988076011520.ingest.sentry.io/4505988079812608",
     integrations: [new Sentry.Replay()],
     // Performance Monitoring
@@ -43,10 +45,7 @@ Vue.use(permissions);
 Vue.use(VueSocialSharing);
 
 Vue.config.productionTip = false;
-Vue.prototype.$hostname =
-  process.env.NODE_ENV === "production"
-    ? "https://portal.cause-foundation.org.uk"
-    : "http://localhost:4000";
+Vue.prototype.$hostname = portalURL;
 Vue.prototype.moment = moment;
 
 if (process.env.NODE_ENV === "production") {
