@@ -365,7 +365,7 @@ export default {
     this.allNominatorsData = this.allNominators;
     this.currentNominator = this.nominator;
 
-    const res = await getUndelivered();
+    const res = await getUndelivered(this.$store.getters.getActiveCampaign);
     this.tableData = Object.values(res?.data);
 
     this.$emit("resultData", "families", this.tableData);

@@ -57,16 +57,16 @@ export const markDirectHamper = async (body) =>
 export const markDirectHampersBulk = async (body) =>
   await httpClient.post(`/hampers/mark-direct-bulk`, body);
 
-export const getHamperOverview = async (hamperId) =>
+export const getHamperOverview = async (hamperId, campaignId) =>
   await httpClient.get(
-    `/hampers/get-overview/${requiredPathParam(hamperId, "hamperId")}`
+    `/hampers/get-overview/${requiredPathParam(hamperId, "hamperId")}?campaignId=${requiredPathParam(campaignId, "campaignId")}`
   );
 
 export const getHamperFeedbackLabels = async (body) =>
   httpClient.post(`/feedback/hampers/generate`, body);
 
-export const getUndelivered = async () =>
-  await httpClient.get(`/hampers/undelivered`);
+export const getUndelivered = async (campaignId) =>
+  await httpClient.get(`/hampers/undelivered?campaignId=${requiredPathParam(campaignId, "campaignId")}`);
 
-export const getUndelivereDonors = async () =>
-  await httpClient.get(`/hampers/undelivered-donors`);
+export const getUndelivereDonors = async (campaignId) =>
+  await httpClient.get(`/hampers/undelivered-donors?campaignId=${requiredPathParam(campaignId, "campaignId")}`);

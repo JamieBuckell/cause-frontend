@@ -204,7 +204,7 @@ export default {
     async checkHamperId() {
       this.hamperId = this.hamperId.toUpperCase();
       this.messages = [];
-      const res = await getHamperOverview(this.hamperId);
+      const res = await getHamperOverview(this.hamperId, this.$store.getters.getActiveCampaign);
 
       if (!res.data.success) {
         if (res?.data?.messages) {

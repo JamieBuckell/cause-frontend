@@ -371,7 +371,7 @@ export default {
     this.allNominatorsData = this.allNominators;
     this.currentNominator = this.nominator;
 
-    const res = await getUndelivereDonors();
+    const res = await getUndelivereDonors(this.$store.getters.getActiveCampaign);
     this.tableData = Object.values(res?.data);
 
     this.$emit("resultData", "families", this.tableData);

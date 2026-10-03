@@ -642,6 +642,14 @@ export default {
       this.$router.push(`/donors/view/${r.GSI2PK}`);
     },
     async handleDelete(i, r) {
+      const confirmation = await Swal.fire({
+        title: "Delete this donor?",
+        text: "Any families allocated to this donor will be unallocated and will need another donor.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Delete and unallocate",
+      });
+      if (!confirmation.isConfirmed && confirmation.value !== true) return;
       const updateRes = await deleteDonor({
         campaign: this.$store.getters.getActiveCampaign,
         donorId: r?.GSI2PK ?? "UNKNOWN",
