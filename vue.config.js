@@ -1,13 +1,20 @@
 const path = require("path");
 const packageVersion = require("./package.json").version;
 
+const deploymentEnvironment = process.env.VUE_APP_ENVIRONMENT || "live";
+if (!["dev", "live"].includes(deploymentEnvironment)) {
+  throw new Error(`Unknown deployment environment: ${deploymentEnvironment}`);
+}
+const commit = process.env.VUE_APP_COMMIT_SHA ||
+  require("child_process").execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+
 const buildVersion =
-  process.env.VUE_APP_BUILD_VERSION || `${packageVersion}-${Date.now()}`;
+  process.env.VUE_APP_BUILD_VERSION || `${packageVersion}-${deploymentEnvironment}-${commit.slice(0, 7)}-${Date.now()}`;
 
 class BuildVersionPlugin {
   apply(compiler) {
     compiler.hooks.emit.tap("BuildVersionPlugin", (compilation) => {
-      const contents = JSON.stringify({ version: buildVersion });
+      const contents = JSON.stringify({ version: buildVersion, environment: deploymentEnvironment, commit });
       compilation.assets["version.json"] = {
         source: () => contents,
         size: () => contents.length,

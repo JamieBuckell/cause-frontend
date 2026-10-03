@@ -1,22 +1,22 @@
-name: Deploy main to production site
+name: Deploy dev to development site
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - dev
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: deploy-main
+  group: deploy-dev
   cancel-in-progress: true
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dev'
     name: Build and deploy
     runs-on: ubuntu-latest
 
@@ -36,19 +36,19 @@ jobs:
       - name: Build application
         run: npx vue-cli-service build
         env:
-          VUE_APP_ENVIRONMENT: live
+          VUE_APP_ENVIRONMENT: dev
           VUE_APP_COMMIT_SHA: ${{ github.sha }}
           NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: arn:aws:iam::988218197909:role/cause-frontend-github-actions
+          role-to-assume: arn:aws:iam::988218197909:role/cause-frontend-dev-github-actions
           aws-region: eu-west-2
 
       - name: Deploy fingerprinted assets to S3
         run: >-
-          aws s3 sync dist/ s3://causef.jamiebuckell.co.uk/
+          aws s3 sync dist/ s3://causef.jamiebuckell.co.uk/development/
           --exclude '*.html'
           --exclude 'version.json'
           --exclude 'donors/register'
@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy HTML entry points without caching
         run: >-
-          aws s3 cp dist/ s3://causef.jamiebuckell.co.uk/
+          aws s3 cp dist/ s3://causef.jamiebuckell.co.uk/development/
           --recursive
           --exclude '*'
           --include '*.html'
@@ -67,7 +67,7 @@ jobs:
 
       - name: Deploy application version without caching
         run: >-
-          aws s3 cp dist/version.json s3://causef.jamiebuckell.co.uk/version.json
+          aws s3 cp dist/version.json s3://causef.jamiebuckell.co.uk/development/version.json
           --content-type 'application/json; charset=utf-8'
           --cache-control 'no-cache,no-store,must-revalidate'
           --only-show-errors
@@ -75,10 +75,10 @@ jobs:
       # The registration URL has no extension, so S3 cannot infer its MIME type.
       - name: Set registration page content type
         run: >-
-          aws s3 cp dist/donors/register s3://causef.jamiebuckell.co.uk/donors/register
+          aws s3 cp dist/donors/register s3://causef.jamiebuckell.co.uk/development/donors/register
           --content-type 'text/html; charset=utf-8'
           --cache-control 'no-cache,no-store,must-revalidate'
           --only-show-errors
 
-      - name: Invalidate production site cache
-        run: aws cloudfront create-invalidation --distribution-id E3S4Z05K6XBLYL --paths '/*'
+      - name: Invalidate development site cache
+        run: aws cloudfront create-invalidation --distribution-id E2G9Q9M0SNBI07 --paths '/*'

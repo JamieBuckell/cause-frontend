@@ -7,6 +7,7 @@
   </div>
 </template>
 <script>
+import { portalURL } from "@/environment";
 /* eslint-disable no-console */
 import Vue from "vue";
 import config from "@/config";
@@ -149,10 +150,7 @@ export default {
           ).hashedpassword;
           nominator.emailVerification.verified;
           pData.donors[nominatorIndex];
-          const apiURL =
-            process.env.NODE_ENV === "production"
-              ? "https://portal.cause-foundation.org.uk/"
-              : "http://localhost:4000/";
+          const apiURL = `${portalURL}/`;
 
           console.log(
             `${apiURL}subscription/verify/${encodeURI(
