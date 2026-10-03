@@ -14,6 +14,26 @@ const buildVersion =
 class BuildVersionPlugin {
   apply(compiler) {
     compiler.hooks.emit.tap("BuildVersionPlugin", (compilation) => {
+      // Apply to every HTML entry point, including copied utility pages and
+      // the extensionless registration page. Crawlers must be able to read
+      // this directive, so do not block these pages through robots.txt.
+      if (deploymentEnvironment === "dev") {
+        const robots = '<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">';
+        for (const [filename, asset] of Object.entries(compilation.assets)) {
+          if (!filename.endsWith(".html") && filename !== "donors/register") {
+            continue;
+          }
+          const html = asset.source().toString();
+          const contents = /<head(?:\s[^>]*)?>/i.test(html)
+            ? html.replace(/<head(?:\s[^>]*)?>/i, `$&${robots}`)
+            : `<head>${robots}</head>${html}`;
+          compilation.assets[filename] = {
+            source: () => contents,
+            size: () => Buffer.byteLength(contents),
+          };
+        }
+      }
+
       const contents = JSON.stringify({ version: buildVersion, environment: deploymentEnvironment, commit });
       compilation.assets["version.json"] = {
         source: () => contents,

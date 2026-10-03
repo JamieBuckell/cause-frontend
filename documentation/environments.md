@@ -12,3 +12,5 @@ The dev CloudFront origin uses `/development` and maps missing SPA routes to its
 Pushes to dev run `deploy-dev.yml`. Pushes to main run `deploy-main.yml`. Each workflow also checks its branch for manual dispatches. Do not use the legacy `npm run deploy` script for dev: it targets the production bucket root.
 
 `/version.json` records the environment, full source commit and build version. Compare this file between domains to identify deployed code. No account or email action is needed.
+
+Development builds add `noindex, nofollow, noarchive, noimageindex` robots metadata to every HTML entry point, including registration and utility pages. Production builds do not add this metadata. Crawling remains allowed so search engines can read the noindex directive; this is not access control.
