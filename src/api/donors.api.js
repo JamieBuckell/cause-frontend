@@ -76,8 +76,19 @@ export const downloadFile = async (body) =>
 export const donorEmailUpdate = async (body) =>
   httpClient.post(`/donors/email-update`, body);
 
+const requireDonorSuccess = (response) => {
+  if (response.status < 200 || response.status >= 300) {
+    const error = new Error(Object.values(response.data?.messages || {}).join(" ") || "Could not update donor. Refresh and try again.");
+    error.response = response;
+    throw error;
+  }
+  return response;
+};
 export const donorPledgeUpdate = async (body) =>
-  httpClient.post(`/donors/update-pledge`, body);
+  requireDonorSuccess(await httpClient.post(`/donors/update-pledge`, body));
+
+export const reconnectDonorAllocations = async (body) =>
+  requireDonorSuccess(await httpClient.post(`/donors/reconnect-allocations`, body));
 
 export const addHamper = async (body) =>
   await httpClient.post(`/donors/update`, body);

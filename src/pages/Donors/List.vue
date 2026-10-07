@@ -239,6 +239,7 @@
 </template>
 <script>
 import Vue from "vue";
+import { reconnectAssignments } from "@/services/donorAllocations";
 import { Select, Option } from "element-ui";
 import { deleteDonor, hideDonor, resendVerification } from "@/api/donors.api";
 import { getByCampaign } from "@/api/campaign.api";
@@ -325,6 +326,7 @@ export default {
     const savedFilters = this.$store.getters.getGenericData("donorsFilters");
     return {
       tableData: [],
+      repairingDonorId: null,
       pagination: {
         perPage: this.paginateOptions.perPage ?? 50,
         currentPage: 1,
@@ -505,7 +507,8 @@ export default {
       return result;
     },
     getCustomActions() {
-      const propCustomActions = this.customActions;
+      const propCustomActions = [...this.customActions];
+      if (this.isJamie()) propCustomActions.push({ emit: "reconnectAllocations", type: "icon", icon: "fa fa-link", class: "btn-info", text: "Reconnect allocation links" });
       if (this.userInGroup("admin")) {
         propCustomActions.push({
           emit: "hideEmail",
@@ -527,6 +530,25 @@ export default {
     },
     async handleCustomAction(i, k, r) {
       switch (k) {
+        case "reconnectAllocations": {
+          if (!this.isJamie() || this.repairingDonorId) return;
+          this.repairingDonorId = r.GSI2PK;
+          try {
+            const pData = this.$store.getters.getPlatformData;
+            const donor = pData.donors.find(d => d.GSI2PK === r.GSI2PK && d.PK === this.$store.getters.getActiveCampaign);
+            const result = await reconnectAssignments(donor, this.$store.getters.getActiveCampaign);
+            if (result?.donor) {
+              const current = this.$store.getters.getPlatformData;
+              const donors = current.donors.map(d => d.GSI2PK === result.donor.GSI2PK && d.PK === result.donor.PK ? result.donor : d);
+              await this.$store.dispatch("setPlatformData", { ...current, donors });
+              await this.getDonorData();
+              await Swal.fire({ title: "Allocation links restored", text: result.message, icon: "success" });
+            }
+          } catch (error) {
+            await Swal.fire({ title: "Could not reconnect allocations", text: error.message, icon: "error" });
+          } finally { this.repairingDonorId = null; }
+          return;
+        }
         case "hideEmail":
           // console.log("hideEmail");
 
