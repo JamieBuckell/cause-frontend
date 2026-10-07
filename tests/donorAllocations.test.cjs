@@ -41,3 +41,9 @@ test('already correct allocations make no write request',async()=>{
 test('backend conflicts propagate without a second repair request',async()=>{
  const f=setup({fail:true});await assert.rejects(f.reconnectAssignments(donor,'TEST'),/Source changed/);assert.equal(f.calls.length,1);
 });
+
+test('a submit event cannot be mistaken for a delete request',()=>{
+ const f=setup();const requests=[{requestId:'request',numberOfFamilies:1}];
+ const result=f.editablePledges(requests,{requestId:'request',numberOfFamilies:2},0,{type:'submit'});
+ assert.equal(result.length,1);assert.equal(result[0].numberOfFamilies,2);
+});
