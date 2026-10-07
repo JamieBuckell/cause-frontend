@@ -122,6 +122,7 @@ const CommunicationsCreate = () =>
   import("src/pages/Communications/Create.vue");
 const CommunicationsSentList = () =>
   import("src/pages/Communications/SentList.vue");
+const CommunicationsIssues = () => import("src/pages/Communications/Issues.vue");
 const EmailTemplatesList = () =>
   import("src/pages/Communications/EmailTemplatesList.vue");
 const HamperRefsCheck = () => import("src/pages/DataFix/HamperRefsCheck.vue");
@@ -603,6 +604,7 @@ let communicationsCreateMenu = {
       name: "Sent Communication",
       component: CommunicationsSentList,
     },
+    { path: "issues", name: "Email Issues", component: CommunicationsIssues, meta: { requiresAuth: true } },
     {
       path: "emails",
       name: "Email Templates",

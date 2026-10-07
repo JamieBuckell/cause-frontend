@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Test mailing confirmation and retry flow
-        run: node --test tests/communicationsSend.test.cjs
+        run: node --test tests/*.test.cjs
 
       - name: Build application
         run: npx vue-cli-service build

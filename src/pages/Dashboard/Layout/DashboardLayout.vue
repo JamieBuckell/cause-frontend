@@ -125,6 +125,7 @@
           <sidebar-item
             :link="{ name: 'Send Email', path: '/communications/create' }"
           ></sidebar-item>
+          <sidebar-item :link="{ name: 'Email Issues', path: '/communications/issues' }"></sidebar-item>
           <sidebar-item
             :link="{ name: 'Previous Emails', path: '/communications/sent' }"
           ></sidebar-item>
