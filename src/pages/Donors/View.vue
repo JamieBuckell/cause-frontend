@@ -26,6 +26,9 @@
       <div class="col-12 col-lg-3">
         <card>
           <div slot="header">
+            <button v-if="isJamie()" class="btn btn-sm btn-outline-info" :disabled="repairingAllocations || savingPledge" @click="repairAllocationLinks">
+              {{ repairingAllocations ? "Checking allocations…" : "Reconnect allocation links" }}
+            </button>
             <h4 class="title">
               {{
                 donor && donor.donorDetails && donor.donorDetails.firstName
@@ -444,6 +447,7 @@
 </template>
 <script>
 import Vue from "vue";
+import { editablePledges, reconnectAssignments } from "@/services/donorAllocations";
 import {
   getHash,
   downloadFile,
@@ -484,6 +488,8 @@ export default {
     return {
       isLoading: true,
       allocationLoading: false,
+      repairingAllocations: false,
+      savingPledge: false,
       activeCampaign: {},
       downloadPending: false,
       familyListOptions: {
@@ -1004,87 +1010,59 @@ export default {
         this.editEmailAddress = false;
       }
     },
-    async savePledge(delteItem = false) {
-      await Swal.fire({
-        title: "Do you want to send a pledge updated email?",
-        text: `As you have updated this users pledge details, you should send a confirmation of the updated details to the donor.`,
-        type: "warning",
-        showCancelButton: true,
-        showDenyButton: true,
-        confirmButtonClass: "btn btn-success btn-fill",
-        denyButtonClass: "btn btn-danger btn-fill",
-        cancelButtonClass: "btn btn-secondary btn-fill",
-        confirmButtonText: "Yes, send it!",
-        denyButtonText: "No, just save",
-        cancelButtonText: "Cancel",
-        buttonsStyling: false,
-      }).then(async (d) => {
-        const sendEmail = d.isConfirmed;
-        if (d.isConfirmed || d.isDenied) {
-          const ci = this.editPledgeData?.campaignIndex ?? false;
-          if (ci >= 0) {
-            if (
-              this.editPledgeData.familyDetail.length >
-              this.editPledgeData.numberOfFamilies
-            ) {
-              this.editPledgeData.familyDetail =
-                this.editPledgeData.familyDetail.slice(
-                  0,
-                  this.editPledgeData.numberOfFamilies
-                );
-            }
-
-            this.campaigns[ci] = this.editPledgeData;
-            if (delteItem) {
-              this.campaigns.splice(ci, 1);
-            }
-
-            const updateRes = await donorPledgeUpdate({
-              campaignData: JSON.stringify(this.campaigns),
-              donorId: this.donor.GSI2PK,
-              sendEmail,
-              campaignId: this.$store.getters.getActiveCampaign,
-            });
-
-            if (updateRes?.data?.messages) {
-              this.messages = Object.keys(updateRes?.data?.messages).map(
-                (k) => ({
-                  error: updateRes?.data?.messages[k],
-                })
-              );
-            }
-            if (updateRes.status == 200) {
-              const pData = this.$store.getters.getPlatformData;
-
-              const i = pData.donors.findIndex(
-                (d) => d.GSI3PK === this.donor.GSI3PK
-              );
-              const donorUpdates = { ...pData.donors[i] };
-
-              if (donorUpdates.PK) {
-                donorUpdates.familyDetails.request = this.campaigns;
-
-                pData.donors[i] = donorUpdates;
-
-                await this.$store.dispatch("setPlatformData", {
-                  ...pData,
-                });
-              }
-            }
-          }
+    async applyUpdatedDonor(updated) {
+      const pData = this.$store.getters.getPlatformData;
+      const donors = pData.donors.map(d => d.PK === updated.PK && d.GSI2PK === updated.GSI2PK ? updated : d);
+      this.donor = updated;
+      this.campaigns = updated.familyDetails.request;
+      await this.$store.dispatch("setPlatformData", { ...pData, donors });
+      await this.getDonorData();
+    },
+    async repairAllocationLinks() {
+      if (!this.isJamie() || this.repairingAllocations) return;
+      this.repairingAllocations = true;
+      try {
+        const result = await reconnectAssignments(this.donor, this.$store.getters.getActiveCampaign);
+        if (result?.donor) {
+          await this.applyUpdatedDonor(result.donor);
+          await Swal.fire({ title: "Allocation links restored", text: result.message, icon: "success" });
         }
-      });
-      if (!this.messages.length) {
+      } catch (error) {
+        await Swal.fire({ title: "Could not reconnect allocations", text: error.message, icon: "error" });
+      } finally { this.repairingAllocations = false; }
+    },
+    async savePledge(deleteItem = false) {
+      if (this.savingPledge) return;
+      this.savingPledge = true;
+      let saved = false;
+      this.messages = [];
+      try {
+        const decision = await Swal.fire({
+          title: "Send a pledge updated email?", text: "Choose whether to email the donor after saving their pledge.",
+          icon: "question", showCancelButton: true, showDenyButton: true,
+          confirmButtonText: "Save and send email", denyButtonText: "Save without email", cancelButtonText: "Cancel",
+        });
+        if (!decision.isConfirmed && !decision.isDenied) return;
+        const index = this.editPledgeData.campaignIndex;
+        if (!Number.isInteger(index) || index < 0 || index >= this.campaigns.length) throw new Error("Refresh the donor before editing this pledge.");
+        const requests = editablePledges(this.campaigns, this.editPledgeData, index, deleteItem);
+        const { data } = await donorPledgeUpdate({ campaignData: JSON.stringify(requests), donorId: this.donor.GSI2PK,
+          sendEmail: decision.isConfirmed, campaignId: this.$store.getters.getActiveCampaign });
+        saved = true;
+        // Use the saved server record, including its preserved allocation links.
+        await this.applyUpdatedDonor(data.donor);
         this.editPledge = false;
-      }
+        if (data.notificationWarning) await Swal.fire({ title: "Pledge saved", text: data.notificationWarning, icon: "warning" });
+      } catch (error) {
+        this.messages = [{ error: error.message }];
+        await Swal.fire({ title: saved ? "Pledge saved; refresh the page" : "Pledge not saved", text: error.message, icon: "error" });
+      } finally { this.savingPledge = false; }
     },
     doEditPledge(c, ci) {
+      this.messages = [];
       this.editPledge = true;
-      this.editPledgeData = { ...c };
-      this.editPledgeData.familyDetail =
-        typeof c.familyDetail === "string"
-          ? JSON.parse(c.familyDetail)
-          : c.familyDetail;
+      this.editPledgeData = JSON.parse(JSON.stringify(c));
+      this.editPledgeData.familyDetail = typeof c.familyDetail === "string" ? JSON.parse(c.familyDetail) : [...(c.familyDetail || [])];
       this.editPledgeData.campaignIndex = ci;
     },
     getErrorMessage(m) {
