@@ -207,7 +207,7 @@
 </template>
 <script>
 import Vue from "vue";
-import { sendEmail } from "@/api/communications.api";
+import { previewAndSendEmail } from "@/services/communicationsSend";
 import Swal from "sweetalert2";
 import { MessageBox, Select, Option, Tag } from "element-ui";
 
@@ -297,68 +297,25 @@ export default {
       this.emailError = hasError;
     },
     async sendEmail() {
-      await Swal.fire({
-        title: "Are you sure?",
-        text: `If you hit yes, this email will be sent to your specified emails. The process cannot be undone.`,
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonClass: "btn btn-success btn-fill",
-        cancelButtonClass: "btn btn-danger btn-fill",
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
-        buttonsStyling: false,
-      }).then(async (d) => {
-        this.isLoading = true;
-        if (d?.isConfirmed && !d?.isDismissed) {
-          try {
-            const emailSendRes = await sendEmail({
-              options: {
-                type: this.emailType,
-                campaignId: this.campaignId,
-                toAddresses: this.specificAddresses,
-                excludeTeamLeads: !this.includeTeamLeads,
-                excludePledged: !this.includePledged,
-                excludeSubscribers: this.excludeSubscribers,
-              },
-              email: {
-                fromAddress: this.sendFrom,
-                subject: this.emailSubject,
-                title: this.emailTitle,
-                content: this.htmlContent,
-              },
-            });
-            if (emailSendRes.status == 200) {
-              Swal.fire({
-                title: "Success",
-                text: "Email sent successfully.",
-                timer: 3000,
-                showConfirmButton: false,
-              });
-              /* *
-            this.emailSubject = `CAUSE Foundation: `;
-            this.emailTitle = "";
-            this.htmlContent = "";
-            this.toAddresses = [];
-            /* */
-            } else {
-              Swal.fire({
-                title: "Error",
-                text: "An unexpected error occurred",
-                timer: 3000,
-                showConfirmButton: false,
-              });
-            }
-          } catch (e) {
-            Swal.fire({
-              title: "Error",
-              text: e?.message ?? "An unexpected error occurred",
-              timer: 3000,
-              showConfirmButton: false,
-            });
-          }
-        }
+      if (this.isLoading) return;
+      this.isLoading = true;
+      try {
+        await previewAndSendEmail({
+          options: {
+            type: this.emailType, campaignId: this.campaignId,
+            toAddresses: this.specificAddresses,
+            excludeTeamLeads: !this.includeTeamLeads,
+            excludePledged: !this.includePledged,
+            excludeSubscribers: this.excludeSubscribers,
+          },
+          email: { fromAddress: this.sendFrom, subject: this.emailSubject,
+            title: this.emailTitle, content: this.htmlContent },
+        });
+      } catch (error) {
+        await Swal.fire({ title: "Mailing not confirmed", text: error.message, type: "error" });
+      } finally {
         this.isLoading = false;
-      });
+      }
     },
   },
   async mounted() {

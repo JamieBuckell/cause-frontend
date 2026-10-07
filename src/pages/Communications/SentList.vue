@@ -66,7 +66,7 @@
 </template>
 <script>
 import Vue from "vue";
-import { sendEmail } from "@/api/communications.api";
+import { previewAndSendEmail } from "@/services/communicationsSend";
 import { getSentCommuncations } from "@/api/communications.api";
 import ListingsPage from "@/components/Cards/ListingsPage.vue";
 import EmailPreview from "@/components/Communications/EmailPreview.vue";
@@ -99,6 +99,7 @@ export default {
   data() {
     return {
       showPreview: false,
+      isSending: false,
       previewData: {
         template: "",
         title: "",
@@ -129,9 +130,10 @@ export default {
           },
           {
             prop: "recipientCount",
-            label: "Total Recipients",
+            label: "Selected Recipients",
             minWidth: 60,
           },
+          { prop: "deliveryStatus", label: "Sending status", minWidth: 180 },
         ],
         searchKeys: ["subject", "title", "content"],
         delete: false,
@@ -176,6 +178,21 @@ export default {
     },
   },
   methods: {
+    async loadEmails() {
+      const res = await getSentCommuncations();
+      this.sentEmailsData = Object.values(res.data?.emails || {}).map((e) => ({
+        dateAdded: e.dateAdded,
+        requestId: e.GSI1PK,
+        deliveryStatus: e.deliveryStatus || "Historical send records",
+        ...e.email,
+      }));
+
+      this.previewData.template = res.data?.template;
+
+      this.sentEmailsData.sort((a, b) =>
+        b.dateAdded > a.dateAdded ? 1 : a.dateAdded > b.dateAdded ? -1 : 0
+      );
+    },
     async handleCreate(i, r) {
       this.$router.push(`/communications/create`);
     },
@@ -192,59 +209,39 @@ export default {
           this.previewData.options = r?.options ? JSON.parse(r.options) : "";
           break;
         case "resendComms":
-          await Swal.fire({
-            title: "Are you sure?",
-            text: `If you resent this communication all previous recipients will recieve the email again.`,
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonClass: "btn btn-success btn-fill",
-            cancelButtonClass: "btn btn-danger btn-fill",
-            confirmButtonText: "Yes",
-            cancelButtonText: "No",
-            buttonsStyling: false,
-          }).then(async (d) => {
-            if (d?.isConfirmed && !d?.isDismissed) {
-              const emailOptions = r?.options ? parseJson(r.options) : {};
-
-              const emailSendRes = await sendEmail({
+          if (this.isSending) return;
+          this.isSending = true;
+          try {
+            const choice = await Swal.fire({
+              title: "Choose recipients for this resend",
+              input: "radio",
+              inputOptions: {
+                remaining: "Only recipients not already sent this email",
+                all: "Everyone — send another copy to previous recipients",
+              },
+              inputValue: "remaining",
+              showCancelButton: true,
+              confirmButtonText: "Preview recipients",
+            });
+            if (choice.isConfirmed) {
+              const emailOptions = r.options ? parseJson(r.options) : {};
+              await previewAndSendEmail({
                 options: {
-                  type: emailOptions?.type ? emailOptions?.type : "specific",
-                  toAddresses: emailOptions?.toAddresses
-                    ? emailOptions?.toAddresses
-                    : [],
-                  excludeTeamLeads: emailOptions?.excludeTeamLeads
-                    ? emailOptions?.excludeTeamLeads
-                    : false,
-                  excludePledged: emailOptions?.excludePledged
-                    ? emailOptions?.excludePledged
-                    : false,
-                  ignorePreviouslySent: true,
+                  ...emailOptions,
+                  campaignId: emailOptions.campaignId,
+                  ignorePreviouslySent: choice.value === "all",
                 },
                 existingEmailId: r.requestId,
-                email: {
-                  fromAddress: r?.fromAddress ? r?.fromAddress : "hampers",
-                  subject: r.subject,
-                  title: r.title,
-                  content: r.content,
-                },
+                email: { fromAddress: r.sendFrom || r.fromAddress || "hampers",
+                  subject: r.subject, title: r.title, content: r.content },
               });
-              if (emailSendRes.status == 200) {
-                Swal.fire({
-                  title: "Success",
-                  text: "Email sent successfully.",
-                  timer: 3000,
-                  showConfirmButton: false,
-                });
-              } else {
-                Swal.fire({
-                  title: "Error",
-                  text: "An unexpected error occurred",
-                  timer: 3000,
-                  showConfirmButton: false,
-                });
-              }
+              await this.loadEmails();
             }
-          });
+          } catch (error) {
+            await Swal.fire({ title: "Mailing not confirmed", text: error.message, type: "error" });
+          } finally {
+            this.isSending = false;
+          }
           break;
         default:
           this.$emit(k, i, r);
@@ -256,17 +253,7 @@ export default {
     if (!this.userInGroup("admin") && !this.organisationId) {
       this.$router.push("/");
     }
-    const res = await getSentCommuncations();
-    this.sentEmailsData = Object.values(res.data?.emails).map((e) => ({
-      dateAdded: e.dateAdded,
-      ...e.email,
-    }));
-
-    this.previewData.template = res.data?.template;
-
-    this.sentEmailsData.sort((a, b) =>
-      b.dateAdded > a.dateAdded ? 1 : a.dateAdded > b.dateAdded ? -1 : 0
-    );
+    await this.loadEmails();
   },
 };
 </script>
