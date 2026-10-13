@@ -29,7 +29,7 @@
         </span>
       </div>
     </div>
-    <div class="row always-show" v-if="!rowData.emailVerification.verified">
+    <div class="row always-show" v-if="!rowData.emailVerification.verified && !manuallyVerified">
       <div class="col-6">
         <button
           type="submit"
@@ -45,7 +45,7 @@
           type="submit"
           class="btn btn-warning btn-fill pull-right w-100 mt-3"
           @click="manualVerification"
-          v-if="!verificationPending"
+          v-if="!verificationPending && userInGroup('Admin')"
         >
           Manually Verify
         </button>
@@ -66,7 +66,7 @@
   </div>
 </template>
 <script>
-import { resendVerification, verifySubscription } from "@/api/donors.api";
+import { resendVerification, verifyDonorManually } from "@/api/donors.api";
 import Swal from "sweetalert2";
 export default {
   name: "DonorDetail",
@@ -83,27 +83,35 @@ export default {
   data() {
     return {
       verificationPending: false,
+      manuallyVerified: false,
     };
+  },
+  watch: {
+    "rowData.GSI2PK"() { this.manuallyVerified = false; },
   },
   methods: {
     async manualVerification() {
-      if (this.rowData.GSI2PK) {
-        this.verificationPending = true;
-
-        const verification = await verifySubscription(
+      if (!this.rowData.GSI2PK || this.verificationPending || !this.userInGroup("Admin")) return;
+      this.verificationPending = true;
+      try {
+        await verifyDonorManually(
           this.rowData.GSI3PK,
-          "",
           this.$store.getters.getActiveCampaign
         );
-      
-        if (verification.status === 200) {
-          Swal.fire({
-            title: "Success",
-            text: "Email successfully Verified.",
-            timer: 3000,
-            showConfirmButton: false,
-          });
-        }
+        this.manuallyVerified = true;
+        await Swal.fire({
+          title: "Success",
+          text: "Email successfully verified.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        await Swal.fire({
+          title: "Verification failed",
+          text: Object.values(error.response?.data?.messages || {}).join(" ") || error.message || "Please try again.",
+          icon: "error",
+        });
+      } finally {
         this.verificationPending = false;
       }
     },
