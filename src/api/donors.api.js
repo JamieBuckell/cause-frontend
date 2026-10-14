@@ -92,3 +92,8 @@ export const reconnectDonorAllocations = async (body) =>
 
 export const addHamper = async (body) =>
   await httpClient.post(`/donors/update`, body);
+
+export const verifyDonorManually = async (emailAddress, campaignId) =>
+  requireDonorSuccess(await httpClient.post(
+    `/subscription/verify/${requiredPathParam(emailAddress, "emailAddress")}?campaignId=${requiredPathParam(campaignId, "campaignId")}`
+  ));
