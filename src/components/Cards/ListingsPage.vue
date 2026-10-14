@@ -69,7 +69,6 @@
             class="mb-3 w-100"
             placeholder="Search records"
             v-model="searchQuery"
-            @change="updateSearch"
             aria-controls="datatables"
           />
         </div>
@@ -101,7 +100,7 @@
       >
         <div class="">
           <p class="card-category pb-2">
-            Showing {{ from + 1 }} to {{ to }} of {{ total }} entries
+            Showing {{ total ? from + 1 : 0 }} to {{ to }} of {{ total }} entries
           </p>
         </div>
       </div>
@@ -204,14 +203,14 @@
     >
       <div>
         <p class="card-category">
-          Showing {{ from + 1 }} to {{ to }} of {{ total }} entries
+          Showing {{ total ? from + 1 : 0 }} to {{ to }} of {{ total }} entries
         </p>
       </div>
       <l-pagination
         class="pagination-no-border"
         v-model="pagination.currentPage"
         :per-page="pagination.perPage"
-        :total="pagination.total"
+        :total="total"
       >
       </l-pagination>
     </div>
@@ -291,18 +290,12 @@ export default {
       perPageOptions: this.paginateOptions.perPageOptions ?? [5, 10, 25, 50],
       total: 0,
     };
-    let pagination = this.$store.getters.getPaginationData(this.listingsType);
-    if (!pagination) {
-      this.$store.dispatch("setPaginationData", {
-        type: this.listingsType,
-        attributes: defaultPagination,
-      });
-      pagination = defaultPagination;
-    }
-
-    if (!pagination?.perPage) {
-      pagination.perPage = 25;
-    }
+    const savedPagination = this.$store.getters.getPaginationData(this.listingsType);
+    // Keep the preferred page size, but give each table its own page and total.
+    const pagination = {
+      ...defaultPagination,
+      perPage: savedPagination?.perPage || defaultPagination.perPage,
+    };
     return {
       type: this.listingsType,
       createKey: 0,
@@ -325,7 +318,7 @@ export default {
     };
   },
   computed: {
-    queriedData() {
+    filteredData() {
       let result = this.tableData;
 
       if (this.searchQuery !== "" && this.fuseSearch) {
@@ -338,9 +331,12 @@ export default {
         });
       }
 
-      return result.length && this.paginateOptions.perPage
-        ? result.slice(this.from, this.to)
-        : result;
+      return result;
+    },
+    queriedData() {
+      return this.paginateOptions.perPage
+        ? this.filteredData.slice(this.from, this.to)
+        : this.filteredData;
     },
     to() {
       let highBound = this.from + this.pagination.perPage;
@@ -353,8 +349,7 @@ export default {
       return this.pagination.perPage * (this.pagination.currentPage - 1);
     },
     total() {
-      this.paginationTotal(this.tableData.length);
-      return this.tableData.length;
+      return this.filteredData.length;
     },
     searchEnabled() {
       return this.options?.search && this.options?.searchKeys.length;
@@ -378,7 +373,12 @@ export default {
     this.tableData = [];
   },
   watch: {
+    searchQuery() {
+      this.pagination.currentPage = 1;
+      this.updateSearch();
+    },
     listingsData(newVal) {
+      this.pagination.currentPage = 1;
       this.tableData = newVal;
       this.initFuse();
     },
@@ -388,17 +388,7 @@ export default {
   },
   methods: {
     updateSearch() {
-      let searchResults = [];
-      if (this.searchQuery !== "" && this.fuseSearch) {
-        let fsr = this.fuseSearch.search(this.searchQuery);
-        // Filter out the lower matches
-        fsr = fsr.filter((d) => d.score <= 0.01);
-        //Format into how we need it
-        searchResults = Object.keys(fsr).map(function (key) {
-          return { ...fsr[key].item };
-        });
-      }
-      this.$emit("updateSearch", searchResults);
+      this.$emit("updateSearch", this.searchQuery !== "" ? this.filteredData : []);
     },
     checkActionCondition(r, a) {
       if (a.condition) {
@@ -469,9 +459,10 @@ export default {
       }
     },
     updatePagination() {
+      this.pagination.currentPage = 1;
       this.$store.dispatch("setPaginationData", {
         type: this.listingsType,
-        attributes: this.pagination,
+        attributes: { ...this.pagination },
       });
     },
     initFuse() {
