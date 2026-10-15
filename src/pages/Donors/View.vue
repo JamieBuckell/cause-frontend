@@ -816,70 +816,47 @@ export default {
       if (f.reference) {
         this.isLoading = true;
 
-        const allocation = this.donor?.familyDetails?.request
-          ? this.donor.familyDetails.request.find((r) =>
-              r?.allocation
-                ? r.allocation.find((a) => f?.reference === a?.hamperId)
-                    ?.hamperId
-                : false
-            )
-          : {};
-
-        const unallocateRes = await unallocateFamily({
-          campaignId: this.$store.getters.getActiveCampaign,
-          requestId: allocation?.requestId ?? null,
-          hamperId: f.reference,
-          donorId: this.donor.GSI2PK,
-        });
-        if (unallocateRes.status == 200) {
-          const requestIndex = this.donor?.familyDetails?.request.findIndex(
-            (r) => r.requestId === (allocation?.requestId ?? null)
-          );
-          const allocationIndex = this.donor?.familyDetails?.request[
-            requestIndex
-          ]?.allocation.findIndex((a) => a.hamperId === f.reference);
-
-          this.donor?.familyDetails?.request[requestIndex]?.allocation.splice(
-            allocationIndex,
-            1
-          );
-
-          const assignedIndex = this.assignedFamilies.findIndex(
-            (pf) => pf.GSI2SK === `SK#${f.reference}`
-          );
-          this.assignedFamilies.splice(assignedIndex, 1);
-
-          const allocationComplete =
-            this.assignedFamilies.length === this.campaign?.numberOfFamilies;
-
-          const pFamilyIndex = this.donor.families.findIndex(
-            (pf) => pf.GSI2SK === `SK#${f.reference}`
-          );
-          if (this.donor.families[pFamilyIndex]) {
-            this.donor.families[pFamilyIndex].allocatedTo = "unallocated";
-            this.donor.families[pFamilyIndex].status = "unallocated";
-          }
-
-          this.isLoading = false;
-          Swal.fire({
-            title: "Success",
-            text: "Family unallocated.",
-            timer: 2000,
-            showConfirmButton: false,
+        try {
+          const unallocateRes = await unallocateFamily({
+            campaignId: this.$store.getters.getActiveCampaign,
+            familyId: f.requestId,
+            hamperId: f.reference,
+            donorId: this.donor.GSI2PK,
           });
-          this.allocateFamily = allocationComplete;
-        } else {
-          this.isLoading = false;
-          if (unallocateRes?.data?.messages) {
+          if (unallocateRes.status == 200) {
+            this.donor = unallocateRes.data.donor;
+            this.assignedFamilies = this.assignedFamilies.filter(
+              pf => pf.GSI2PK !== unallocateRes.data.family.GSI2PK
+            );
+            this.donor.families = this.assignedFamilies;
+            const allocationComplete =
+              this.assignedFamilies.length === this.campaign?.numberOfFamilies;
+
+            this.isLoading = false;
             Swal.fire({
-              title: "Error",
-              text: Object.keys(unallocateRes?.data?.messages)
-                .map((k) => unallocateRes?.data?.messages[k])
-                .join(),
+              title: "Success",
+              text: "Family unallocated.",
               timer: 2000,
               showConfirmButton: false,
             });
+            this.allocateFamily = allocationComplete;
+          } else {
+            this.isLoading = false;
+            if (unallocateRes?.data?.messages) {
+              Swal.fire({
+                title: "Error",
+                text: Object.keys(unallocateRes?.data?.messages)
+                  .map((k) => unallocateRes?.data?.messages[k])
+                  .join(),
+                timer: 2000,
+                showConfirmButton: false,
+              });
+            }
           }
+        } catch (error) {
+          Swal.fire({ title: "Error", text: "Unable to unallocate this family. Please refresh and try again." });
+        } finally {
+          this.isLoading = false;
         }
       } else {
         this.messages = [{ error: "Error with family data" }];
