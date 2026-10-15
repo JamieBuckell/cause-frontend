@@ -622,7 +622,8 @@ export default {
         }
       };
 
-      const allocations = campaign?.numberOfFamilies; // this.assignedFamilies.length
+      // Older pledges store the requested count as text. Compare numeric totals.
+      const allocations = Number(campaign?.numberOfFamilies);
       const c =
         campaign.allocation && this.donor.families
           ? campaign.allocation.filter((hamper) =>
