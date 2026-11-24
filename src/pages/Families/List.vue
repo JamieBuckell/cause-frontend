@@ -268,6 +268,7 @@ import Vue from "vue";
 import { Dialog, MessageBox, Select, Option } from "element-ui";
 import {
   markDirectHampersBulk,
+  markDirectHamper,
   listFamilies,
   deleteFamily,
 } from "@/api/families.api";
@@ -445,6 +446,7 @@ export default {
       },
       editFamilyData: [],
       tableData: [],
+      markingDirect: false,
       allNominatorsData: [],
       allDonorsData: [],
       familyMemberData: [],
@@ -694,7 +696,7 @@ export default {
       return result;
     },
     getCustomActions() {
-      const propCustomActions = this.customActions;
+      const propCustomActions = [...this.customActions];
       if (
         !this.organisationId &&
         !propCustomActions.find((ca) => ca.emit === "viewOrganisation")?.emit
@@ -708,6 +710,18 @@ export default {
         });
       }
       if (this.userInGroup("admin")) {
+        if (
+          this.options.directHamper &&
+          !propCustomActions.some((action) => action.emit === "directHamper")
+        ) {
+          propCustomActions.push({
+            emit: "directHamper",
+            type: "icon",
+            icon: "nc-icon nc-delivery-fast",
+            class: "btn-primary",
+            text: "Received Direct",
+          });
+        }
         if (
           this.options.resetReferences &&
           !propCustomActions.find((ca) => ca.emit === "resetReferences")?.emit
@@ -979,6 +993,9 @@ export default {
     },
     async handleCustomAction(i, k, r) {
       switch (k) {
+        case "directHamper":
+          await this.doMarkDirect(r);
+          break;
         case "viewOrganisation":
           this.$router.push(`/organisations/view/${r.organisationId}`);
           break;
@@ -1158,6 +1175,33 @@ export default {
         receiveStatus: f?.receiveStatus ?? "",
         dateAddedSort: moment(f?.dateAdded).format("YYYYMMDDHHmmss"),
       }));
+    },
+    async doMarkDirect(family) {
+      if (!this.userInGroup("admin") || !this.options.directHamper || this.markingDirect) return;
+      if (family.receiveStatus === "direct-hamper") return;
+      this.markingDirect = true;
+      try {
+        const result = await markDirectHamper({
+          hamperId: family.reference,
+          campaignId: this.$store.getters.getActiveCampaign,
+        });
+        if (result?.status !== 200 || !result?.data?.success) {
+          const messages = result?.data?.messages;
+          throw new Error(messages ? Object.values(messages).join(" ") : "Could not mark the hamper as received direct.");
+        }
+        family.receiveStatus = "direct-hamper";
+        this.$store.commit("setForceRefresh", true);
+        await Swal.fire({
+          title: "Hamper marked as received direct",
+          timer: 2000,
+          showConfirmButton: false,
+          icon: "success",
+        });
+      } catch (error) {
+        await Swal.fire({ title: "Could not mark hamper as received direct", text: error.message, icon: "error" });
+      } finally {
+        this.markingDirect = false;
+      }
     },
     async doBulkMarkDirect(families) {
       const hamperIds = families.map((f) => f.reference);
