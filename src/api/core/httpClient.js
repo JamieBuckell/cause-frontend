@@ -55,7 +55,7 @@ const createHttpError = (axiosError, response, authRedirected = false) => {
 
 const errorInterceptor = (error) => {
   if (!error.response) {
-    if (error.toString().includes("Network Error")) {
+    if (!error.config?.skipNetworkErrorRedirect && error.toString().includes("Network Error")) {
       // store.dispatch("signOut");
       if (process.env.NODE_ENV === "production") {
         router.push({

@@ -4,7 +4,7 @@
       <div class="col-lg-4 col-md-6 col-sm-8">
         <ValidationObserver v-slot="{ handleSubmit }">
           <!--You can specify transitions on initial render. The `card-hidden` class will be present initially and then it will be removed-->
-          <form @submit.prevent="handleSubmit(submit)">
+          <form @submit.prevent="handleSubmit(recieveHamper)">
             <div class="accept-loading" v-if="loading">
               <div class="center">
                 <div class="spinner-border text-muted" role="status">
@@ -20,7 +20,21 @@
                 </div>
 
                 <div>
+                  <p v-if="campaignId" class="text-center">
+                    Campaign: {{ campaignName || campaignId }} ({{ campaignId }})
+                  </p>
+                  <div v-if="!campaignId" class="text-center mb-3">
+                    <p>{{ campaignLoading ? 'Loading current campaign…' : 'Current campaign unavailable' }}</p>
+                    <button type="button" class="btn btn-info" :disabled="campaignLoading" @click="loadCampaign">Retry campaign</button>
+                  </div>
+                  <div v-if="cameraError" class="text-center mb-3" role="alert">
+                    <p>{{ cameraError }}</p>
+                    <button type="button" class="btn btn-info" @click="retryCamera">Retry camera</button>
+                  </div>
+                  <p v-if="cameraStarting && !cameraError" class="text-center" role="status">Starting camera… If prompted, allow camera access.</p>
                   <qrcode-stream
+                    v-if="!cameraError"
+                    :key="cameraKey"
                     :camera="camera"
                     @decode="onDecode"
                     @init="onInit"
@@ -39,8 +53,8 @@
                       />
                     </div>
                   </qrcode-stream>
-                  <div v-if="showManual" class="text-center mt-3">
-                    <small>Having trouble focusing?</small><br />
+                  <div v-if="showManual || cameraError" class="text-center mt-3">
+                    <small>You can also upload a photo of the QR code or enter the Hamper ID below.</small><br />
                     <qrcode-capture
                       @decode="onDecode"
                       style="margin-top: 0.5rem"
@@ -68,16 +82,18 @@
                       :error="failed ? 'The Hamper ID field is required' : null"
                       :hasSuccess="passed"
                       name="hamperId"
-                      pattern="[0-9a-zA-Z\-]*"
+                      :disabled="loading || submitting || !campaignId"
                       v-model="hamperId"
                     >
-                      <a
+                      <button
+                        type="button"
+                        :disabled="loading || submitting || !campaignId"
                         slot="addonRight"
                         class="hamper-check"
                         @click.prevent="checkHamperId"
                       >
                         Check
-                      </a>
+                      </button>
                     </fg-input>
                   </ValidationProvider>
 
@@ -132,7 +148,7 @@
                   <button
                     type="submit"
                     class="btn btn-fill btn-info btn-round btn-wd"
-                    @click.prevent="recieveHamper"
+                    :disabled="loading || submitting || !campaignId"
                   >
                     Submit
                   </button>
@@ -146,14 +162,12 @@
   </auth-layout>
 </template>
 <script>
-import Vue from "vue";
-import config from "@/config";
 import { FadeRenderTransition } from "src/components/index";
 import AuthLayout from "src/pages/Dashboard/Pages/AuthLayout.vue";
 import { extend } from "vee-validate";
 import { required, email, min } from "vee-validate/dist/rules";
-import { checkHamper, recieveHamper } from "@/api/families.api";
-import { QrcodeStream, QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
+import { checkHamper, recieveHamper, getScannerCampaign } from "@/api/families.api";
+import { QrcodeStream, QrcodeCapture } from "vue-qrcode-reader";
 import LAlert from "src/components/Alert";
 import Swal from "sweetalert2";
 
@@ -171,7 +185,14 @@ export default {
   },
   data() {
     return {
-      showManual: false,
+      showManual: true,
+      campaignId: "",
+      campaignName: "",
+      campaignLoading: false,
+      cameraError: "",
+      cameraStarting: true,
+      cameraKey: 0,
+      decoding: false,
       messages: [],
       submitting: false,
       camera: "auto",
@@ -207,106 +228,126 @@ export default {
     };
   },
   methods: {
+    clearDetails() {
+      this.familyUnitTotal = "";
+      this.familyDynamic = "";
+      this.donorName = "";
+      this.donorCompany = "";
+    },
+    setMessages(data, fallback) {
+      this.messages = data?.messages
+        ? Object.values(data.messages).map(error => ({ error }))
+        : [{ error: fallback }];
+    },
+    async loadCampaign() {
+      if (this.campaignLoading) return;
+      this.campaignLoading = true;
+      this.messages = [];
+      this.campaignId = "";
+      try {
+        const { data } = await getScannerCampaign();
+        if (!data?.success || !data.campaignId) {
+          this.setMessages(data, "Unable to load the current campaign. Please try again.");
+          return;
+        }
+        this.campaignId = data.campaignId;
+        this.campaignName = data.campaignName;
+      } catch (error) {
+        this.setMessages(null, "Unable to load the current campaign. Please check your connection and try again.");
+      } finally {
+        this.campaignLoading = false;
+      }
+    },
     async checkHamperId() {
+      if (this.loading || this.submitting || !this.campaignId) return false;
       this.loading = true;
       this.numberOfBags = "";
-      this.hamperId = this.hamperId.toUpperCase();
+      this.clearDetails();
       this.messages = [];
-      const activeCampaign = this.$store.getters?.getActiveCampaign; // HC04JA-047
-      const res = await checkHamper({
-        hamperId: this.hamperId,
-        campaignId:
-          activeCampaign && activeCampaign.length
-            ? activeCampaign
-            : config.portalDefaults.campaign,
-      });
-
-      this.loading = false;
-      if (!res.data.success) {
-        if (res?.data?.messages) {
-          this.messages = Object.keys(res?.data?.messages).map((k) => ({
-            error: res?.data?.messages[k],
-          }));
+      const hamperId = this.hamperId.trim().toUpperCase();
+      this.hamperId = hamperId;
+      try {
+        const { data } = await checkHamper({ hamperId, expectedCampaignId: this.campaignId });
+        // Ignore a response if the input changed while the request was running.
+        if (this.hamperId !== hamperId) return false;
+        if (data?.hamperId) {
+          this.hamperId = data.hamperId;
+          this.numberOfBags = data.bagsReceived ?? "";
+          this.familyUnitTotal = data.familyUnitTotal ?? "";
+          this.familyDynamic = data.familyDynamic ?? "";
+          this.donorName = data.donor?.name ?? "";
+          this.donorCompany = data.donor?.company ?? "";
         }
+        if (!data?.success) {
+          this.setMessages(data, "Unable to check this hamper. Please try again.");
+          return false;
+        }
+        return true;
+      } catch (error) {
+        this.setMessages(null, "Unable to check this hamper. Please check your connection and try again.");
+        return false;
+      } finally {
+        this.loading = false;
       }
-
-      if (res?.data?.hamperId) {
-        this.hamperId = res.data.hamperId;
-      }
-
-      if (res?.data?.bagsReceived) {
-        this.numberOfBags = res.data.bagsReceived;
-      }
-      if (res?.data?.familyUnitTotal) {
-        this.familyUnitTotal = res.data.familyUnitTotal;
-      }
-      if (res?.data?.donor?.name) {
-        this.donorName = res.data.donor.name;
-      }
-      if (res?.data?.donor?.company && res.data.donor.company != "") {
-        this.donorCompany = res.data.donor.company;
-      }
-
-      if (res?.data?.familyDynamic) {
-        this.familyDynamic = res.data.familyDynamic;
-      }
-
-      this.showScanConfirmation = true;
-      await this.timeout(2500);
-      this.showScanConfirmation = false;
     },
     async recieveHamper() {
-      const res = await recieveHamper({
-        hamperId: this.hamperId,
-        noBags: this.numberOfBags,
-        campaignId: this.$store.getters.getActiveCampaign.length
-          ? this.$store.getters.getActiveCampaign
-          : config.portalDefaults.campaign,
-      });
-      if (res?.data?.messages) {
-        this.messages = Object.keys(res?.data?.messages).map((k) => ({
-          error: res?.data?.messages[k],
-        }));
+      if (this.submitting || this.loading || this.decoding || !this.campaignId) return;
+      if (!this.hamperId.trim() || !Number.isInteger(Number(this.numberOfBags)) || Number(this.numberOfBags) <= 0) {
+        this.setMessages(null, "Enter a Hamper ID and a positive whole number of bags.");
+        return;
       }
-      if (res.data.success) {
-        this.submitting = false;
+      this.submitting = true;
+      this.messages = [];
+      this.camera = "off";
+      try {
+        const { data } = await recieveHamper({
+          hamperId: this.hamperId.trim().toUpperCase(),
+          noBags: this.numberOfBags,
+          expectedCampaignId: this.campaignId,
+        });
+        if (!data?.success) {
+          this.setMessages(data, "Unable to receive this hamper. Please try again.");
+          return;
+        }
         this.hamperId = "";
         this.numberOfBags = "";
-        this.familyUnitTotal = "";
-        this.familyDynamic = "";
-
-        Swal.fire({
-          title: "Hamper successfully received",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        this.clearDetails();
+        await Swal.fire({ title: "Hamper successfully received", timer: 2000, showConfirmButton: false });
+      } catch (error) {
+        this.setMessages(null, "Unable to confirm receipt. Please check the hamper before trying again.");
+      } finally {
+        this.submitting = false;
+        this.camera = "auto";
       }
     },
     async onInit(promise) {
+      this.cameraStarting = true;
       try {
         await promise;
-      } catch (e) {
-        // console.error(e)
+      } catch (error) {
+        this.cameraError = "Unable to start the camera. Check camera permissions, then retry, upload a photo, or enter the Hamper ID.";
       } finally {
-        this.showScanConfirmation = this.camera === "off";
+        this.cameraStarting = false;
       }
     },
-
-    async onDecode(content) {
-      this.hamperId = content;
-      await this.checkHamperId();
-
-      this.pause();
-      await this.timeout(500);
-      this.unpause();
-    },
-
-    unpause() {
+    retryCamera() {
+      this.cameraError = "";
       this.camera = "auto";
+      this.cameraKey += 1;
     },
-
-    pause() {
+    async onDecode(content) {
+      if (this.decoding || this.loading || this.submitting || !this.campaignId) return;
+      this.decoding = true;
       this.camera = "off";
+      this.hamperId = content;
+      try {
+        this.showScanConfirmation = await this.checkHamperId();
+        await this.timeout(this.showScanConfirmation ? 2500 : 500);
+      } finally {
+        this.showScanConfirmation = false;
+        this.decoding = false;
+        this.camera = "auto";
+      }
     },
 
     timeout(ms) {
@@ -321,9 +362,7 @@ export default {
     },
   },
   mounted() {
-    if (!this.userInGroup("admin")) {
-      // this.$router.push('/')
-    }
+    this.loadCampaign();
   },
 };
 </script>
@@ -351,6 +390,8 @@ export default {
     background: #009643;
     color: #fff;
     padding: 7px 15px;
+    border: 0;
+    &:disabled { opacity: 0.6; cursor: default; }
 
     &:hover {
       cursor: pointer;
