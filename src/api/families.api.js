@@ -46,10 +46,10 @@ export const emailFamilyAssignment = async (body) =>
   await httpClient.post(`/families/email-assignment`, body);
 
 export const checkHamper = async (body) =>
-  await httpClient.post(`/hampers/check`, body);
+  await httpClient.post(`/hampers/check`, body, { skipNetworkErrorRedirect: true, timeout: 20000 });
 
 export const recieveHamper = async (body) =>
-  await httpClient.post(`/hampers/receive`, body);
+  await httpClient.post(`/hampers/receive`, body, { skipNetworkErrorRedirect: true, timeout: 20000 });
 
 export const markDirectHamper = async (body) =>
   await httpClient.post(`/hampers/mark-direct`, body);
@@ -70,3 +70,6 @@ export const getUndelivered = async (campaignId) =>
 
 export const getUndelivereDonors = async (campaignId) =>
   await httpClient.get(`/hampers/undelivered-donors?campaignId=${requiredPathParam(campaignId, "campaignId")}`);
+
+export const getScannerCampaign = async () =>
+  await httpClient.get(`/hampers/current-campaign`, { skipNetworkErrorRedirect: true, timeout: 20000 });
