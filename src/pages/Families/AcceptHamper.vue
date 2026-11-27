@@ -53,13 +53,7 @@
                       />
                     </div>
                   </qrcode-stream>
-                  <div v-if="showManual || cameraError" class="text-center mt-3">
-                    <small>You can also upload a photo of the QR code or enter the Hamper ID below.</small><br />
-                    <qrcode-capture
-                      @decode="onDecode"
-                      style="margin-top: 0.5rem"
-                    />
-                  </div>
+
 
                   <br />
                   <l-alert
@@ -167,7 +161,7 @@ import AuthLayout from "src/pages/Dashboard/Pages/AuthLayout.vue";
 import { extend } from "vee-validate";
 import { required, email, min } from "vee-validate/dist/rules";
 import { checkHamper, recieveHamper, getScannerCampaign } from "@/api/families.api";
-import { QrcodeStream, QrcodeCapture } from "vue-qrcode-reader";
+import { QrcodeStream } from "vue-qrcode-reader";
 import LAlert from "src/components/Alert";
 import Swal from "sweetalert2";
 
@@ -180,12 +174,10 @@ export default {
     FadeRenderTransition,
     AuthLayout,
     QrcodeStream,
-    QrcodeCapture,
     LAlert,
   },
   data() {
     return {
-      showManual: true,
       campaignId: "",
       campaignName: "",
       campaignLoading: false,
@@ -325,7 +317,7 @@ export default {
       try {
         await promise;
       } catch (error) {
-        this.cameraError = "Unable to start the camera. Check camera permissions, then retry, upload a photo, or enter the Hamper ID.";
+        this.cameraError = "Unable to start the camera. Check camera permissions, then retry or enter the Hamper ID below.";
       } finally {
         this.cameraStarting = false;
       }
