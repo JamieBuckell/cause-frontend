@@ -33,7 +33,7 @@
                   </div>
                   <p v-if="cameraStarting && !cameraError" class="text-center" role="status">Starting camera… If prompted, allow camera access.</p>
                   <qrcode-stream
-                    v-if="!cameraError"
+                    v-if="!cameraError && pageVisible"
                     :key="cameraKey"
                     :camera="camera"
                     @decode="onDecode"
@@ -53,6 +53,15 @@
                       />
                     </div>
                   </qrcode-stream>
+                  <div v-if="!cameraError" class="text-center mt-2">
+                    <button
+                      type="button"
+                      class="btn btn-info"
+                      :disabled="cameraStarting || decoding || loading || submitting || !pageVisible"
+                      @click="retryCamera"
+                    >Restart camera</button>
+                    <p class="small text-muted">If the picture stays blurry, move the phone slightly further away or restart the camera. Your entered details will be kept.</p>
+                  </div>
 
 
                   <br />
@@ -184,6 +193,8 @@ export default {
       cameraError: "",
       cameraStarting: true,
       cameraKey: 0,
+      cameraInitAttempt: 0,
+      pageVisible: !document.hidden,
       decoding: false,
       messages: [],
       submitting: false,
@@ -313,19 +324,31 @@ export default {
       }
     },
     async onInit(promise) {
-      this.cameraStarting = true;
+      const attempt = ++this.cameraInitAttempt;
+      this.cameraStarting = this.camera !== "off";
       try {
         await promise;
       } catch (error) {
+        if (attempt !== this.cameraInitAttempt) return;
         this.cameraError = "Unable to start the camera. Check camera permissions, then retry or enter the Hamper ID below.";
       } finally {
-        this.cameraStarting = false;
+        if (attempt === this.cameraInitAttempt) this.cameraStarting = false;
       }
     },
     retryCamera() {
+      if (this.decoding || this.loading || this.submitting || !this.pageVisible) return;
+      this.cameraInitAttempt += 1;
+      this.cameraStarting = true;
       this.cameraError = "";
       this.camera = "auto";
+      // Remount to release the old stream and open a fresh camera session.
       this.cameraKey += 1;
+    },
+    onVisibilityChange() {
+      this.pageVisible = !document.hidden;
+      // Unmount while hidden so iOS does not retain an interrupted stream.
+      this.cameraInitAttempt += 1;
+      this.cameraStarting = this.pageVisible && !this.cameraError;
     },
     async onDecode(content) {
       if (this.decoding || this.loading || this.submitting || !this.campaignId) return;
@@ -355,6 +378,11 @@ export default {
   },
   mounted() {
     this.loadCampaign();
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+  },
+  beforeDestroy() {
+    this.cameraInitAttempt += 1;
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
   },
 };
 </script>
