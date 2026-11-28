@@ -74,3 +74,11 @@ test('camera failure reveals actionable feedback and retry remounts camera', asy
   assert.equal(state.cameraError, '');
   assert.equal(state.cameraKey, 1);
 });
+
+for (const bagsReceived of [0, '0', undefined, null, 3]) {
+  test(`lookup displays an empty bag count unless already positive: ${bagsReceived}`, async () => {
+    const { state } = fixture({ check: async () => ({ data: { success: true, hamperId: 'HC10DC-004B', bagsReceived } }) });
+    await state.onDecode('HC10DC-004B');
+    assert.equal(state.numberOfBags, Number(bagsReceived) > 0 ? bagsReceived : '');
+  });
+}
