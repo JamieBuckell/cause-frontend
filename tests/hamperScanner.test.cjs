@@ -12,7 +12,7 @@ function fixture(api = {}) {
     getScannerCampaign: async () => api.campaign(),
     Swal: { fire: async () => {} },
   });
-  const state = { ...methods, campaignId: 'CURRENT', hamperId: 'hc04hl012', numberOfBags: 2, loading: false, submitting: false, decoding: false, messages: [], camera: 'auto', timeout: async () => {} };
+  const state = { ...methods, campaignId: 'CURRENT', hamperId: 'hc04hl012', numberOfBags: 2, loading: false, submitting: false, decoding: false, messages: [], camera: 'auto', cameraInitAttempt: 0, cameraKey: 0, pageVisible: true, timeout: async () => {} };
   return { state, calls };
 }
 test('campaign load uses backend current campaign independently of browser selection', async () => {
@@ -82,3 +82,25 @@ for (const bagsReceived of [0, '0', undefined, null, 3]) {
     assert.equal(state.numberOfBags, Number(bagsReceived) > 0 ? bagsReceived : '');
   });
 }
+
+test('late camera failure cannot overwrite a newer successful camera session', async () => {
+  const { state } = fixture();
+  let reject;
+  const pending = state.onInit(new Promise((resolve, fail) => { reject = fail; }));
+  await state.onInit(Promise.resolve());
+  reject(Error('old camera interrupted'));
+  await pending;
+  assert.equal(state.cameraError, undefined);
+  assert.equal(state.cameraStarting, false);
+});
+
+test('camera restart preserves entered details and is blocked during a lookup', () => {
+  const { state } = fixture();
+  state.retryCamera();
+  assert.equal(state.hamperId, 'hc04hl012');
+  assert.equal(state.numberOfBags, 2);
+  assert.equal(state.cameraKey, 1);
+  state.loading = true;
+  state.retryCamera();
+  assert.equal(state.cameraKey, 1);
+});
