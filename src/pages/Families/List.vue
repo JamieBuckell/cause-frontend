@@ -360,6 +360,7 @@ export default {
         authorise: false,
         resetReferences: false,
         splitFamily: true,
+        directHamper: true,
         showDonor: true,
         highlight: {
           unauthorised: false,
@@ -491,7 +492,7 @@ export default {
         dropoffStatus: savedFilters?.dropoffStatus
           ? savedFilters.dropoffStatus
           : "All",
-        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off", "Direct"],
+        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off", "Direct", "Not Direct"],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
           : "All",
@@ -652,6 +653,9 @@ export default {
               break;
           }
           result = result.filter((d) => {
+            if (this.filters.dropoffStatus.toLowerCase() === "not direct") {
+              return d?.receiveStatus !== "direct-hamper";
+            }
             return allowedReceiveStatuses.length
               ? allowedReceiveStatuses.includes(d?.receiveStatus)
               : false;
