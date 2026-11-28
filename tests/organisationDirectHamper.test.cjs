@@ -30,7 +30,10 @@ test('organisation direct receipt waits for persistence before updating the disp
   assert.equal(f.calls[0].campaignId, 'CHC2026');
   assert.equal(f.family.receiveStatus, 'direct-hamper');
   assert.equal(f.state.markingDirect, false);
-  assert.deepEqual(f.commits[0], ['setForceRefresh', true]);
+  assert.equal(f.commits.length, 0, 'local update must not trigger a platform refresh');
+  assert.equal(f.dialogs[0].toast, true);
+  assert.equal(f.dialogs[0].position, 'top-end');
+  assert.equal(f.dialogs[0].showConfirmButton, false);
 });
 for (const api of [() => { throw Error('Network error'); }, () => ({ status: 400, data: { messages: { error: 'Not saved' } } })]) {
   test('failed direct receipt preserves displayed status and releases the pending action', async () => {
@@ -39,6 +42,7 @@ for (const api of [() => { throw Error('Network error'); }, () => ({ status: 400
     assert.equal(f.state.markingDirect, false);
     assert.equal(f.commits.length, 0);
     assert.equal(f.dialogs[0].icon, 'error');
+    assert.equal(f.dialogs[0].toast, true);
   });
 }
 test('direct receipt cannot run for non-admins or where the option is disabled', async () => {

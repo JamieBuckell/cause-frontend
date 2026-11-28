@@ -1194,15 +1194,27 @@ export default {
           throw new Error(messages ? Object.values(messages).join(" ") : "Could not mark the hamper as received direct.");
         }
         family.receiveStatus = "direct-hamper";
-        this.$store.commit("setForceRefresh", true);
-        await Swal.fire({
+        Swal.fire({
+          toast: true,
+          position: "top-end",
           title: "Hamper marked as received direct",
           timer: 2000,
+          timerProgressBar: true,
           showConfirmButton: false,
           icon: "success",
         });
       } catch (error) {
-        await Swal.fire({ title: "Could not mark hamper as received direct", text: error.message, icon: "error" });
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          title: "Could not mark hamper as received direct",
+          text: error.message,
+          icon: "error",
+          timer: 6000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          showCloseButton: true,
+        });
       } finally {
         this.markingDirect = false;
       }
