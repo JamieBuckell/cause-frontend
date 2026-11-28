@@ -3,5 +3,6 @@ import { requiredPathParam } from "@/api/core/pathParams";
 
 export const getHamperScreen = async (campaignId) =>
   await httpClient.get(
-    `/hampers/screen/${requiredPathParam(campaignId, "campaignId")}`
+    `/hampers/screen/${requiredPathParam(campaignId, "campaignId")}`,
+    { skipNetworkErrorRedirect: true, timeout: 20000 }
   );
