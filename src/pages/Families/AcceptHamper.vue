@@ -264,7 +264,7 @@ export default {
         if (this.hamperId !== hamperId) return false;
         if (data?.hamperId) {
           this.hamperId = data.hamperId;
-          this.numberOfBags = data.bagsReceived ?? "";
+          this.numberOfBags = Number(data.bagsReceived) > 0 ? data.bagsReceived : "";
           this.familyUnitTotal = data.familyUnitTotal ?? "";
           this.familyDynamic = data.familyDynamic ?? "";
           this.donorName = data.donor?.name ?? "";
