@@ -360,6 +360,7 @@ export default {
         authorise: false,
         resetReferences: false,
         splitFamily: true,
+        directHamper: true,
         showDonor: true,
         highlight: {
           unauthorised: false,
@@ -491,7 +492,7 @@ export default {
         dropoffStatus: savedFilters?.dropoffStatus
           ? savedFilters.dropoffStatus
           : "All",
-        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off", "Direct"],
+        dropoffStatusOptions: ["All", "Awaiting", "Dropped Off", "Direct", "Not Direct"],
         hasAdditionalInformation: savedFilters?.hasAdditionalInformation
           ? savedFilters.hasAdditionalInformation
           : "All",
@@ -652,6 +653,9 @@ export default {
               break;
           }
           result = result.filter((d) => {
+            if (this.filters.dropoffStatus.toLowerCase() === "not direct") {
+              return d?.receiveStatus !== "direct-hamper";
+            }
             return allowedReceiveStatuses.length
               ? allowedReceiveStatuses.includes(d?.receiveStatus)
               : false;
@@ -1190,15 +1194,27 @@ export default {
           throw new Error(messages ? Object.values(messages).join(" ") : "Could not mark the hamper as received direct.");
         }
         family.receiveStatus = "direct-hamper";
-        this.$store.commit("setForceRefresh", true);
-        await Swal.fire({
+        Swal.fire({
+          toast: true,
+          position: "top-end",
           title: "Hamper marked as received direct",
           timer: 2000,
+          timerProgressBar: true,
           showConfirmButton: false,
           icon: "success",
         });
       } catch (error) {
-        await Swal.fire({ title: "Could not mark hamper as received direct", text: error.message, icon: "error" });
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          title: "Could not mark hamper as received direct",
+          text: error.message,
+          icon: "error",
+          timer: 6000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          showCloseButton: true,
+        });
       } finally {
         this.markingDirect = false;
       }
